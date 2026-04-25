@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import { validateAuthoringForm } from '../src/index.mjs';
 import { auditFormAgainstDefaults } from '../src/standards/index.mjs';
+import { normalizeImportedLabels } from '../src/import/build.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
 import {
   buildSyntheticAcroFormPdf,
@@ -173,6 +174,66 @@ test('importPdf cleans SF-180-style static prose labels and raises numbered-labe
     true,
     'clean numbered static labels should not remain low confidence',
   );
+});
+
+test('normalizeImportedLabels cleans weak XFA labels and disambiguates duplicates', () => {
+  const chapters = [
+    {
+      id: 'imported',
+      title: 'Imported',
+      pages: [
+        {
+          id: 'details',
+          title: 'Details',
+          components: [
+            {
+              id: 'facilityWebsite',
+              type: 'address',
+              label: '8. PLEASE SELECT EACH ACTIVITY OF DAILY LIVING (ADL) THAT THE FACILITY IS PROVIDING TO THE CARE RECIPIENT.',
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[56].Facility_Website_Address[0]',
+                pdfPage: 15,
+              },
+            },
+            {
+              id: 'amount1',
+              type: 'textInput',
+              label: ',',
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[49].Monthly_Amount[0]',
+                pdfPage: 8,
+              },
+            },
+            {
+              id: 'amount2',
+              type: 'textInput',
+              label: ',',
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[50].Monthly_Amount[1]',
+                pdfPage: 9,
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  normalizeImportedLabels(chapters);
+  const labels = chapters.flatMap(chapter =>
+    chapter.pages.flatMap(page => page.components.map(component => component.label)),
+  );
+
+  assert.equal(labels[0], 'Facility Website Address');
+  assert.deepEqual(labels.slice(1), [
+    'Monthly Amount (page 9.1)',
+    'Monthly Amount (page 10.2)',
+  ]);
+  assert.equal(new Set(labels).size, labels.length);
+  assert.equal(labels.some(label => label.length > 90), false);
 });
 
 test('importPdf can curate sections from caller-provided recipe data', async () => {

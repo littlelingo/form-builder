@@ -70,6 +70,16 @@ const SEMANTIC_PAGE_RULES = [
     ],
   },
   {
+    id: 'applicantInformation',
+    title: 'Applicant information',
+    patterns: [
+      /\bapplicant\b|\brequester\b/,
+      /\brepresentative\b|\borganization\b/,
+      /\bcorrespondence\b|\belectronically\b/,
+      /\blegal proof\b|\bdeceased\b|\bincompetent\b/,
+    ],
+  },
+  {
     id: 'serviceInformation',
     title: 'Military service',
     patterns: [
@@ -85,6 +95,19 @@ const SEMANTIC_PAGE_RULES = [
       /\bclaim\b|\bbenefit\b|\bcompensation\b|\bpension\b/,
       /\bissue\b|\bappeal\b|\bdisagreement\b/,
       /\bdisability\b|\bcondition\b/,
+      /\baccident\b|\bincident\b|\boccurrence\b/,
+      /\bproperty damage\b|\bpersonal injury\b|\bwrongful death\b/,
+      /\bbasis of claim\b|\bwitness(?:es)?\b|\bclaimant\b/,
+    ],
+  },
+  {
+    id: 'insuranceInformation',
+    title: 'Insurance information',
+    patterns: [
+      /\binsurance\b|\binsurer\b/,
+      /\bpolicy\b|\bcarrier\b|\bcoverage\b/,
+      /\bdeductible\b|\bliability\b|\bproperty damage\b/,
+      /\bfiled a claim\b|\bclaim with your insurance\b/,
     ],
   },
   {
@@ -103,6 +126,8 @@ const SEMANTIC_PAGE_RULES = [
       /\bemploy\b|\bemployer\b|\boccupation\b/,
       /\bworked\b|\bwork history\b|\bdates? of employment\b|\blast date of employment\b/,
       /\bearnings\b|\bwages\b/,
+      /\bself-employment\b|\blast job\b|\blast five years\b/,
+      /\bobtain employment\b|\bleave your last job\b/,
     ],
   },
   {
@@ -120,6 +145,7 @@ const SEMANTIC_PAGE_RULES = [
     patterns: [
       /\beducation\b|\bschool\b|\btraining\b/,
       /\bdegree\b|\bprogram\b/,
+      /\bdates? of training\b|\btype of education\b/,
       /\bchapter 36\b|\bcareer\b/,
     ],
   },

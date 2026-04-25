@@ -429,6 +429,572 @@
           }
         }
       ]
+    },
+    {
+      "id": "sf-180-records-request-2020-static",
+      "title": "Standard Form 180 military records request workflow",
+      "description": "Curates the static-text extraction fields from Standard Form 180 into a builder-native military records request workflow.",
+      "formFingerprint": "SF-180-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:standard[-_\\s]+form[-_\\s]+180|sf[-_\\s]?180|request pertaining to military records)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:nameUsedDuringService$",
+          "static:socialSecurity$",
+          "static:servicePastAndPresent$",
+          "static:purposeOfRequest$",
+          "static:authorizationSignature$"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "serviceMemberName",
+          "selector": { "namePattern": "static:nameUsedDuringService$" },
+          "chapterId": "serviceMemberInformation",
+          "chapterTitle": "Service member information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Name used during service",
+            "hint": "Enter the last, first, and full middle name used during military service."
+          }
+        },
+        {
+          "id": "serviceMemberSocialSecurityNumber",
+          "selector": { "namePattern": "static:socialSecurity$" },
+          "chapterId": "serviceMemberInformation",
+          "chapterTitle": "Service member information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Social Security number",
+            "hint": "Enter the Social Security number without dashes."
+          }
+        },
+        {
+          "id": "serviceMemberDateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "serviceMemberInformation",
+          "chapterTitle": "Service member information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Date of birth"
+          }
+        },
+        {
+          "id": "serviceMemberPlaceOfBirth",
+          "selector": { "namePattern": "static:placeOfBirth$" },
+          "chapterId": "serviceMemberInformation",
+          "chapterTitle": "Service member information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Place of birth"
+          }
+        },
+        {
+          "id": "serviceHistory",
+          "selector": { "namePattern": "static:servicePastAndPresent$" },
+          "chapterId": "serviceHistory",
+          "chapterTitle": "Service history",
+          "pageId": "serviceDetails",
+          "pageTitle": "Service details",
+          "component": {
+            "label": "Service, past and present",
+            "hint": "List all known service periods to support an effective records search."
+          }
+        },
+        {
+          "id": "isServiceMemberDeceased",
+          "selector": { "namePattern": "static:isThisPersonDeceased$" },
+          "chapterId": "serviceHistory",
+          "chapterTitle": "Service history",
+          "pageId": "serviceDetails",
+          "pageTitle": "Service details",
+          "component": {
+            "label": "Is this person deceased?"
+          }
+        },
+        {
+          "id": "retiredFromMilitaryService",
+          "selector": { "namePattern": "static:didThisPersonRetireFromMilitaryService$" },
+          "chapterId": "serviceHistory",
+          "chapterTitle": "Service history",
+          "pageId": "serviceDetails",
+          "pageTitle": "Service details",
+          "component": {
+            "label": "Did this person retire from military service?"
+          }
+        },
+        {
+          "id": "requestedRecords",
+          "selector": { "namePattern": "static:checkTheItemYouAreRequesting$" },
+          "chapterId": "recordsRequest",
+          "chapterTitle": "Records request",
+          "pageId": "requestedRecords",
+          "pageTitle": "Requested records",
+          "component": {
+            "label": "Records being requested",
+            "hint": "Select or describe each record item requested from the source form."
+          }
+        },
+        {
+          "id": "purposeOfRequest",
+          "selector": { "namePattern": "static:purposeOfRequest$" },
+          "chapterId": "recordsRequest",
+          "chapterTitle": "Records request",
+          "pageId": "requestedRecords",
+          "pageTitle": "Requested records",
+          "component": {
+            "label": "Purpose of request",
+            "hint": "Explain the purpose of the records request if provided."
+          }
+        },
+        {
+          "id": "requesterName",
+          "selector": { "namePattern": "static:requesterName$" },
+          "chapterId": "requesterInformation",
+          "chapterTitle": "Requester information",
+          "pageId": "requesterDetails",
+          "pageTitle": "Requester details",
+          "component": {
+            "label": "Requester name"
+          }
+        },
+        {
+          "id": "requesterRelationship",
+          "selector": { "namePattern": "static:requesterRelationshipToServiceMember$" },
+          "chapterId": "requesterInformation",
+          "chapterTitle": "Requester information",
+          "pageId": "requesterDetails",
+          "pageTitle": "Requester details",
+          "component": {
+            "label": "Requester relationship to service member",
+            "hint": "Describe the requester's relationship to the service member or Veteran."
+          }
+        },
+        {
+          "id": "authorizationSignature",
+          "selector": { "namePattern": "static:authorizationSignature$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": {
+            "label": "Authorization signature",
+            "hint": "The requester signs here to authorize the records request."
+          }
+        }
+      ]
+    },
+    {
+      "id": "va-form-95-tort-claim-2020-static",
+      "title": "VA Form 95 tort claim workflow",
+      "description": "Curates the static-text extraction fields from VA Form 95 into a builder-native tort claim workflow.",
+      "formFingerprint": "VA-FORM-95-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?form[-_\\s]?95|tort[-_\\s]?claim|basis of claim)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:submitToAppropriateFederalAgency$",
+          "static:nameAddressOfClaimantAndClaimantSPersonalRepresentativeIfAny$",
+          "static:basisOfClaim",
+          "static:doYouCarryAccidentInsurance",
+          "static:doYouCarryPublicLiabilityAndPropertyDamageInsurance"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "receivingAgency",
+          "selector": { "namePattern": "static:submitToAppropriateFederalAgency$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": {
+            "label": "Federal agency receiving this claim",
+            "hint": "Enter the federal agency where this claim will be submitted."
+          }
+        },
+        {
+          "id": "claimantAddress",
+          "selector": { "namePattern": "static:nameAddressOfClaimantAndClaimantSPersonalRepresentativeIfAny$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": {
+            "label": "Claimant or representative name and address",
+            "hint": "Enter the claimant's name and address, and the personal representative if one is listed."
+          }
+        },
+        {
+          "id": "employmentType",
+          "selector": { "namePattern": "static:typeOfEmployment$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": {
+            "label": "Type of employment"
+          }
+        },
+        {
+          "id": "claimantDateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": {
+            "label": "Date of birth"
+          }
+        },
+        {
+          "id": "maritalStatus",
+          "selector": { "namePattern": "static:maritalStatus$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": {
+            "label": "Marital status"
+          }
+        },
+        {
+          "id": "accidentDate",
+          "selector": { "namePattern": "static:dateAndDayOfAccident$" },
+          "chapterId": "incidentDetails",
+          "chapterTitle": "Incident details",
+          "pageId": "incidentDateAndTime",
+          "pageTitle": "Incident date and time",
+          "component": {
+            "label": "Date and day of accident"
+          }
+        },
+        {
+          "id": "accidentTime",
+          "selector": { "namePattern": "static:time$" },
+          "chapterId": "incidentDetails",
+          "chapterTitle": "Incident details",
+          "pageId": "incidentDateAndTime",
+          "pageTitle": "Incident date and time",
+          "component": {
+            "label": "Time of accident",
+            "hint": "Enter the time of the accident and indicate A.M. or P.M."
+          }
+        },
+        {
+          "id": "basisOfClaim",
+          "selector": {
+            "namePattern": "static:basisOfClaimStateInDetailTheKnownFactsAndCircumstancesAttendingTheDamageInjuryOrDeathIdentifyingPersonsAndPropertyInvolvedThePlaceOfOccurrenceAnd"
+          },
+          "chapterId": "incidentDetails",
+          "chapterTitle": "Incident details",
+          "pageId": "basisOfClaim",
+          "pageTitle": "Basis of claim",
+          "component": {
+            "type": "textArea",
+            "label": "Basis of claim",
+            "hint": "Describe the facts and circumstances of the damage, injury, or death.",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "propertyDamageAmount",
+          "selector": { "namePattern": "static:propertyDamage$" },
+          "chapterId": "damages",
+          "chapterTitle": "Damages",
+          "pageId": "damageAmounts",
+          "pageTitle": "Damage amounts",
+          "component": {
+            "label": "Property damage amount"
+          }
+        },
+        {
+          "id": "personalInjuryAmount",
+          "selector": { "namePattern": "static:personalInjuryWrongfulDeath$" },
+          "chapterId": "damages",
+          "chapterTitle": "Damages",
+          "pageId": "damageAmounts",
+          "pageTitle": "Damage amounts",
+          "component": {
+            "label": "Personal injury or wrongful death amount"
+          }
+        },
+        {
+          "id": "witnesses",
+          "selector": { "namePattern": "static:witnesses$" },
+          "chapterId": "incidentDetails",
+          "chapterTitle": "Incident details",
+          "pageId": "witnesses",
+          "pageTitle": "Witnesses",
+          "component": {
+            "type": "textArea",
+            "label": "Witnesses",
+            "hint": "List witnesses to the incident, if any.",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "dateSigned",
+          "selector": { "namePattern": "static:dateOfSignature$" },
+          "chapterId": "signature",
+          "chapterTitle": "Signature",
+          "pageId": "claimSignature",
+          "pageTitle": "Claim signature",
+          "component": {
+            "label": "Date of signature"
+          }
+        },
+        {
+          "id": "accidentInsuranceDetails",
+          "selector": {
+            "namePattern": "static:doYouCarryAccidentInsuranceYesIfYesGiveNameAndAddressOfInsuranceCompanyAndPolicyNumberNo"
+          },
+          "chapterId": "insuranceInformation",
+          "chapterTitle": "Insurance information",
+          "pageId": "accidentInsurance",
+          "pageTitle": "Accident insurance",
+          "component": {
+            "type": "textArea",
+            "label": "Accident insurance details",
+            "hint": "State whether accident insurance applies. If yes, include company name, address, and policy number.",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "filedInsuranceClaim",
+          "selector": {
+            "namePattern": "static:haveYouFiledAClaimWithYourInsuranceCarrierInThisInstanceAndIfSoIsItFullCoverageOrDeductible(?:YesNo)?$"
+          },
+          "chapterId": "insuranceInformation",
+          "chapterTitle": "Insurance information",
+          "pageId": "claimWithCarrier",
+          "pageTitle": "Claim with insurance carrier",
+          "component": {
+            "label": "Filed a claim with insurance carrier?",
+            "hint": "Indicate whether a claim has been filed and whether it is full coverage or deductible."
+          }
+        },
+        {
+          "id": "deductibleAmount",
+          "selector": { "namePattern": "static:ifDeductibleStateAmount$" },
+          "chapterId": "insuranceInformation",
+          "chapterTitle": "Insurance information",
+          "pageId": "claimWithCarrier",
+          "pageTitle": "Claim with insurance carrier",
+          "component": {
+            "type": "textInput",
+            "label": "Deductible amount"
+          }
+        },
+        {
+          "id": "insurerAction",
+          "selector": {
+            "namePattern": "static:ifAClaimHasBeenFiledWithYourCarrierWhatActionHasYourInsurerTakenOrProposedToTakeWithReferenceToYourClaim$"
+          },
+          "chapterId": "insuranceInformation",
+          "chapterTitle": "Insurance information",
+          "pageId": "claimWithCarrier",
+          "pageTitle": "Claim with insurance carrier",
+          "component": {
+            "type": "textArea",
+            "label": "Insurer action on claim",
+            "hint": "Describe what the insurer has taken or proposed to take for this claim.",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "publicLiabilityInsuranceDetails",
+          "selector": {
+            "namePattern": "static:doYouCarryPublicLiabilityAndPropertyDamageInsuranceYesIfYesGiveNameAndAddressOfInsuranceCarrierNo"
+          },
+          "chapterId": "insuranceInformation",
+          "chapterTitle": "Insurance information",
+          "pageId": "liabilityInsurance",
+          "pageTitle": "Liability insurance",
+          "component": {
+            "type": "textArea",
+            "label": "Public liability and property damage insurance details",
+            "hint": "State whether public liability and property damage insurance applies. If yes, include the insurance carrier name and address.",
+            "maxLength": 2000
+          }
+        }
+      ]
+    },
+    {
+      "id": "va-form-21-4142-authorization-2020-static",
+      "title": "VA Form 21-4142 authorization workflow",
+      "description": "Curates the static-text extraction fields from VA Form 21-4142 into a builder-native authorization workflow with repeatable treatment providers.",
+      "formFingerprint": "VA-FORM-21-4142-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:21[-_\\s]?4142|authorization[-_\\s]+to[-_\\s]+disclose)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:veteranSName$",
+          "static:socialSecurityNumber$",
+          "static:vAFileNumber$",
+          "static:dateOfBirth$",
+          "static:patientSName$",
+          "static:providerOrFacilityName$",
+          "static:dateOfTreatment$",
+          "static:providerFacilityStreetAddress$"
+        ],
+        "minFieldMatches": 6
+      },
+      "fields": [
+        {
+          "id": "veteranName",
+          "selector": { "namePattern": "static:veteranSName$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "Veteran's name",
+            "hint": "Enter the Veteran's first name, middle initial, and last name."
+          }
+        },
+        {
+          "id": "veteranSocialSecurityNumber",
+          "selector": { "namePattern": "static:socialSecurityNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "Social Security number",
+            "hint": "Enter the Veteran's Social Security number without dashes."
+          }
+        },
+        {
+          "id": "vaFileNumber",
+          "selector": { "namePattern": "static:vAFileNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "VA file number"
+          }
+        },
+        {
+          "id": "veteranDateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "Date of birth"
+          }
+        },
+        {
+          "id": "veteranServiceNumber",
+          "selector": { "namePattern": "static:veteranSServiceNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "Veteran's service number",
+            "hint": "Enter the service number if applicable."
+          }
+        },
+        {
+          "id": "patientName",
+          "selector": { "namePattern": "static:patientSName$" },
+          "chapterId": "patientInformation",
+          "chapterTitle": "Patient information",
+          "pageId": "patientDetails",
+          "pageTitle": "Patient details",
+          "component": {
+            "label": "Patient's name",
+            "hint": "Enter the patient's first name, middle initial, and last name."
+          }
+        },
+        {
+          "id": "providerName",
+          "selector": { "namePattern": "static:providerOrFacilityName$" },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility VA may request records from.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "label": "Provider or facility name",
+            "hint": "Enter the provider or facility name.",
+            "summaryCard": true
+          }
+        },
+        {
+          "id": "datesOfTreatment",
+          "selector": { "namePattern": "static:dateOfTreatment$" },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility VA may request records from.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "type": "textInput",
+            "label": "Dates of treatment",
+            "hint": "Enter the dates or date range of treatment."
+          }
+        },
+        {
+          "id": "providerFacilityAddress",
+          "selector": { "namePattern": "static:providerFacilityStreetAddress$" },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility VA may request records from.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "label": "Provider or facility street address",
+            "hint": "Enter the provider or facility street address."
+          }
+        }
+      ]
     }
   ]
 }

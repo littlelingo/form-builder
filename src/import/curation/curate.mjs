@@ -102,8 +102,13 @@ function normalizeCuration(curation = {}, source) {
   const pageId = curation.pageId || 'page1';
   return {
     source,
+    order: curation.order,
     chapterId,
     chapterTitle: curation.chapterTitle || titleFromId(chapterId),
+    chapterType: curation.chapterType || undefined,
+    chapterOptions: curation.chapterOptions || undefined,
+    itemNameLabel: curation.itemNameLabel || undefined,
+    sectionIntro: curation.sectionIntro || undefined,
     pageId,
     pageTitle: curation.pageTitle || titleFromId(pageId, 'Page 1'),
   };
@@ -114,7 +119,8 @@ function applyRecipe(fields, recipe) {
   let matchedFieldCount = 0;
 
   const curatedFields = fields.map(field => {
-    const mapping = mappings.find(candidate => selectorMatches(field, candidate.selector));
+    const mappingIndex = mappings.findIndex(candidate => selectorMatches(field, candidate.selector));
+    const mapping = mappingIndex >= 0 ? mappings[mappingIndex] : null;
     if (!mapping) return field;
     matchedFieldCount += 1;
     return {
@@ -122,6 +128,7 @@ function applyRecipe(fields, recipe) {
       semanticId: mapping.id || field.semanticId,
       curation: {
         ...normalizeCuration(mapping, 'recipe'),
+        order: mappingIndex,
         recipeId: recipe.id || null,
       },
       componentOverrides: {

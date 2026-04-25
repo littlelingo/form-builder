@@ -78,6 +78,21 @@ function validateComponentOverrides(component, path, errors) {
   }
 }
 
+function validateChapterMetadata(mapping, path, errors) {
+  if (mapping.chapterType !== undefined && !['standard', 'listLoop'].includes(mapping.chapterType)) {
+    errors.push(`${path}.chapterType must be "standard" or "listLoop"`);
+  }
+  if (mapping.chapterOptions !== undefined && !isObject(mapping.chapterOptions)) {
+    errors.push(`${path}.chapterOptions must be an object when provided`);
+  }
+  if (mapping.itemNameLabel !== undefined && !hasText(mapping.itemNameLabel)) {
+    errors.push(`${path}.itemNameLabel must be a non-empty string when provided`);
+  }
+  if (mapping.sectionIntro !== undefined && !hasText(mapping.sectionIntro)) {
+    errors.push(`${path}.sectionIntro must be a non-empty string when provided`);
+  }
+}
+
 function validateFieldMapping(mapping, path, errors) {
   if (!isObject(mapping)) {
     errors.push(`${path} must be an object`);
@@ -89,6 +104,7 @@ function validateFieldMapping(mapping, path, errors) {
   if (mapping.id !== undefined && !hasText(mapping.id)) {
     errors.push(`${path}.id must be a non-empty string when provided`);
   }
+  validateChapterMetadata(mapping, path, errors);
   validateComponentOverrides(mapping.component, `${path}.component`, errors);
 }
 

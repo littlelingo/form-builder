@@ -62,6 +62,100 @@ function deriveLabel(field) {
   return 'Untitled field';
 }
 
+function fieldNameStem(pdfFieldName) {
+  const raw = String(pdfFieldName || '')
+    .split('.')
+    .pop()
+    ?.replace(/\[\d+\]$/g, '')
+    .replace(/^#?subform$/i, '')
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!raw) return '';
+  return raw
+    .toLowerCase()
+    .replace(/\b[a-z]/g, char => char.toUpperCase())
+    .replace(/\bVa\b/g, 'VA')
+    .replace(/\bSsn\b/g, 'SSN');
+}
+
+function labelKey(label) {
+  return String(label || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isWeakImportedLabel(label) {
+  const normalized = String(label || '').trim().toLowerCase();
+  return (
+    !/[a-z0-9]/i.test(normalized) ||
+    /^page\s+\d+$/i.test(normalized) ||
+    /^\([^)]*\)$/.test(normalized) ||
+    /^(city|country|state\/province|zip code\/postal code|month|day|year|yes|no|radio option)$/i.test(normalized)
+  );
+}
+
+function isUsefulFieldStem(stem) {
+  return stem &&
+    !/^(field|subform|form|check box|checkbox|radio button list)$/i.test(stem);
+}
+
+function importedComponentLabel(component) {
+  const label = String(component.label || '').replace(/\s+/g, ' ').trim();
+  const stem = fieldNameStem(component.provenance?.pdfFieldName);
+  if ((label.length > 90 || isWeakImportedLabel(label)) && isUsefulFieldStem(stem)) {
+    return stem;
+  }
+  if (label.length > 90) {
+    return `${label.slice(0, 86).trim()}...`;
+  }
+  return label || stem || 'Imported field';
+}
+
+function allComponents(chapters) {
+  return chapters.flatMap(chapter =>
+    (chapter.pages || []).flatMap(page => page.components || []),
+  );
+}
+
+export function normalizeImportedLabels(chapters) {
+  const components = allComponents(chapters);
+  for (const component of components) {
+    if (component.provenance?.origin === 'pdf-field') {
+      component.label = importedComponentLabel(component);
+    }
+  }
+
+  const byLabel = new Map();
+  for (const component of components) {
+    const key = labelKey(component.label);
+    if (!key) continue;
+    if (!byLabel.has(key)) byLabel.set(key, []);
+    byLabel.get(key).push(component);
+  }
+
+  for (const group of byLabel.values()) {
+    if (group.length < 2) continue;
+    group.forEach((component, index) => {
+      const page = Number.isInteger(component.provenance?.pdfPage)
+        ? component.provenance.pdfPage + 1
+        : null;
+      const suffix = page ? `page ${page}.${index + 1}` : `field ${index + 1}`;
+      const base = component.label.replace(/\s+\((?:page|field)\s+\d+(?:\.\d+)?\)$/i, '');
+      const maxBaseLength = Math.max(20, 87 - suffix.length);
+      const trimmedBase = base.length > maxBaseLength
+        ? `${base.slice(0, maxBaseLength - 3).trim()}...`
+        : base;
+      component.label = `${trimmedBase} (${suffix})`;
+    });
+  }
+
+  return chapters;
+}
+
 function buildResponseOptions(field) {
   if (!Array.isArray(field.options) || field.options.length === 0) return undefined;
   return field.options.map(opt => ({
@@ -221,6 +315,17 @@ function sortFieldsByPdfPosition(fields) {
   });
 }
 
+function sortCuratedFields(fields) {
+  return [...fields].sort((a, b) => {
+    const aOrder = a.curation?.order;
+    const bOrder = b.curation?.order;
+    if (Number.isInteger(aOrder) && Number.isInteger(bOrder) && aOrder !== bOrder) {
+      return aOrder - bOrder;
+    }
+    return sortFieldsByPdfPosition([a, b])[0] === a ? -1 : 1;
+  });
+}
+
 function segmentCuratedFields(fields) {
   const curatedFields = fields.filter(field => field.curation?.chapterId && field.curation?.pageId);
   if (curatedFields.length === 0) return null;
@@ -234,6 +339,10 @@ function segmentCuratedFields(fields) {
       const chapter = {
         id: chapterId,
         title: curation.chapterTitle || titleFromId(chapterId),
+        type: curation.chapterType || 'standard',
+        options: curation.chapterOptions,
+        itemNameLabel: curation.itemNameLabel,
+        sectionIntro: curation.sectionIntro,
         pages: [],
         pageMap: new Map(),
       };
@@ -257,9 +366,17 @@ function segmentCuratedFields(fields) {
     return chapter.pageMap.get(pageId);
   }
 
-  for (const field of sortFieldsByPdfPosition(curatedFields)) {
+  for (const field of sortCuratedFields(curatedFields)) {
     const chapter = getChapter(field.curation);
     const page = getPage(chapter, field.curation);
+    if (chapter.type === 'listLoop') {
+      const duplicateKey = field.semanticId || field.name || field.closestLabel;
+      if (duplicateKey && page.fields.some(existing =>
+        (existing.semanticId || existing.name || existing.closestLabel) === duplicateKey
+      )) {
+        continue;
+      }
+    }
     page.fields.push(field);
   }
 
@@ -293,6 +410,7 @@ export function buildAuthoringForm({
 
   const takenIds = new Set();
   const builtChapters = chapters.map(chapter => buildChapter(chapter, takenIds, corpus));
+  normalizeImportedLabels(builtChapters);
 
   return {
     schemaVersion: '1.0.0',

@@ -62,6 +62,13 @@
         "selector": { "$ref": "#/$defs/selector" },
         "chapterId": { "type": "string", "minLength": 1 },
         "chapterTitle": { "type": "string" },
+        "chapterType": { "enum": ["standard", "listLoop"] },
+        "chapterOptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "itemNameLabel": { "type": "string" },
+        "sectionIntro": { "type": "string" },
         "pageId": { "type": "string", "minLength": 1 },
         "pageTitle": { "type": "string" },
         "component": { "$ref": "#/$defs/componentOverrides" }

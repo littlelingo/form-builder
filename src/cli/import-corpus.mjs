@@ -57,7 +57,7 @@ export const REPRESENTATIVE_TARGETS = [
     filename: 'dd-form-293_2020.pdf',
     targetSet: 'next-risk',
     category: 'noisy-static-review-form',
-    targetLevel: 'structured',
+    targetLevel: 'builder-native',
     focus: 'Static correction-board form should have semantic pages and fewer prose labels.',
   },
   {

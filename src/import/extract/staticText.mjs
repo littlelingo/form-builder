@@ -114,6 +114,36 @@ function humanizeStaticLabel(label) {
 
 function cleanStaticLabel(label) {
   const text = normalizeLabel(label);
+  if (/^branch at time of inequity or impropriety\b/i.test(text)) {
+    return 'Branch at time of inequity or impropriety';
+  }
+  if (/^component at time of inequity or impropriety\b/i.test(text)) {
+    return 'Component at time of inequity or impropriety';
+  }
+  if (/^highest education achieved\b/i.test(text)) {
+    return 'Highest education achieved';
+  }
+  if (/^discharge characterization received\b/i.test(text)) {
+    return 'Discharge characterization received';
+  }
+  if (/^action requested\b/i.test(text)) {
+    return 'Action requested';
+  }
+  if (/^applicant must sign\b/i.test(text)) {
+    return 'Applicant signature';
+  }
+  if (/^documents in support of claim\b/i.test(text)) {
+    return 'Documents in support of claim';
+  }
+  if (/^other documents that may be helpful\b/i.test(text)) {
+    return 'Other supporting documents';
+  }
+  if (/^my discharge was inequitable because\b/i.test(text)) {
+    return 'Discharge inequity statement';
+  }
+  if (/^the discharge is improper because\b/i.test(text)) {
+    return 'Discharge impropriety statement';
+  }
   if (/^purpose\s*:/i.test(text)) {
     return 'Purpose of request';
   }
@@ -129,7 +159,12 @@ function cleanStaticLabel(label) {
   if (/^did this person retire from military service\?/i.test(text)) {
     return 'Did this person retire from military service?';
   }
-  return text;
+  return text
+    .replace(/\b(?:NO\s+YES|YES\s+NO)\b.*$/i, '')
+    .replace(/\s+\b(?:ARMY|NAVY|AIR FORCE|COAST GUARD|MARINE CORPS)\b.*$/i, '')
+    .replace(/\s+\b(?:GED|HIGH SCHOOL DIPLOMA|BACHELOR'S DEGREE|MASTER'S DEGREE|DOCTORATE DEGREE)\b.*$/i, '')
+    .replace(/\s+\b(?:REGULAR|RESERVE|GUARD)\b(?:\s+\b(?:REGULAR|RESERVE|GUARD)\b)*$/i, '')
+    .replace(/\s+\(?(?:select one|select all that apply)\.?\)?$/i, '');
 }
 
 function toStaticKey(label, fallback) {
