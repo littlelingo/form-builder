@@ -59,6 +59,8 @@ import type {
   ComponentSystemId,
   PaletteDragItem,
   PreviewData,
+  SavedTemplateImportOptions,
+  SavedTemplateImportResult,
   SavedCustomTemplate,
   SelectedNode,
 } from './types';
@@ -491,31 +493,65 @@ export default function App() {
     downloadCustomTemplates(customTemplates);
   }
 
-  function handleImportCustomTemplates(templates: SavedCustomTemplate[]) {
+  function handleImportCustomTemplates(
+    templates: SavedCustomTemplate[],
+    options: SavedTemplateImportOptions = {},
+  ): SavedTemplateImportResult {
+    const conflictStrategy = options.conflictStrategy || 'rename';
     const importedAt = new Date().toISOString();
-    const usedLabels = new Set(customTemplates.map(template => template.label.toLowerCase()));
+    const normalizedTemplates = normalizeCustomTemplates(templates);
+    const existingLabelKeys = new Set(customTemplates.map(template => template.label.toLowerCase()));
+    const replacementKeys = new Set<string>();
+    const usedLabels = new Set(existingLabelKeys);
+    let skippedCount = 0;
+    let replacedCount = 0;
     let renamedCount = 0;
-    const importedTemplates = normalizeCustomTemplates(templates).map((template, index) => {
-      const label = uniqueImportedTemplateLabel(template.label, usedLabels);
+    const importedTemplates = normalizedTemplates.flatMap((template, index) => {
+      const baseLabel = template.label.trim() || 'Imported template';
+      const labelKey = baseLabel.toLowerCase();
+      const conflictsWithExisting = existingLabelKeys.has(labelKey);
+
+      if (conflictsWithExisting && conflictStrategy === 'skip') {
+        skippedCount += 1;
+        return [];
+      }
+
+      if (conflictsWithExisting && conflictStrategy === 'replace' && !replacementKeys.has(labelKey)) {
+        replacementKeys.add(labelKey);
+        usedLabels.delete(labelKey);
+        replacedCount += 1;
+      }
+
+      const label = uniqueImportedTemplateLabel(baseLabel, usedLabels);
       if (label !== template.label) renamedCount += 1;
-      return {
+      return [{
         ...template,
         id: `custom-imported-${Date.now()}-${index}`,
         label,
         createdAt: template.createdAt || new Date().toISOString(),
         importedAt,
+      }];
+    });
+    if (importedTemplates.length === 0) {
+      return {
+        importedCount: 0,
+        renamedCount,
+        replacedCount,
+        skippedCount,
       };
-    });
-    if (importedTemplates.length === 0) return 0;
+    }
 
-    setCustomTemplates(current => {
-      const next = [...importedTemplates, ...current].slice(0, 25);
-      saveCustomTemplates(next);
-      return next;
-    });
+    const retainedTemplates = customTemplates.filter(
+      template => !replacementKeys.has(template.label.toLowerCase()),
+    );
+    const next = [...importedTemplates, ...retainedTemplates].slice(0, 25);
+    setCustomTemplates(next);
+    saveCustomTemplates(next);
     return {
       importedCount: importedTemplates.length,
       renamedCount,
+      replacedCount,
+      skippedCount,
     };
   }
 

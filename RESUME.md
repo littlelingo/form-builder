@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after helper preset precision
+Last updated: 2026-04-25 EDT after saved template import review choices
 
 ## Current Workspace
 
@@ -14,13 +14,13 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the helper preset precision checkpoint. The latest passing slice
-makes the Patterns-panel helper preset review derive target IDs from the
-current authoring form, so Contact and Identity helper previews show the exact
-prefill and computed-value IDs that insertion will create, including collision
-safe suffixes. The next recommended implementation slice is saved template
-overwrite/merge choices, because imports currently rename conflicts
-automatically without letting authors choose skip, rename, or replace.
+Resume from the saved template import review choices checkpoint. The latest
+passing slice adds an import-conflict review step for saved custom templates,
+letting authors rename duplicates, skip duplicates, or replace existing saved
+templates before writing to localStorage. The next recommended implementation
+slice is extracting the saved-template import conflict resolver into a small
+testable helper, because the browser smoke now covers the flow but the merge
+rules still live inside the React app handler.
 
 Recent completed slices:
 
@@ -227,6 +227,15 @@ Recent completed slices:
     - Browser smoke verifies both the initial helper preview and the
       collision-safe Contact preview after a Contact template already exists.
 
+20. **Saved template import review choices**
+    - Saved-template imports with duplicate labels now open a review panel
+      instead of immediately renaming conflicts.
+    - Authors can choose to rename duplicates, skip duplicates, or replace
+      existing saved templates.
+    - Import status text now reports renamed, skipped, and replaced counts.
+    - Browser smoke verifies all three duplicate-import choices against an
+      exported saved-template library.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -261,7 +270,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the helper preset precision slice:
+Latest verification after the saved template import review choices slice:
 
 ```bash
 npm run builder:smoke
@@ -333,6 +342,8 @@ Confirmed:
   triage as runner and template coverage grows.
 - Automated smoke now verifies helper preset review displays generated target
   IDs and collision-safe suffixes for Contact and Identity helpers.
+- Automated smoke now verifies saved-template import conflict review choices:
+  rename duplicates, skip duplicates, and replace existing.
 
 Known browser-console issue:
 
@@ -342,9 +353,10 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Saved template overwrite/merge choices**
-   - If imported libraries become larger, consider an explicit import review
-     step for skip, rename, or replace decisions.
+1. **Saved template import resolver tests**
+   - Extract the saved-template import conflict resolution from `App.tsx` into
+     a small helper and add focused tests for rename, skip, replace, duplicate
+     labels inside the same import file, and the 25-template cap.
 
 2. **Helper preset reusable tests**
    - If helper previews gain more templates, add narrow model tests for

@@ -192,6 +192,19 @@ export interface SavedCustomTemplate {
   component?: AuthoringComponent;
 }
 
+export type SavedTemplateImportConflictStrategy = 'rename' | 'skip' | 'replace';
+
+export interface SavedTemplateImportOptions {
+  conflictStrategy?: SavedTemplateImportConflictStrategy;
+}
+
+export interface SavedTemplateImportResult {
+  importedCount: number;
+  renamedCount: number;
+  replacedCount: number;
+  skippedCount: number;
+}
+
 export interface PaletteComponent {
   type: string;
   label: string;

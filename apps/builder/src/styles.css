@@ -653,6 +653,32 @@ textarea {
   padding-left: 1rem;
 }
 
+.builder-template-import-review {
+  background: #f7f9fb;
+  border: 1px solid var(--builder-line);
+  border-radius: 0.4rem;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+}
+
+.builder-template-import-review h4 {
+  font-size: 0.86rem;
+  margin: 0;
+}
+
+.builder-template-import-review p,
+.builder-template-import-review ul {
+  color: var(--builder-ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.builder-template-import-review ul {
+  padding-left: 1rem;
+}
+
 .builder-custom-template-list {
   display: grid;
   gap: 0.35rem;

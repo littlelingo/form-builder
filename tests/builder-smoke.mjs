@@ -294,6 +294,27 @@ async function smokeSavedTemplateLibrary(page) {
   await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
   await expectVisible(
     page,
+    page.getByRole('heading', { name: 'Review import conflicts' }),
+    'Expected saved template import conflicts to require review.',
+  );
+  await expectVisible(
+    page,
+    page.getByRole('button', { name: 'Rename duplicates' }),
+    'Expected saved template import review to offer duplicate renaming.',
+  );
+  await expectVisible(
+    page,
+    page.getByRole('button', { name: 'Skip duplicates' }),
+    'Expected saved template import review to offer duplicate skipping.',
+  );
+  await expectVisible(
+    page,
+    page.getByRole('button', { name: 'Replace existing' }),
+    'Expected saved template import review to offer replacement.',
+  );
+  await page.getByRole('button', { name: 'Rename duplicates' }).click();
+  await expectVisible(
+    page,
     page.getByText('Imported 1 saved template. 1 duplicate name was renamed.'),
     'Expected saved template import to report duplicate label handling.',
   );
@@ -306,6 +327,25 @@ async function smokeSavedTemplateLibrary(page) {
     page,
     page.getByText(/Section .* 3 fields .* Created .* Imported/),
     'Expected imported saved template metadata.',
+  );
+  await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
+  await page.getByRole('button', { name: 'Skip duplicates' }).click();
+  await expectVisible(
+    page,
+    page.getByText('No saved templates imported. 1 duplicate name was skipped.'),
+    'Expected saved template import review to skip duplicate labels.',
+  );
+  assert.equal(
+    await page.getByRole('button', { name: 'Add Smoke renamed contact (imported 2)' }).count(),
+    0,
+    'Expected skipped duplicate import not to create another renamed template.',
+  );
+  await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
+  await page.getByRole('button', { name: 'Replace existing' }).click();
+  await expectVisible(
+    page,
+    page.getByText('Imported 1 saved template. 1 existing template was replaced.'),
+    'Expected saved template import review to replace duplicate labels.',
   );
   await page.getByRole('button', { name: 'Delete Smoke renamed contact (imported)', exact: true }).click();
   await page.getByRole('button', { name: 'Delete Smoke renamed contact', exact: true }).click();

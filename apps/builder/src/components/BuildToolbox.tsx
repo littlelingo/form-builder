@@ -7,7 +7,13 @@ import type {
   TemplateHelperPreview,
   TemplateInsertionOptions,
 } from '../lib/formModel';
-import type { PaletteDragItem, SavedCustomTemplate } from '../types';
+import type {
+  PaletteDragItem,
+  SavedCustomTemplate,
+  SavedTemplateImportConflictStrategy,
+  SavedTemplateImportOptions,
+  SavedTemplateImportResult,
+} from '../types';
 
 type BuildTab = 'fields' | 'patterns';
 
@@ -32,7 +38,8 @@ interface BuildToolboxProps {
   onExportCustomTemplates: () => void;
   onImportCustomTemplates: (
     templates: SavedCustomTemplate[],
-  ) => number | { importedCount: number; renamedCount?: number };
+    options?: SavedTemplateImportOptions,
+  ) => SavedTemplateImportResult;
   onRemoveCustomTemplate: (templateId: string) => void;
   onRenameCustomTemplate: (templateId: string, label: string) => void;
   onSaveCustomTemplate: (label: string) => void;
@@ -108,6 +115,10 @@ export function BuildToolbox({
   const [activeTab, setActiveTab] = useState<BuildTab>('fields');
   const [customTemplateName, setCustomTemplateName] = useState('');
   const [includeTemplateHelpers, setIncludeTemplateHelpers] = useState(true);
+  const [pendingTemplateImport, setPendingTemplateImport] = useState<{
+    conflictLabels: string[];
+    templates: SavedCustomTemplate[];
+  } | null>(null);
   const [renamingTemplateId, setRenamingTemplateId] = useState('');
   const [renamingTemplateLabel, setRenamingTemplateLabel] = useState('');
   const [templateTransferMessage, setTemplateTransferMessage] = useState('');
@@ -171,28 +182,65 @@ export function BuildToolbox({
     onPaletteDragStart({ kind: 'customTemplate', templateId });
   }
 
+  function savedTemplateImportMessage(result: SavedTemplateImportResult) {
+    const messages = [
+      result.importedCount === 0
+        ? 'No saved templates imported.'
+        : result.importedCount === 1
+          ? 'Imported 1 saved template.'
+          : `Imported ${result.importedCount} saved templates.`,
+      result.renamedCount
+        ? `${result.renamedCount} duplicate ${result.renamedCount === 1 ? 'name was' : 'names were'} renamed.`
+        : '',
+      result.skippedCount
+        ? `${result.skippedCount} duplicate ${result.skippedCount === 1 ? 'name was' : 'names were'} skipped.`
+        : '',
+      result.replacedCount
+        ? `${result.replacedCount} existing ${result.replacedCount === 1 ? 'template was' : 'templates were'} replaced.`
+        : '',
+    ].filter(Boolean);
+    return messages.join(' ');
+  }
+
+  function applyCustomTemplateImport(
+    templates: SavedCustomTemplate[],
+    conflictStrategy: SavedTemplateImportConflictStrategy,
+  ) {
+    const result = onImportCustomTemplates(templates, { conflictStrategy });
+    setTemplateTransferMessage(savedTemplateImportMessage(result));
+    setPendingTemplateImport(null);
+  }
+
+  function importedTemplateConflictLabels(templates: SavedCustomTemplate[]) {
+    const existingLabels = new Set(customTemplates.map(template => template.label.toLowerCase()));
+    return Array.from(new Set(
+      templates
+        .map(template => template.label?.trim())
+        .filter((label): label is string => Boolean(label && existingLabels.has(label.toLowerCase()))),
+    ));
+  }
+
   async function handleCustomTemplateImport(file?: File) {
     if (!file) return;
 
     try {
       const parsed = JSON.parse(await file.text());
-      const importResult = onImportCustomTemplates(
-        Array.isArray(parsed) ? parsed : parsed.templates,
-      );
-      const importedCount =
-        typeof importResult === 'number' ? importResult : importResult.importedCount;
-      const renamedCount =
-        typeof importResult === 'number' ? 0 : importResult.renamedCount || 0;
-      setTemplateTransferMessage(
-        [
-          importedCount === 1
-            ? 'Imported 1 saved template.'
-            : `Imported ${importedCount} saved templates.`,
-          renamedCount
-            ? `${renamedCount} duplicate ${renamedCount === 1 ? 'name was' : 'names were'} renamed.`
-            : '',
-        ].filter(Boolean).join(' '),
-      );
+      const parsedTemplates =
+        Array.isArray(parsed)
+          ? parsed
+          : parsed && typeof parsed === 'object' && 'templates' in parsed
+            ? (parsed as { templates?: unknown }).templates
+            : [];
+      const templates = (Array.isArray(parsedTemplates) ? parsedTemplates : []) as SavedCustomTemplate[];
+      const conflictLabels = importedTemplateConflictLabels(templates || []);
+      if (conflictLabels.length > 0) {
+        setPendingTemplateImport({ conflictLabels, templates });
+        setTemplateTransferMessage(
+          `${conflictLabels.length} duplicate saved-template ${conflictLabels.length === 1 ? 'name needs' : 'names need'} review before import.`,
+        );
+        return;
+      }
+      applyCustomTemplateImport(templates || [], 'rename');
     } catch (error) {
       setTemplateTransferMessage(error instanceof Error ? error.message : String(error));
     } finally {
@@ -494,6 +542,61 @@ export function BuildToolbox({
               >
                 Import saved templates
               </button>
+            </div>
+          )}
+
+          {pendingTemplateImport && (
+            <div
+              aria-labelledby="saved-template-import-review-heading"
+              className="builder-template-import-review"
+              role="group"
+            >
+              <h4 id="saved-template-import-review-heading">Review import conflicts</h4>
+              <p>
+                {pendingTemplateImport.conflictLabels.length} duplicate saved-template{' '}
+                {pendingTemplateImport.conflictLabels.length === 1 ? 'name matches' : 'names match'} your library.
+              </p>
+              <ul>
+                {pendingTemplateImport.conflictLabels.slice(0, 4).map(label => (
+                  <li key={label}>{label}</li>
+                ))}
+              </ul>
+              <div className="builder-template-transfer-actions">
+                <button
+                  className="usa-button usa-button--secondary"
+                  disabled={disabled}
+                  type="button"
+                  onClick={() => applyCustomTemplateImport(pendingTemplateImport.templates, 'rename')}
+                >
+                  Rename duplicates
+                </button>
+                <button
+                  className="usa-button usa-button--outline"
+                  disabled={disabled}
+                  type="button"
+                  onClick={() => applyCustomTemplateImport(pendingTemplateImport.templates, 'skip')}
+                >
+                  Skip duplicates
+                </button>
+                <button
+                  className="usa-button usa-button--outline"
+                  disabled={disabled}
+                  type="button"
+                  onClick={() => applyCustomTemplateImport(pendingTemplateImport.templates, 'replace')}
+                >
+                  Replace existing
+                </button>
+                <button
+                  className="usa-button usa-button--unstyled"
+                  type="button"
+                  onClick={() => {
+                    setPendingTemplateImport(null);
+                    setTemplateTransferMessage('Saved-template import canceled.');
+                  }}
+                >
+                  Cancel import
+                </button>
+              </div>
             </div>
           )}
 
