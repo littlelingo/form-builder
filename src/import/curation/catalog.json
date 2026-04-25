@@ -1163,6 +1163,442 @@
           }
         }
       ]
+    },
+    {
+      "id": "va-form-21-8940-tdiu-2020-static",
+      "title": "VA Form 21-8940 TDIU workflow",
+      "description": "Curates the static-text extraction fields from VA Form 21-8940 (Veteran's Application for Increased Compensation Based on Unemployability) into a builder-native TDIU workflow.",
+      "formFingerprint": "VA-FORM-21-8940-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?form[-_\\s]?21[-_\\s]?8940|tdiu|application for increased compensation based on unemployability|too disabled to work)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:whatServiceConnectedDisabilityPrevents",
+          "static:dateYouLastWorkedFullTime",
+          "static:dateYouBecameTooDisabledToWork",
+          "static:listAllYourEmploymentIncludingSelfEmploymentForTheLastFiveYearsYouWorked",
+          "static:haveYouTriedToObtainEmploymentSinceYouBecameTooDisabledToWork"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "veteranName",
+          "selector": { "namePattern": "static:nameOfVeteran$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Veteran name",
+            "hint": "Enter the Veteran's full legal name."
+          }
+        },
+        {
+          "id": "socialSecurityNumber",
+          "selector": { "namePattern": "static:veteranSSocialSecurityNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "maskedInput",
+            "label": "Social Security number",
+            "hint": "Enter the 9-digit Social Security number with no dashes.",
+            "maxLength": 11
+          }
+        },
+        {
+          "id": "vaFileNumber",
+          "selector": { "namePattern": "static:vAFileNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "VA file number",
+            "hint": "Enter the VA file number if different from the Social Security number."
+          }
+        },
+        {
+          "id": "dateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "date",
+            "label": "Date of birth"
+          }
+        },
+        {
+          "id": "mailingAddress",
+          "selector": { "namePattern": "static:mailingAddressOfVeteran$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": {
+            "type": "address",
+            "label": "Mailing address"
+          }
+        },
+        {
+          "id": "emailAddress",
+          "selector": { "namePattern": "static:emailAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": {
+            "type": "email",
+            "label": "Email address"
+          }
+        },
+        {
+          "id": "telephoneNumber",
+          "selector": { "namePattern": "static:telephoneNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": {
+            "type": "phone",
+            "label": "Telephone number"
+          }
+        },
+        {
+          "id": "preventingDisability",
+          "selector": { "namePattern": "static:whatServiceConnectedDisabilityPrevents" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability and medical care",
+          "pageId": "preventingDisability",
+          "pageTitle": "Service-connected disability",
+          "component": {
+            "type": "textArea",
+            "label": "Service-connected disability preventing employment",
+            "hint": "Describe the service-connected disabilities that prevent you from securing or following substantially gainful employment.",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "doctorCareYesNo",
+          "selector": { "namePattern": "static:haveYouBeenUnderADoctorSCare$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability and medical care",
+          "pageId": "medicalCare",
+          "pageTitle": "Medical care",
+          "component": {
+            "type": "yesNo",
+            "label": "Have you been under a doctor's care for this disability?"
+          }
+        },
+        {
+          "id": "treatmentDate",
+          "selector": { "namePattern": "static:dateOfTreatmentByDoctor$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability and medical care",
+          "pageId": "medicalCare",
+          "pageTitle": "Medical care",
+          "component": {
+            "type": "date",
+            "label": "Date of treatment by doctor"
+          }
+        },
+        {
+          "id": "doctorAddress",
+          "selector": { "namePattern": "static:nameAndAddressOfDoctor$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability and medical care",
+          "pageId": "medicalCare",
+          "pageTitle": "Medical care",
+          "component": {
+            "type": "address",
+            "label": "Name and address of doctor"
+          }
+        },
+        {
+          "id": "hospitalAddress",
+          "selector": { "namePattern": "static:nameAndAddressOfHospital$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability and medical care",
+          "pageId": "medicalCare",
+          "pageTitle": "Medical care",
+          "component": {
+            "type": "address",
+            "label": "Name and address of hospital"
+          }
+        },
+        {
+          "id": "hospitalizationDate",
+          "selector": { "namePattern": "static:dateOfHospitalization$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability and medical care",
+          "pageId": "medicalCare",
+          "pageTitle": "Medical care",
+          "component": {
+            "type": "date",
+            "label": "Date of hospitalization"
+          }
+        },
+        {
+          "id": "disabilityImpactDate",
+          "selector": { "namePattern": "static:dateYourDisabilityAffected" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "impactDates",
+          "pageTitle": "Disability impact dates",
+          "component": {
+            "type": "date",
+            "label": "Date disability affected full-time employment"
+          }
+        },
+        {
+          "id": "lastWorkedDate",
+          "selector": { "namePattern": "static:dateYouLastWorkedFullTime$" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "impactDates",
+          "pageTitle": "Disability impact dates",
+          "component": {
+            "type": "date",
+            "label": "Date last worked full-time"
+          }
+        },
+        {
+          "id": "tooDisabledToWorkDate",
+          "selector": { "namePattern": "static:dateYouBecameTooDisabledToWork$" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "impactDates",
+          "pageTitle": "Disability impact dates",
+          "component": {
+            "type": "date",
+            "label": "Date became too disabled to work"
+          }
+        },
+        {
+          "id": "highestAnnualEarnings",
+          "selector": { "namePattern": "static:whatIsTheMostYouEverEarnedInOneYear$" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "highestEarnings",
+          "pageTitle": "Highest earnings",
+          "component": {
+            "type": "textInput",
+            "label": "Most ever earned in one year",
+            "hint": "Enter the dollar amount."
+          }
+        },
+        {
+          "id": "highestEarningsYear",
+          "selector": { "namePattern": "static:whatYear$" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "highestEarnings",
+          "pageTitle": "Highest earnings",
+          "component": {
+            "type": "textInput",
+            "label": "Year of highest earnings"
+          }
+        },
+        {
+          "id": "highestEarningsOccupation",
+          "selector": { "namePattern": "static:occupationDuringThatYear$" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "highestEarnings",
+          "pageTitle": "Highest earnings",
+          "component": {
+            "type": "textInput",
+            "label": "Occupation during that year"
+          }
+        },
+        {
+          "id": "employmentLastFiveYears",
+          "selector": { "namePattern": "static:listAllYourEmploymentIncludingSelfEmploymentForTheLastFiveYearsYouWorked" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "recentActivity",
+          "pageTitle": "Recent employment",
+          "component": {
+            "type": "textArea",
+            "label": "Employment for the last five years",
+            "hint": "List all employment, including self-employment, for the last five years you worked.",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "leftLastJobYesNo",
+          "selector": { "namePattern": "static:didYouLeaveYourLastJobSelfEmployment" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "recentActivity",
+          "pageTitle": "Recent employment",
+          "component": {
+            "type": "yesNo",
+            "label": "Did you leave your last job or self-employment because of your disability?"
+          }
+        },
+        {
+          "id": "disabilityIncomeYesNo",
+          "selector": { "namePattern": "static:doYouReceiveExpectToReceive" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "recentActivity",
+          "pageTitle": "Recent employment",
+          "component": {
+            "type": "yesNo",
+            "label": "Do you receive or expect disability or workers' compensation benefits?"
+          }
+        },
+        {
+          "id": "obtainEmploymentSinceYesNo",
+          "selector": { "namePattern": "static:haveYouTriedToObtainEmploymentSinceYouBecameTooDisabledToWork" },
+          "chapterId": "employmentHistory",
+          "chapterTitle": "Employment history",
+          "pageId": "recentActivity",
+          "pageTitle": "Recent employment",
+          "component": {
+            "type": "yesNo",
+            "label": "Have you tried to obtain employment since you became too disabled to work?"
+          }
+        },
+        {
+          "id": "highestEducation",
+          "selector": { "namePattern": "static:education$" },
+          "chapterId": "educationAndTraining",
+          "chapterTitle": "Education and training",
+          "pageId": "education",
+          "pageTitle": "Education and training",
+          "component": {
+            "label": "Highest level of education completed"
+          }
+        },
+        {
+          "id": "educationItem22c",
+          "selector": { "namePattern": "static:22c$" },
+          "chapterId": "educationAndTraining",
+          "chapterTitle": "Education and training",
+          "pageId": "education",
+          "pageTitle": "Education and training",
+          "component": {
+            "label": "Additional education detail",
+            "hint": "Enter any additional education detail required by item 22c."
+          }
+        },
+        {
+          "id": "priorEducationYesNo",
+          "selector": { "namePattern": "static:didYouHaveAnyOtherEducationAndTrainingBeforeYouWereTooDisabledToWork" },
+          "chapterId": "educationAndTraining",
+          "chapterTitle": "Education and training",
+          "pageId": "education",
+          "pageTitle": "Education and training",
+          "component": {
+            "type": "yesNo",
+            "label": "Other education or training before becoming too disabled to work?"
+          }
+        },
+        {
+          "id": "trainingDates",
+          "selector": { "namePattern": "static:datesOfTraining$" },
+          "chapterId": "educationAndTraining",
+          "chapterTitle": "Education and training",
+          "pageId": "education",
+          "pageTitle": "Education and training",
+          "component": {
+            "label": "Dates of training"
+          }
+        },
+        {
+          "id": "trainingType",
+          "selector": { "namePattern": "static:typeOfEducationOrTraining$" },
+          "chapterId": "educationAndTraining",
+          "chapterTitle": "Education and training",
+          "pageId": "education",
+          "pageTitle": "Education and training",
+          "component": {
+            "label": "Type of education or training"
+          }
+        },
+        {
+          "id": "trainingSinceYesNo",
+          "selector": { "namePattern": "static:haveYouHadAnyEducationAndTrainingSinceYouBecameTooDisabledToWork" },
+          "chapterId": "educationAndTraining",
+          "chapterTitle": "Education and training",
+          "pageId": "education",
+          "pageTitle": "Education and training",
+          "component": {
+            "type": "yesNo",
+            "label": "Education or training since becoming too disabled to work?"
+          }
+        },
+        {
+          "id": "remarks",
+          "selector": { "namePattern": "static:remarks$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "remarksAndSignature",
+          "pageTitle": "Remarks and signature",
+          "component": {
+            "type": "textArea",
+            "hint": "Add any remarks or additional information.",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "claimantSignature",
+          "selector": { "namePattern": "static:signatureOfClaimant$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "remarksAndSignature",
+          "pageTitle": "Remarks and signature",
+          "component": {
+            "label": "Signature of claimant",
+            "hint": "Type the claimant's full legal name."
+          }
+        },
+        {
+          "id": "dateSigned",
+          "selector": { "namePattern": "static:dateSigned$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "remarksAndSignature",
+          "pageTitle": "Remarks and signature",
+          "component": {
+            "type": "date",
+            "label": "Date signed"
+          }
+        },
+        {
+          "id": "witnessSignature",
+          "selector": { "namePattern": "static:signatureOfWitness$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "remarksAndSignature",
+          "pageTitle": "Remarks and signature",
+          "component": {
+            "label": "Signature of witness",
+            "hint": "Type the witness's full legal name if a witness is present."
+          }
+        },
+        {
+          "id": "witnessAddress",
+          "selector": { "namePattern": "static:addressOfWitness$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "remarksAndSignature",
+          "pageTitle": "Remarks and signature",
+          "component": {
+            "type": "address",
+            "label": "Address of witness"
+          }
+        }
+      ]
     }
   ]
 }
