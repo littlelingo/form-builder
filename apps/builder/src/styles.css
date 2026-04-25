@@ -2923,6 +2923,243 @@ textarea {
   color: #565c65;
 }
 
+.pdf-import-progress {
+  align-items: flex-start;
+  background: rgba(22, 46, 81, 0.42);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 5.5rem 1rem 1rem;
+  position: fixed;
+  z-index: 80;
+}
+
+.pdf-import-progress__panel {
+  background: #fff;
+  border: 2px solid #005ea8;
+  border-radius: 0.5rem;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.26);
+  color: var(--builder-ink);
+  display: grid;
+  gap: 0.85rem;
+  max-width: 840px;
+  padding: 1rem;
+  width: min(840px, 100%);
+}
+
+.pdf-import-progress--success .pdf-import-progress__panel {
+  border-color: var(--builder-success);
+}
+
+.pdf-import-progress--error .pdf-import-progress__panel {
+  border-color: var(--builder-danger);
+}
+
+.pdf-import-progress--blocked .pdf-import-progress__panel {
+  border-color: #946800;
+}
+
+.pdf-import-progress__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.pdf-import-progress__header h2 {
+  font-size: 1.35rem;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.pdf-import-progress__header p {
+  color: #565c65;
+  font-size: 0.94rem;
+  margin: 0.35rem 0 0;
+}
+
+.pdf-import-progress__dismiss {
+  background: #fff;
+  border: 1px solid rgba(22, 46, 81, 0.22);
+  border-radius: 0.35rem;
+  color: var(--builder-ink);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.7rem;
+}
+
+.pdf-import-progress__dismiss:hover {
+  background: rgba(22, 46, 81, 0.06);
+}
+
+.pdf-import-progress__meter {
+  background: #d9e8f6;
+  border-radius: 999px;
+  height: 0.65rem;
+  overflow: hidden;
+}
+
+.pdf-import-progress__meter span {
+  background: #005ea8;
+  display: block;
+  height: 100%;
+  transition: width 0.18s ease;
+}
+
+.pdf-import-progress--success .pdf-import-progress__meter span {
+  background: var(--builder-success);
+}
+
+.pdf-import-progress--error .pdf-import-progress__meter span {
+  background: var(--builder-danger);
+}
+
+.pdf-import-progress--blocked .pdf-import-progress__meter span {
+  background: #946800;
+}
+
+.pdf-import-progress__detail {
+  background: #f7fbff;
+  border-left: 0.35rem solid #005ea8;
+  color: var(--builder-ink);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+}
+
+.pdf-import-progress--success .pdf-import-progress__detail {
+  background: #f4fbf6;
+  border-left-color: var(--builder-success);
+}
+
+.pdf-import-progress--error .pdf-import-progress__detail {
+  background: #fff3f2;
+  border-left-color: var(--builder-danger);
+}
+
+.pdf-import-progress--blocked .pdf-import-progress__detail {
+  background: #fff8e8;
+  border-left-color: #946800;
+}
+
+.pdf-import-progress__steps {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pdf-import-progress__steps li {
+  align-items: center;
+  background: #f7f7f7;
+  border: 1px solid #d6d7d9;
+  border-radius: 0.35rem;
+  color: #565c65;
+  display: flex;
+  font-size: 0.74rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.45rem;
+}
+
+.pdf-import-progress__steps li span {
+  background: #d6d7d9;
+  border-radius: 999px;
+  flex: 0 0 0.55rem;
+  height: 0.55rem;
+}
+
+.pdf-import-progress__steps li.is-done {
+  background: #f4fbf6;
+  border-color: #a9d8b8;
+  color: #1a7340;
+}
+
+.pdf-import-progress__steps li.is-done span {
+  background: var(--builder-success);
+}
+
+.pdf-import-progress__steps li.is-active {
+  background: #f7fbff;
+  border-color: #005ea8;
+  color: #005ea8;
+}
+
+.pdf-import-progress__steps li.is-active span {
+  background: #005ea8;
+}
+
+.pdf-import-progress__steps li.is-error {
+  background: #fff3f2;
+  border-color: var(--builder-danger);
+  color: var(--builder-danger);
+}
+
+.pdf-import-progress__steps li.is-error span {
+  background: var(--builder-danger);
+}
+
+.pdf-import-progress__steps li.is-blocked {
+  background: #fff8e8;
+  border-color: #946800;
+  color: #6f4e00;
+}
+
+.pdf-import-progress__steps li.is-blocked span {
+  background: #946800;
+}
+
+.pdf-import-progress__stats {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin: 0;
+}
+
+.pdf-import-progress__stats div {
+  background: #f7f7f7;
+  border: 1px solid #d6d7d9;
+  border-radius: 0.35rem;
+  padding: 0.55rem;
+}
+
+.pdf-import-progress__stats dt {
+  color: #565c65;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pdf-import-progress__stats dd {
+  color: var(--builder-ink);
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin: 0.18rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .pdf-import-progress {
+    padding-top: 1rem;
+  }
+
+  .pdf-import-progress__header {
+    display: grid;
+  }
+
+  .pdf-import-progress__steps,
+  .pdf-import-progress__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .builder-example-row {
   display: flex;
   align-items: stretch;

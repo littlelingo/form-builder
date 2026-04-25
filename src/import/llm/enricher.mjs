@@ -5,6 +5,10 @@ const TOKEN_INPUT_CAP = 30_000;
 const TOKEN_OUTPUT_CAP = 8_000;
 const BATCH_FIELD_LIMIT = 15;
 
+function envValue(name) {
+  return typeof process !== 'undefined' ? process.env?.[name] : undefined;
+}
+
 function approximateTokens(text) {
   // Rough heuristic: 4 chars ~ 1 token.
   return Math.ceil((text || '').length / 4);
@@ -38,7 +42,7 @@ function buildPayload({ formId, title, ombNumber, fields }) {
 export async function enrichFields(rawFields, options = {}) {
   const enabled = options.enabled !== false;
   const providerName =
-    options.providerName || process.env.IMPORT_LLM_PROVIDER || 'ollama';
+    options.providerName || envValue('IMPORT_LLM_PROVIDER') || 'ollama';
   const useCache = options.useCache !== false;
   const formId = options.formId || 'imported-form';
   const title = options.title || formId;

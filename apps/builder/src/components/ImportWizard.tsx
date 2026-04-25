@@ -30,11 +30,12 @@ function flatten(components: AuthoringComponent[] = []): AuthoringComponent[] {
 
 function gatherLowBand(form: AuthoringForm): WizardStep[] {
   const steps: WizardStep[] = [];
+  const importOrigins = new Set(['pdf-field', 'pdf-static-region']);
   for (const chapter of form.chapters) {
     for (const page of chapter.pages) {
       for (const component of flatten(page.components)) {
         if (!component.provenance || component.provenance.reviewed) continue;
-        if (component.provenance.origin !== 'pdf-field') continue;
+        if (!importOrigins.has(component.provenance.origin)) continue;
         const band = confidenceBand(component.provenance.confidence);
         if (band !== 'low') continue;
         steps.push({

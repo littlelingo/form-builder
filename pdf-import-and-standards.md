@@ -40,6 +40,25 @@ Implications:
 - Both example forms retro-stamped with `source` + `provenance` blocks during M1 migration so they look schema-identical to importer output.
 - Gold-standard regression test asserts importer output is **equal-or-better** than the seeded example: structural equivalence (chapter count, page count, conditional rules present, key field IDs present, listLoop chapters detected) is the floor; standards-audit warning count must be **≤** the seeded form's warning count; per-field hint coverage must be **≥**. Importer regressions fail the test; importer improvements pass and update the snapshot under explicit author confirmation.
 
+## Curated Import Contract
+
+Every PDF import/conversion should aim for a **builder-native curated draft**, not a literal PDF replica and not a raw field dump. The importer may start with deterministic extraction, static text inference, corpus matches, or LLM enrichment, but the user-facing result should be organized the way a builder-authored form would be organized.
+
+For every imported PDF, the expected end state is:
+
+- Semantic chapters and pages that match the applicant workflow, not just PDF page order.
+- Stable human-readable component IDs.
+- Clean labels, hints, response options, required flags, validations, and conditions where the PDF provides enough evidence.
+- Split PDF widgets merged into one semantic builder component when appropriate, such as SSN, date, address, and phone fragments.
+- Low-confidence provenance preserved for every inferred component so the review panel can guide cleanup.
+- A reusable exemplar/recipe captured after review so the next similar PDF starts closer to the curated state.
+
+The 27-8832 example is the quality model for this contract. Its source PDF drove the conversion, but the saved result is `examples/27-8832-authoring.json`: a semantic builder form with chapters, conditional behavior, labels, hints, and generated VA formConfig support. Future imports, including VA9, should follow the same path:
+
+`PDF source -> raw extraction -> semantic draft -> builder review -> curated authoring JSON -> reusable corpus/recipe`
+
+The generic static/AcroForm importer remains the safety net. It should produce a reviewable draft even when a PDF has weak metadata, but curated examples and recipes are the mechanism that turns repeated form families into high-quality imports.
+
 PDF storage convention:
 
 - Real source PDFs live under `fixtures-real/` (gitignored by default; opt-in commit if license + size permit).

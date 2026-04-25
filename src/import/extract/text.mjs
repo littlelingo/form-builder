@@ -16,7 +16,16 @@ function bboxFromTextItem(item, viewport) {
   };
 }
 
-export async function extractText(pdfBytes) {
+function emitProgress(onProgress, event) {
+  if (typeof onProgress !== 'function') return;
+  try {
+    onProgress(event);
+  } catch {
+    // Progress callbacks should not affect import results.
+  }
+}
+
+export async function extractText(pdfBytes, options = {}) {
   const data = pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes);
 
   const loadingTask = getDocument({
@@ -29,6 +38,12 @@ export async function extractText(pdfBytes) {
 
   const pages = [];
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+    emitProgress(options.onProgress, {
+      stage: 'extract-text',
+      detail: `Reading page ${pageNum} of ${doc.numPages}`,
+      pageNumber: pageNum,
+      pageCount: doc.numPages,
+    });
     const page = await doc.getPage(pageNum);
     const content = await page.getTextContent();
     const viewport = page.getViewport({ scale: 1 });

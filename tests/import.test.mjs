@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { validateAuthoringForm } from '../src/index.mjs';
 import { auditFormAgainstDefaults } from '../src/standards/index.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
-import { buildSyntheticAcroFormPdf } from './fixtures/syntheticPdf.mjs';
+import { buildSyntheticAcroFormPdf, buildSyntheticStaticPdf } from './fixtures/syntheticPdf.mjs';
 
 async function runImport(pdfBytes, options = {}) {
   return importPdf(pdfBytes, {
@@ -28,6 +28,57 @@ test('importPdf produces a valid authoring form from a synthetic AcroForm PDF', 
   assert.equal(validation.valid, true, validation.errors.join('\n'));
   assert.equal(importReport.validation.valid, true);
   assert.ok(importReport.acroFormFieldCount >= 6, 'should detect AcroForm fields');
+});
+
+test('importPdf reports progress through each major import phase', async () => {
+  const pdfBytes = await buildSyntheticAcroFormPdf();
+  const events = [];
+  await runImport(pdfBytes, {
+    onProgress: event => events.push(event),
+  });
+
+  const stages = events.map(event => event.stage);
+  for (const stage of [
+    'fingerprint',
+    'extract-acroform',
+    'extract-text',
+    'pair-labels',
+    'corpus',
+    'enrichment',
+    'build-authoring',
+    'validate',
+    'complete',
+  ]) {
+    assert.ok(stages.includes(stage), `Expected progress stage "${stage}"`);
+  }
+
+  const complete = events.find(event => event.stage === 'complete');
+  assert.equal(complete.validation.valid, true);
+  assert.ok(complete.fieldCount >= 6);
+  assert.ok(complete.pageCount >= 1);
+});
+
+test('importPdf infers draft components from static PDFs without fillable fields', async () => {
+  const pdfBytes = await buildSyntheticStaticPdf();
+  const { form, importReport } = await runImport(pdfBytes, {
+    filename: 'static.pdf',
+    enrich: false,
+  });
+
+  assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
+  assert.ok(importReport.componentCount >= 2);
+  assert.equal(form.chapters.length, 1);
+
+  const components = form.chapters.flatMap(chapter =>
+    chapter.pages.flatMap(page => page.components),
+  );
+  assert.ok(components.length >= 2);
+  assert.equal(components[0].provenance.origin, 'pdf-static-region');
+  assert.equal(components[0].provenance.reviewed, false);
+  assert.equal(components[0].provenance.confidenceBand, 'low');
+  assert.ok(components.find(component => component.label === 'Name of veteran'));
+  assert.ok(components.find(component => component.label === 'Claim file number'));
 });
 
 test('every imported component has provenance with confidence in [0, 1] and pdf-field origin', async () => {

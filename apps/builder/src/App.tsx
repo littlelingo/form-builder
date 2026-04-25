@@ -142,6 +142,7 @@ function cloneJson<T>(value: T): T {
 }
 
 function formHasLowBand(form: AuthoringForm): boolean {
+  const importOrigins = new Set(['pdf-field', 'pdf-static-region']);
   for (const chapter of form.chapters) {
     for (const page of chapter.pages) {
       const stack = [...page.components];
@@ -151,7 +152,7 @@ function formHasLowBand(form: AuthoringForm): boolean {
         if (
           component.provenance &&
           component.provenance.reviewed === false &&
-          component.provenance.origin === 'pdf-field' &&
+          importOrigins.has(component.provenance.origin) &&
           confidenceBand(component.provenance.confidence) === 'low'
         ) {
           return true;
@@ -716,6 +717,9 @@ export default function App() {
 
   function handleImport(nextForm: AuthoringForm) {
     replaceForm(nextForm);
+    setWorkspacePanel('preview');
+    setCanvasMode('edit');
+    setToolboxPanel('outline');
     const lowBand = formHasLowBand(nextForm);
     if (lowBand) {
       setWizardOpen(true);

@@ -50,3 +50,33 @@ export async function buildSyntheticAcroFormPdf() {
 
   return doc.save();
 }
+
+export async function buildSyntheticStaticPdf() {
+  const doc = await PDFDocument.create();
+  const helvetica = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([612, 792]);
+
+  page.drawText('STATIC BENEFITS FORM', {
+    x: 50,
+    y: 730,
+    size: 14,
+    font: helvetica,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText('1. NAME OF VETERAN', {
+    x: 50,
+    y: 700,
+    size: 11,
+    font: helvetica,
+    color: rgb(0, 0, 0),
+  });
+  page.drawText('2. CLAIM FILE NUMBER', {
+    x: 50,
+    y: 670,
+    size: 11,
+    font: helvetica,
+    color: rgb(0, 0, 0),
+  });
+
+  return doc.save();
+}

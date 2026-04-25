@@ -114,7 +114,11 @@ export interface AuthoringLineage {
   schemaHash: string;
 }
 
-export type AuthoringProvenanceOrigin = 'pdf-field' | 'template' | 'hand-authored';
+export type AuthoringProvenanceOrigin =
+  | 'pdf-field'
+  | 'pdf-static-region'
+  | 'template'
+  | 'hand-authored';
 
 export interface AuthoringProvenanceBbox {
   page: number;

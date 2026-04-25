@@ -102,7 +102,7 @@ function buildComponent(field, takenIds, corpus = []) {
     type: componentType,
     label,
     provenance: {
-      origin: 'pdf-field',
+      origin: field.provenanceOrigin || 'pdf-field',
       pdfFieldName: field.name || null,
       pdfPage: field.bbox?.page ?? null,
       bbox: field.bbox || null,

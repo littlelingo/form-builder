@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after PDF import + standards V1 + UX restructure
+Last updated: 2026-04-25 EDT after PDF import status UI, static PDF fallback, and curated-import direction
 
 ## Current Workspace
 
@@ -15,13 +15,52 @@ as the source of truth and generates VA `formConfig` as an output artifact.
 
 ## Snapshot
 
-- 98 tests total: 96 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
+- 100 tests total: 98 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
 - `npm run builder:build` green.
 - `npm run compile:example` and `npm run compile:example:27-8832` produce valid output.
 - Pilot smoke confirmed: real `VBA-27-8832-ARE.pdf` imports end-to-end via local Ollama (`llama3.1:8b`, ~18 min on CPU). Output schema valid, type mix improves over deterministic-only.
+- Browser smoke confirmed: `/Users/clint/Downloads/va9_2020.pdf` imports into builder state with 17 inferred static-text components, Outline populated, Canvas loaded, and import review wizard open.
 - Two design plans live in repo root:
   - `pdf-import-and-standards.md` — V1 fully implemented (M1–M8).
   - `form-route-to-va-gov.md` — drafted, not yet executed.
+
+## Current PDF Import Direction
+
+The user clarified that every PDF import/conversion should try to produce a **builder-native curated draft** directly in builder state, not a raw field dump and not a PDF replica. Examples are useful as gold-standard fixtures, recipes, demos, and corpus seeds, but normal product flow should be:
+
+`Select PDF -> import/convert -> load curated draft into builder state -> review/edit -> save/export authoring JSON`
+
+The importer should treat raw extraction as an internal stage only. The default import pipeline should always attempt:
+
+- form family/title/fingerprint detection,
+- semantic grouping into chapters/pages,
+- stable human-readable IDs,
+- clean labels, hints, options, required flags, validations, and conditions,
+- merging fragmented PDF widgets/static regions into semantic builder components,
+- confidence/provenance for review,
+- recipe/corpus use when known, with generic curation fallback when unknown.
+
+The 27-8832 example is the quality model: the source PDF drove the conversion, but the saved result is a curated builder-native authoring form. VA9 should be the first regression target for making that curated stage native to all imports.
+
+Recent implementation already completed:
+
+- Fixed browser PDF.js worker setup via `apps/builder/src/lib/pdfjsWorker.ts`.
+- Added prominent PDF import progress/status UI in `HeaderStrip.tsx` and `styles.css`.
+- Added progress events through `src/import/pipeline.mjs` and page-level text extraction.
+- Added static text fallback in `src/import/extract/staticText.mjs`.
+- Added `pdf-static-region` provenance support in schema and builder types.
+- Updated successful import behavior to switch to Canvas/Edit/Outline and open review for low-confidence imported components.
+- VA9 direct import now validates and produces 17 low-confidence draft components from static text. This is a safety-net draft, not yet the complete curated end state.
+
+Verified after these changes:
+
+```bash
+npm test -- tests/import.test.mjs
+npm run builder:build
+node --input-type=module -e "import { readFile } from 'node:fs/promises'; import { importPdf } from './src/import/pipeline.mjs'; const bytes = await readFile('/Users/clint/Downloads/va9_2020.pdf'); const result = await importPdf(bytes, { filename: 'va9_2020.pdf', enrich: false }); console.log(result.importReport);"
+```
+
+Browser smoke used `npm run builder:dev` and Playwright to import `/Users/clint/Downloads/va9_2020.pdf`; result: 17 fields in summary, Outline selected, Canvas populated, Review 17 panel, wizard Step 1 of 17.
 
 ## V1 Milestones — Done
 
@@ -79,10 +118,13 @@ ANTHROPIC_API_KEY=sk-ant-... IMPORT_RUN_CLOUD_TESTS=1 npm test
 
 ## Active Plans
 
-### `pdf-import-and-standards.md` (V1 complete)
+### `pdf-import-and-standards.md` (V1 complete, curated-import contract added)
 
 PDF AcroForm → authoring JSON pipeline shipped. V1.5/V2 backlog still open:
 
+- Native curation stage for every PDF import: raw extraction should flow through semantic grouping/normalization before the form is loaded into builder state.
+- VA9 regression target: use `/Users/clint/Downloads/va9_2020.pdf` to drive the curated-import stage. Current static fallback finds 17 draft components; complete solution should produce a curated appeal workflow.
+- Recipe layer: known form families (VA9, 27-8832, future forms) should improve generic imports without requiring every converted form to live in `examples/`.
 - Radio-widget dedup in `src/import/extract/pair.mjs` (BranchOfService currently emits one component per option).
 - Prompt update to strip PDF parenthetical artifacts ("(SSN)", "(MM-DD-YYYY)").
 - Real `vetsWebsiteScrape.json` scraper for the standards layer.
@@ -101,18 +143,23 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 
 ## Recommended Next Sequence
 
-1. **Execute `form-route-to-va-gov.md`** — closes the deployable-output gap. Last V1 piece.
-2. **Radio-widget dedup + prompt cleanup in importer** — smallest pilot quality win for next form imports.
-3. **Backend / persistence (research-plan Artifact 4)** — drafts, versions, audit logs, baselines beyond localStorage. Larger scope.
+1. **Implement native PDF curation stage** — add a post-extraction semantic layer that always attempts to return a builder-native curated draft in memory before loading state.
+2. **Use VA9 as first curation regression target** — define the target appeal workflow shape from `/Users/clint/Downloads/va9_2020.pdf`, then add structural import-quality assertions that compare the actual imported form to that target.
+3. **Add recipe/corpus integration for curated forms** — examples are fixtures/seeds, not the product storage path. Reviewed imports should be exportable from state, and selected curated forms can become recipes/goldens.
+4. **Then return to importer quality backlog** — radio-widget dedup, prompt cleanup, address/date/SSN fragment merging, and better generic grouping.
+5. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.
 
 ## Suggested First Files To Read Next Session
 
 - `pdf-import-and-standards.md`
 - `form-route-to-va-gov.md`
+- `src/import/extract/staticText.mjs`
 - `src/import/pipeline.mjs`
 - `src/import/build.mjs`
+- `src/import/confidence.mjs`
 - `src/standards/index.mjs`
 - `apps/builder/src/components/HeaderStrip.tsx`
+- `apps/builder/src/components/ImportWizard.tsx`
 - `apps/builder/src/App.tsx`
 - `tests/import.test.mjs`, `tests/import-pilot.test.mjs`
 - `docs/import-llm-providers.md`
@@ -127,3 +174,4 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 - Standards layer is data-driven (`src/standards/sources/builtIn.json`). Multi-source plumbing is in place; only `builtIn` is loaded in V1.
 - Browser/Node split: `node:fs`-using modules go through `with { type: 'json' }` static imports or guarded behind `apps/proxy/`. Anthropic SDK is dynamically imported with `/* @vite-ignore */` so it stays Node-only.
 - Before handing off, run `npm test`, `npm run builder:build`, `npm run compile:example`, `npm run compile:example:27-8832`.
+- Do not treat `examples/` as the product storage destination for every converted form. Normal imports should load into builder state and be saved/exported by the user; examples are for goldens, recipes, demos, and corpus seeding.

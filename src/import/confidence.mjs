@@ -7,6 +7,9 @@ function clamp01(value) {
 
 export function computeAcroformSignal(field) {
   if (!field) return 0;
+  if (field.staticSource === 'text-layout' || field.provenanceOrigin === 'pdf-static-region') {
+    return field.bbox ? 0.35 : 0.2;
+  }
   const hasName = !!field.name;
   const hasType = !!field.type && field.type !== 'unknown';
   const hasBbox = !!field.bbox;
