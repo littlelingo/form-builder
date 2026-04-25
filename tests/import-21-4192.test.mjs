@@ -6,7 +6,10 @@ import { assessImportQuality, qualitySignals } from '../src/cli/import-corpus.mj
 import { validateAuthoringForm } from '../src/index.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
 
-const FORM_21_4192_FIXTURE = new URL('../../form-samples/va-form-21-4192-request-for-employment-info_2020.pdf', import.meta.url);
+const FORM_21_4192_FIXTURE = new URL(
+  '../../form-samples/va-form-21-4192-request-for-employment-info_2020.pdf',
+  import.meta.url,
+);
 
 async function fixtureAvailable(url) {
   try {
@@ -23,7 +26,7 @@ function allComponents(form) {
   );
 }
 
-test('VA Form 21-4192 static employment import has builder-native label quality', async t => {
+test('VA Form 21-4192 static employer information request imports as a curated workflow', async t => {
   if (!(await fixtureAvailable(FORM_21_4192_FIXTURE))) {
     t.skip('VA Form 21-4192 sample fixture not present');
     return;
@@ -36,7 +39,6 @@ test('VA Form 21-4192 static employment import has builder-native label quality'
   });
   const validation = validateAuthoringForm(form);
   const components = allComponents(form);
-  const byLabel = new Map(components.map(component => [component.label, component]));
   const labels = components.map(component => component.label);
   const signals = qualitySignals(form, importReport);
   const quality = assessImportQuality({
@@ -48,21 +50,52 @@ test('VA Form 21-4192 static employment import has builder-native label quality'
   });
 
   assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.componentCount, 30);
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(
+    importReport.curation.recipe.recipeId,
+    'va-form-21-4192-employer-information-2020-static',
+  );
+  assert.equal(importReport.curation.recipe.matchedFieldCount, 30);
+  assert.equal(importReport.curation.curatedFieldCount, 30);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
-  assert.equal(quality.level, 'builder-native');
+  assert.equal(quality.level, 'curated');
   assert.deepEqual(signals.veryLongLabels, []);
   assert.deepEqual(signals.duplicateLabels, []);
 
-  assert.ok(labels.includes('Amount Earned During Last 12 Months Of Employment'));
-  assert.ok(labels.includes('Reason For Termination Of Employment'));
-  assert.ok(labels.includes('Gross Amount Of Last Payment'));
-  assert.ok(labels.includes('Was A Lump Sum Payment Made?'));
-  assert.ok(labels.includes('Disability Prevents Military Duties?'));
-  assert.ok(labels.includes('Receiving Employment-Related Benefits?'));
-  assert.ok(labels.includes('Employer Or Supervisor Signature'));
-  assert.equal(byLabel.get('Reason For Termination Of Employment')?.type, 'textArea');
-  assert.equal(byLabel.get('Was A Lump Sum Payment Made?')?.type, 'yesNo');
-  assert.equal(labels.some(label => label.length > 90), false);
-  assert.equal(importReport.componentCount, 30);
+  assert.deepEqual(
+    form.chapters.map(chapter => chapter.title),
+    [
+      'Employer information',
+      'Veteran information',
+      'Employment record',
+      'Termination',
+      'Employment-related benefits',
+      'Certification',
+    ],
+  );
+
+  assert.ok(labels.includes('Amount earned during last 12 months of employment'));
+  assert.ok(labels.includes('Reason for termination of employment'));
+  assert.ok(labels.includes('Gross amount of last payment'));
+  assert.ok(labels.includes('Was a lump sum payment made?'));
+  assert.ok(labels.includes('Disability prevents military duties?'));
+  assert.ok(labels.includes('Receiving employment-related benefits?'));
+  assert.ok(labels.includes('Employer or supervisor signature'));
+
+  const byId = id => components.find(component => component.id === id);
+  assert.equal(byId('reasonForTermination')?.type, 'textArea');
+  assert.equal(byId('lumpSumPaymentMade')?.type, 'yesNo');
+  assert.equal(byId('disabilityPreventsMilitaryDuties')?.type, 'yesNo');
+  assert.equal(byId('receivingEmploymentBenefits')?.type, 'yesNo');
+  assert.equal(byId('socialSecurityNumber')?.type, 'maskedInput');
+  assert.equal(byId('employerNameAndAddress')?.type, 'textArea');
+  assert.equal(byId('employerMailingAddress')?.type, 'address');
+  assert.equal(byId('beginningDate')?.type, 'date');
+
+  assert.equal(
+    components.every(component => component.provenance.curation?.source === 'recipe'),
+    true,
+  );
 });

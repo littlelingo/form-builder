@@ -6,7 +6,10 @@ import { assessImportQuality, qualitySignals } from '../src/cli/import-corpus.mj
 import { validateAuthoringForm } from '../src/index.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
 
-const FORM_21_526_FIXTURE = new URL('../../form-samples/va-21-526-application-for-benefits_2020.pdf', import.meta.url);
+const FORM_21_526_FIXTURE = new URL(
+  '../../form-samples/va-21-526-application-for-benefits_2020.pdf',
+  import.meta.url,
+);
 
 async function fixtureAvailable(url) {
   try {
@@ -23,7 +26,7 @@ function allComponents(form) {
   );
 }
 
-test('older VA Form 21-526 static import has builder-native label quality', async t => {
+test('older VA Form 21-526 static disability application imports as a curated workflow', async t => {
   if (!(await fixtureAvailable(FORM_21_526_FIXTURE))) {
     t.skip('older VA Form 21-526 sample fixture not present');
     return;
@@ -47,18 +50,52 @@ test('older VA Form 21-526 static import has builder-native label quality', asyn
   });
 
   assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.componentCount, 57);
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(
+    importReport.curation.recipe.recipeId,
+    'va-form-21-526-disability-compensation-2020-static',
+  );
+  assert.equal(importReport.curation.recipe.matchedFieldCount, 57);
+  assert.equal(importReport.curation.curatedFieldCount, 57);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
-  assert.equal(quality.level, 'builder-native');
+  assert.equal(quality.level, 'curated');
   assert.deepEqual(signals.veryLongLabels, []);
   assert.deepEqual(signals.duplicateLabels, []);
 
-  assert.ok(labels.includes('Current Disability Or Symptoms'));
-  assert.ok(labels.includes('VA Or Military Treatment Facilities'));
-  assert.ok(labels.includes('Do Not Pay Me VA Compensation In Lieu Of Retired Pay'));
-  assert.ok(labels.includes('Do Not Pay Me VA Compensation In Lieu Of Training Pay'));
-  assert.ok(labels.includes('Received Separation Or Severance Pay?'));
-  assert.ok(labels.includes('No Financial Institution Account'));
-  assert.equal(labels.some(label => label.length > 90), false);
-  assert.equal(importReport.componentCount, 57);
+  assert.deepEqual(
+    form.chapters.map(chapter => chapter.title),
+    [
+      'Veteran information',
+      'Homelessness status',
+      'Disability',
+      'Military service',
+      'Direct deposit',
+      'Certification',
+    ],
+  );
+
+  assert.ok(labels.includes('Current disability or symptoms'));
+  assert.ok(labels.includes('VA or military treatment facilities'));
+  assert.ok(labels.includes('Do not pay VA compensation in lieu of retired pay'));
+  assert.ok(labels.includes('Do not pay VA compensation in lieu of training pay'));
+  assert.ok(labels.includes('Received separation or severance pay?'));
+  assert.ok(labels.includes('No financial institution account'));
+
+  const byId = id => components.find(component => component.id === id);
+  assert.equal(byId('socialSecurityNumber')?.type, 'maskedInput');
+  assert.equal(byId('currentDisabilityOrSymptoms')?.type, 'textArea');
+  assert.equal(byId('treatmentFacilities')?.type, 'textArea');
+  assert.equal(byId('currentlyHomeless')?.type, 'yesNo');
+  assert.equal(byId('everPow')?.type, 'yesNo');
+  assert.equal(byId('mailingAddress')?.type, 'address');
+  assert.equal(byId('telephoneNumber')?.type, 'phone');
+  assert.equal(byId('emailAddress')?.type, 'email');
+  assert.equal(byId('dateOfBirth')?.type, 'date');
+
+  assert.equal(
+    components.every(component => component.provenance.curation?.source === 'recipe'),
+    true,
+  );
 });

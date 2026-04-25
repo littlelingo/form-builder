@@ -2727,6 +2727,936 @@
           "component": { "label": "Spouse signature" }
         }
       ]
+    },
+    {
+      "id": "va-form-21-4192-employer-information-2020-static",
+      "title": "VA Form 21-4192 employer information request workflow",
+      "description": "Curates the static-text extraction fields from VA Form 21-4192 (Request for Employment Information in Connection with Claim for Disability Benefits) into a builder-native employment-information workflow.",
+      "formFingerprint": "VA-FORM-21-4192-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?form[-_\\s]?21[-_\\s]?4192|request for employment information|amount earned during|reason for termination|employer or supervisor)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:nameAndAddressOfEmployerOfVeteran",
+          "static:amountEarnedDuringLast12MonthsOfEmployment",
+          "static:reasonForTerminationOfEmployment",
+          "static:wasALumpSumPaymentMade",
+          "static:employerOrSupervisorSignature"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "employerNameAndAddress",
+          "selector": { "namePattern": "static:nameAndAddressOfEmployerOfVeteran$" },
+          "chapterId": "employerInformation",
+          "chapterTitle": "Employer information",
+          "pageId": "employerIdentification",
+          "pageTitle": "Employer identification",
+          "component": {
+            "type": "textArea",
+            "label": "Name and address of employer",
+            "maxLength": 1000
+          }
+        },
+        {
+          "id": "employerMailingAddress",
+          "selector": { "namePattern": "static:address$" },
+          "chapterId": "employerInformation",
+          "chapterTitle": "Employer information",
+          "pageId": "employerIdentification",
+          "pageTitle": "Employer identification",
+          "component": {
+            "type": "address",
+            "label": "Employer mailing address"
+          }
+        },
+        {
+          "id": "veteranBeneficiaryName",
+          "selector": { "namePattern": "static:veteranBeneficarySName$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Veteran or beneficiary name" }
+        },
+        {
+          "id": "socialSecurityNumber",
+          "selector": { "namePattern": "static:socialSecurityNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "maskedInput",
+            "label": "Social Security number",
+            "maxLength": 11
+          }
+        },
+        {
+          "id": "vaFileNumber",
+          "selector": { "namePattern": "static:vAFileNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "VA file number" }
+        },
+        {
+          "id": "dateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "type": "date", "label": "Date of birth" }
+        },
+        {
+          "id": "beginningDate",
+          "selector": { "namePattern": "static:beginningDateOfEmployment$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "datesAndWork",
+          "pageTitle": "Dates and work",
+          "component": { "type": "date", "label": "Beginning date of employment" }
+        },
+        {
+          "id": "endingDate",
+          "selector": { "namePattern": "static:endingDateOfEmployment$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "datesAndWork",
+          "pageTitle": "Dates and work",
+          "component": { "type": "date", "label": "Ending date of employment" }
+        },
+        {
+          "id": "typeOfWork",
+          "selector": { "namePattern": "static:typeOfWorkPerformed$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "datesAndWork",
+          "pageTitle": "Dates and work",
+          "component": { "label": "Type of work performed" }
+        },
+        {
+          "id": "hoursWorked",
+          "selector": { "namePattern": "static:numberOfHoursWorked$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "datesAndWork",
+          "pageTitle": "Dates and work",
+          "component": { "label": "Number of hours worked" }
+        },
+        {
+          "id": "amountEarnedLast12Months",
+          "selector": { "namePattern": "static:amountEarnedDuringLast12MonthsOfEmployment$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "earnings",
+          "pageTitle": "Earnings",
+          "component": { "label": "Amount earned during last 12 months of employment" }
+        },
+        {
+          "id": "timeLost",
+          "selector": { "namePattern": "static:timeLostDuring12MonthsPrecedingLastDateOfEmployment$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "earnings",
+          "pageTitle": "Earnings",
+          "component": {
+            "type": "textInput",
+            "label": "Time lost during 12 months preceding last work date"
+          }
+        },
+        {
+          "id": "concessions",
+          "selector": { "namePattern": "static:concessionsMadeToEmployeeByReasonOfAgeOrDisability$" },
+          "chapterId": "employmentRecord",
+          "chapterTitle": "Employment record",
+          "pageId": "earnings",
+          "pageTitle": "Earnings",
+          "component": {
+            "type": "textArea",
+            "label": "Concessions made because of age or disability",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "reasonForTermination",
+          "selector": { "namePattern": "static:reasonForTerminationOfEmployment$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "terminationDetails",
+          "pageTitle": "Termination details",
+          "component": {
+            "type": "textArea",
+            "label": "Reason for termination of employment",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "dateLastWorked",
+          "selector": { "namePattern": "static:dateLastWorked$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "terminationDetails",
+          "pageTitle": "Termination details",
+          "component": { "type": "date", "label": "Date last worked" }
+        },
+        {
+          "id": "dateOfLastPayment",
+          "selector": { "namePattern": "static:dateOfLastPayment$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "terminationDetails",
+          "pageTitle": "Termination details",
+          "component": { "type": "date", "label": "Date of last payment" }
+        },
+        {
+          "id": "grossAmountOfLastPayment",
+          "selector": { "namePattern": "static:grossAmountOfLastPayment$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "terminationDetails",
+          "pageTitle": "Termination details",
+          "component": { "label": "Gross amount of last payment" }
+        },
+        {
+          "id": "lumpSumPaymentMade",
+          "selector": { "namePattern": "static:wasALumpSumPaymentMade$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "terminationDetails",
+          "pageTitle": "Termination details",
+          "component": { "type": "yesNo", "label": "Was a lump sum payment made?" }
+        },
+        {
+          "id": "datePaid",
+          "selector": { "namePattern": "static:datePaid$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "terminationDetails",
+          "pageTitle": "Termination details",
+          "component": { "type": "date", "label": "Date paid" }
+        },
+        {
+          "id": "currentDutyStatus",
+          "selector": { "namePattern": "static:whatIsTheVeteranSCurrentDutyStatus$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "dutyStatus",
+          "pageTitle": "Duty status",
+          "component": {
+            "type": "textInput",
+            "label": "Veteran's current duty status"
+          }
+        },
+        {
+          "id": "disabilityPreventsMilitaryDuties",
+          "selector": { "namePattern": "static:disabilityPreventsMilitaryDuties$" },
+          "chapterId": "termination",
+          "chapterTitle": "Termination",
+          "pageId": "dutyStatus",
+          "pageTitle": "Duty status",
+          "component": {
+            "type": "yesNo",
+            "label": "Disability prevents military duties?"
+          }
+        },
+        {
+          "id": "receivingEmploymentBenefits",
+          "selector": { "namePattern": "static:receivingEmploymentRelatedBenefits$" },
+          "chapterId": "employmentBenefits",
+          "chapterTitle": "Employment-related benefits",
+          "pageId": "benefits",
+          "pageTitle": "Benefits",
+          "component": {
+            "type": "yesNo",
+            "label": "Receiving employment-related benefits?"
+          }
+        },
+        {
+          "id": "typeOfBenefit",
+          "selector": { "namePattern": "static:typeOfBenefit$" },
+          "chapterId": "employmentBenefits",
+          "chapterTitle": "Employment-related benefits",
+          "pageId": "benefits",
+          "pageTitle": "Benefits",
+          "component": { "label": "Type of benefit" }
+        },
+        {
+          "id": "grossMonthlyBenefitAmount",
+          "selector": { "namePattern": "static:grossMonthlyAmountOfBenefit$" },
+          "chapterId": "employmentBenefits",
+          "chapterTitle": "Employment-related benefits",
+          "pageId": "benefits",
+          "pageTitle": "Benefits",
+          "component": { "label": "Gross monthly amount of benefit" }
+        },
+        {
+          "id": "dateBenefitBegan",
+          "selector": { "namePattern": "static:dateBenefitBegan$" },
+          "chapterId": "employmentBenefits",
+          "chapterTitle": "Employment-related benefits",
+          "pageId": "benefits",
+          "pageTitle": "Benefits",
+          "component": { "type": "date", "label": "Date benefit began" }
+        },
+        {
+          "id": "dateFirstPaymentIssued",
+          "selector": { "namePattern": "static:dateFirstPaymentIssued$" },
+          "chapterId": "employmentBenefits",
+          "chapterTitle": "Employment-related benefits",
+          "pageId": "benefits",
+          "pageTitle": "Benefits",
+          "component": { "type": "date", "label": "Date first payment issued" }
+        },
+        {
+          "id": "dateBenefitWillStop",
+          "selector": { "namePattern": "static:dateBenefitWillStop$" },
+          "chapterId": "employmentBenefits",
+          "chapterTitle": "Employment-related benefits",
+          "pageId": "benefits",
+          "pageTitle": "Benefits",
+          "component": { "type": "date", "label": "Date benefit will stop" }
+        },
+        {
+          "id": "remarks",
+          "selector": { "namePattern": "static:remarks$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": {
+            "type": "textArea",
+            "hint": "Add any additional remarks.",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "employerSignature",
+          "selector": { "namePattern": "static:employerOrSupervisorSignature$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": { "label": "Employer or supervisor signature" }
+        },
+        {
+          "id": "dateSigned",
+          "selector": { "namePattern": "static:dateSigned$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": { "type": "date", "label": "Date signed" }
+        }
+      ]
+    },
+    {
+      "id": "va-form-21-526-disability-compensation-2020-static",
+      "title": "VA Form 21-526 disability compensation application workflow",
+      "description": "Curates the static-text extraction fields from VA Form 21-526 (Application for Disability Compensation and Related Compensation Benefits) into a builder-native disability-application workflow.",
+      "formFingerprint": "VA-FORM-21-526-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?form[-_\\s]?21[-_\\s]?526|application for disability compensation|currently homeless|service connected disability|prisoner of war|do not pay me va compensation)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:veteranServiceMemberName",
+          "static:currentDisabilityOrSymptoms",
+          "static:areYouCurrentlyHomeless",
+          "static:doNotPayMeVACompensationInLieuOfRetiredPay",
+          "static:noFinancialInstitutionAccount"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "veteranName",
+          "selector": { "namePattern": "static:veteranServiceMemberName$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Veteran or service member name" }
+        },
+        {
+          "id": "socialSecurityNumber",
+          "selector": { "namePattern": "static:veteranSSocialSecurityNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "maskedInput",
+            "label": "Social Security number",
+            "maxLength": 11
+          }
+        },
+        {
+          "id": "previouslyFiledClaim",
+          "selector": { "namePattern": "static:haveYouEverFiledAClaimWithVA$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "yesNo",
+            "label": "Have you ever filed a claim with VA?"
+          }
+        },
+        {
+          "id": "vaFileNumber",
+          "selector": { "namePattern": "static:vAFileNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "VA file number" }
+        },
+        {
+          "id": "dateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "type": "date", "label": "Date of birth" }
+        },
+        {
+          "id": "serviceNumber",
+          "selector": { "namePattern": "static:veteranSServiceNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Veteran service number" }
+        },
+        {
+          "id": "bddClaimDate",
+          "selector": { "namePattern": "static:bddClaimsOnlyProvideTheDateOrAnticipatedDateOf$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "date",
+            "label": "BDD-only anticipated separation date"
+          }
+        },
+        {
+          "id": "telephoneNumber",
+          "selector": { "namePattern": "static:telephoneNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "phone", "label": "Telephone number" }
+        },
+        {
+          "id": "mailingAddress",
+          "selector": { "namePattern": "static:currentMailingAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "address", "label": "Current mailing address" }
+        },
+        {
+          "id": "emailAddress",
+          "selector": { "namePattern": "static:emailAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "email", "label": "Email address" }
+        },
+        {
+          "id": "addressChangeType",
+          "selector": { "namePattern": "static:typeOfAddressChange$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "addressChange",
+          "pageTitle": "Address change",
+          "component": {
+            "type": "textInput",
+            "label": "Type of address change"
+          }
+        },
+        {
+          "id": "newAddress",
+          "selector": { "namePattern": "static:newAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "addressChange",
+          "pageTitle": "Address change",
+          "component": { "type": "address", "label": "New address" }
+        },
+        {
+          "id": "effectiveDateOfNewAddress",
+          "selector": { "namePattern": "static:effectiveDateOfNewAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "addressChange",
+          "pageTitle": "Address change",
+          "component": { "type": "date", "label": "Effective date of new address" }
+        },
+        {
+          "id": "currentlyHomeless",
+          "selector": { "namePattern": "static:areYouCurrentlyHomeless$" },
+          "chapterId": "homelessness",
+          "chapterTitle": "Homelessness status",
+          "pageId": "homelessness",
+          "pageTitle": "Homelessness",
+          "component": {
+            "type": "yesNo",
+            "label": "Are you currently homeless?"
+          }
+        },
+        {
+          "id": "livingSituation",
+          "selector": { "namePattern": "static:checkTheBoxThatAppliesToYourLivingSituation$" },
+          "chapterId": "homelessness",
+          "chapterTitle": "Homelessness status",
+          "pageId": "homelessness",
+          "pageTitle": "Homelessness",
+          "component": { "label": "Living situation" }
+        },
+        {
+          "id": "atRiskOfHomelessness",
+          "selector": { "namePattern": "static:areYouCurrentlyAtRiskOfBecomingHomeless$" },
+          "chapterId": "homelessness",
+          "chapterTitle": "Homelessness status",
+          "pageId": "homelessness",
+          "pageTitle": "Homelessness",
+          "component": {
+            "type": "yesNo",
+            "label": "Are you currently at risk of becoming homeless?"
+          }
+        },
+        {
+          "id": "homelessPointOfContact",
+          "selector": { "namePattern": "static:pointOfContact$" },
+          "chapterId": "homelessness",
+          "chapterTitle": "Homelessness status",
+          "pageId": "homelessness",
+          "pageTitle": "Homelessness",
+          "component": { "label": "Point of contact" }
+        },
+        {
+          "id": "homelessPointOfContactPhone",
+          "selector": { "namePattern": "static:pointOfContactTelephoneNumber$" },
+          "chapterId": "homelessness",
+          "chapterTitle": "Homelessness status",
+          "pageId": "homelessness",
+          "pageTitle": "Homelessness",
+          "component": { "type": "phone", "label": "Point-of-contact phone" }
+        },
+        {
+          "id": "currentDisabilityOrSymptoms",
+          "selector": { "namePattern": "static:currentDisabilityOrSymptoms$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability",
+          "pageId": "currentDisabilities",
+          "pageTitle": "Current disabilities",
+          "component": {
+            "type": "textArea",
+            "label": "Current disability or symptoms",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "treatmentFacilities",
+          "selector": { "namePattern": "static:vAOrMilitaryTreatmentFacilities$" },
+          "chapterId": "disability",
+          "chapterTitle": "Disability",
+          "pageId": "currentDisabilities",
+          "pageTitle": "Current disabilities",
+          "component": {
+            "type": "textArea",
+            "label": "VA or military treatment facilities",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "servedUnderAnotherName",
+          "selector": { "namePattern": "static:didYouServeUnderAnotherName$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "yesNo",
+            "label": "Did you serve under another name?"
+          }
+        },
+        {
+          "id": "otherServiceName",
+          "selector": { "namePattern": "static:listTheOtherNameYouServedUnder$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "label": "Other service name" }
+        },
+        {
+          "id": "branchOfService",
+          "selector": { "namePattern": "static:branchOfService$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {}
+        },
+        {
+          "id": "componentOfService",
+          "selector": { "namePattern": "static:component$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "label": "Component of service" }
+        },
+        {
+          "id": "mostRecentActiveServiceDates",
+          "selector": { "namePattern": "static:mostRecentActiveServiceDates$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "label": "Most recent active service dates" }
+        },
+        {
+          "id": "placeOfSeparation",
+          "selector": { "namePattern": "static:placeOfLastOrAnticipatedSeparation$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "label": "Place of last or anticipated separation" }
+        },
+        {
+          "id": "didYouServeIn",
+          "selector": { "namePattern": "static:didYouServeIn$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "yesNo",
+            "label": "Did you serve in a combat zone?"
+          }
+        },
+        {
+          "id": "additionalEnlistmentDates",
+          "selector": { "namePattern": "static:additionalPeriodsEnlistmentDateMonthDayYearMonthDayYear$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "textInput",
+            "label": "Additional enlistment dates"
+          }
+        },
+        {
+          "id": "currentlyServing",
+          "selector": { "namePattern": "static:areYouCurrentlyServingOrHaveYouEverServedIn$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "yesNo",
+            "label": "Currently serving or previously served in Reserve or Guard?"
+          }
+        },
+        {
+          "id": "obligationTerm",
+          "selector": { "namePattern": "static:obligationTermOfService$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "label": "Obligation term of service" }
+        },
+        {
+          "id": "unitNameAndAddress",
+          "selector": { "namePattern": "static:currentOrLastAssignedNameAndAddressOfUnit$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "address",
+            "label": "Unit name and address"
+          }
+        },
+        {
+          "id": "unitPhone",
+          "selector": { "namePattern": "static:currentOrAssignedPhone$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "type": "phone", "label": "Unit phone number" }
+        },
+        {
+          "id": "currentlyActivatedFlag",
+          "selector": { "namePattern": "static:areYouCurrently$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "yesNo",
+            "label": "Are you currently activated?"
+          }
+        },
+        {
+          "id": "activatedOnFederalOrders",
+          "selector": { "namePattern": "static:areYouCurrentlyActivatedOnFederal$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "yesNo",
+            "label": "Currently activated on federal orders?"
+          }
+        },
+        {
+          "id": "dateOfActivation",
+          "selector": { "namePattern": "static:dateOfActivation$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "type": "date", "label": "Date of activation" }
+        },
+        {
+          "id": "anticipatedSeparationDate",
+          "selector": { "namePattern": "static:anticipatedSeparationDate$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "type": "date", "label": "Anticipated separation date" }
+        },
+        {
+          "id": "everPow",
+          "selector": { "namePattern": "static:haveYouEverBeenAPrisonerOfWar$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": {
+            "type": "yesNo",
+            "label": "Have you ever been a prisoner of war?"
+          }
+        },
+        {
+          "id": "datesOfConfinement",
+          "selector": { "namePattern": "static:datesOfConfinement$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceHistory",
+          "pageTitle": "Service history",
+          "component": { "label": "Dates of confinement" }
+        },
+        {
+          "id": "receivingMilitaryRetiredPay",
+          "selector": { "namePattern": "static:areYouReceivingMilitaryRetiredPay$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": {
+            "type": "yesNo",
+            "label": "Are you receiving military retired pay?"
+          }
+        },
+        {
+          "id": "futureMilitaryRetiredPay",
+          "selector": { "namePattern": "static:willYouReceiveMilitaryRetiredPayInTheFuture$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": {
+            "type": "yesNo",
+            "label": "Will you receive military retired pay in the future?"
+          }
+        },
+        {
+          "id": "monthlyAmount",
+          "selector": { "namePattern": "static:monthlyAmount$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": { "label": "Monthly retired pay amount" }
+        },
+        {
+          "id": "retiredStatus",
+          "selector": { "namePattern": "static:retiredStatus$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": { "label": "Retired status" }
+        },
+        {
+          "id": "doNotPayInLieuOfRetiredPay",
+          "selector": { "namePattern": "static:doNotPayMeVACompensationInLieuOfRetiredPay$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": {
+            "type": "yesNo",
+            "label": "Do not pay VA compensation in lieu of retired pay"
+          }
+        },
+        {
+          "id": "receivedSeparationOrSeverance",
+          "selector": { "namePattern": "static:receivedSeparationOrSeverancePay$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": {
+            "type": "yesNo",
+            "label": "Received separation or severance pay?"
+          }
+        },
+        {
+          "id": "datePaymentReceived",
+          "selector": { "namePattern": "static:datePaymentReceived$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": { "type": "date", "label": "Date payment received" }
+        },
+        {
+          "id": "amountReceived",
+          "selector": { "namePattern": "static:amountReceived$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": { "label": "Amount received" }
+        },
+        {
+          "id": "doNotPayInLieuOfTrainingPay",
+          "selector": { "namePattern": "static:doNotPayMeVACompensationInLieuOfTrainingPay$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "retirementAndPay",
+          "pageTitle": "Retirement and pay",
+          "component": {
+            "type": "yesNo",
+            "label": "Do not pay VA compensation in lieu of training pay"
+          }
+        },
+        {
+          "id": "noFinancialInstitutionAccount",
+          "selector": { "namePattern": "static:noFinancialInstitutionAccount$" },
+          "chapterId": "directDeposit",
+          "chapterTitle": "Direct deposit",
+          "pageId": "bankInformation",
+          "pageTitle": "Bank information",
+          "component": {
+            "type": "yesNo",
+            "label": "No financial institution account"
+          }
+        },
+        {
+          "id": "accountNumber",
+          "selector": { "namePattern": "static:accountNumber$" },
+          "chapterId": "directDeposit",
+          "chapterTitle": "Direct deposit",
+          "pageId": "bankInformation",
+          "pageTitle": "Bank information",
+          "component": { "label": "Account number" }
+        },
+        {
+          "id": "bankName",
+          "selector": { "namePattern": "static:nameOfFinancialInstitutionProvideTheNameOfTheBankWhereYou$" },
+          "chapterId": "directDeposit",
+          "chapterTitle": "Direct deposit",
+          "pageId": "bankInformation",
+          "pageTitle": "Bank information",
+          "component": { "label": "Name of financial institution" }
+        },
+        {
+          "id": "routingNumber",
+          "selector": { "namePattern": "static:routingOrTransitNumberTheFirstNineNumbersLocatedAtThe$" },
+          "chapterId": "directDeposit",
+          "chapterTitle": "Direct deposit",
+          "pageId": "bankInformation",
+          "pageTitle": "Bank information",
+          "component": {
+            "label": "Routing or transit number",
+            "hint": "Enter the 9-digit routing number from the bottom of your check."
+          }
+        },
+        {
+          "id": "veteranSignature",
+          "selector": { "namePattern": "static:veteranServiceMemberSignature$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": { "label": "Veteran or service member signature" }
+        },
+        {
+          "id": "dateSigned",
+          "selector": { "namePattern": "static:dateSigned$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": { "type": "date", "label": "Date signed" }
+        },
+        {
+          "id": "witnessNameAndAddress",
+          "selector": { "namePattern": "static:printedNameAndAddressOfWitness$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": {
+            "type": "address",
+            "label": "Printed name and address of witness"
+          }
+        },
+        {
+          "id": "alternateSignerSignature",
+          "selector": { "namePattern": "static:alternateSignerSignature$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": { "label": "Alternate signer signature" }
+        },
+        {
+          "id": "poaRepresentativeSignature",
+          "selector": { "namePattern": "static:poaAuthorizedRepresentativeSignature$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": { "label": "POA or authorized representative signature" }
+        }
+      ]
     }
   ]
 }
