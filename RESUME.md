@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after saved template import resolver tests
+Last updated: 2026-04-25 EDT after helper preset reusable tests
 
 ## Current Workspace
 
@@ -14,12 +14,14 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the saved template import resolver tests checkpoint. The latest
-passing slice extracts saved-template import normalization and conflict
-resolution into a shared helper and adds focused node tests for rename, skip,
-replace, duplicate labels inside one imported library, and the 25-template cap.
-The next recommended implementation slice is helper preset reusable tests,
-because helper-preview behavior is still covered mainly by browser smoke.
+Resume from the helper preset reusable tests checkpoint. The latest passing
+slice moves Contact and Identity helper-template screen creation plus helper
+preview calculation into a shared JS helper used by both `formModel.ts` and
+node tests. Focused tests now cover initial target IDs, collision-safe suffixes,
+computed IDs/targets, and suppression of already-existing helper preview
+entries. The next recommended implementation slice is saved-template import
+review polish, because the conflict panel can now choose rename/skip/replace
+but still shows only duplicate labels.
 
 Recent completed slices:
 
@@ -244,6 +246,17 @@ Recent completed slices:
       the same import file, and the 25-template library cap.
     - Browser smoke still covers the visible import-review flow.
 
+22. **Helper preset reusable tests**
+    - Contact and Identity helper-template screen creation now lives in
+      `apps/builder/src/lib/templateHelperPreview.js`.
+    - `formModel.ts` delegates Contact and Identity template screens plus
+      `previewTemplateAuthoringHelpers` to that shared helper.
+    - Focused node tests cover initial helper targets, collision-safe helper
+      IDs, computed IDs/targets, and omitted preview entries when generated
+      mappings/computed values already exist.
+    - The Identity helper now explicitly uses `vaFileNumber` as the generated
+      VA file number field ID instead of relying on generic acronym casing.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -256,6 +269,7 @@ Recent completed slices:
 - `apps/builder/src/lib/runnerFlow.js`
 - `apps/builder/src/lib/runnerValidation.js`
 - `apps/builder/src/lib/savedTemplateImport.js`
+- `apps/builder/src/lib/templateHelperPreview.js`
 - `apps/builder/src/components/BuildToolbox.tsx`
 - `apps/builder/src/components/ConditionEditor.tsx`
 - `apps/builder/src/components/InspectorPanel.tsx`
@@ -267,6 +281,7 @@ Recent completed slices:
 - `package-lock.json`
 - `tests/builder-smoke.mjs`
 - `tests/saved-template-import.test.mjs`
+- `tests/template-helper-preview.test.mjs`
 
 ## Verified Commands
 
@@ -280,7 +295,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the saved template import resolver tests slice:
+Latest verification after the helper preset reusable tests slice:
 
 ```bash
 npm run builder:smoke
@@ -356,6 +371,8 @@ Confirmed:
   rename duplicates, skip duplicates, and replace existing.
 - Unit tests now verify saved-template import resolver behavior for rename,
   skip, replace, same-file duplicate labels, and the 25-template cap.
+- Unit tests now verify helper preset preview targets, collision-safe suffixes,
+  computed preview IDs/targets, and duplicate-preview suppression.
 
 Known browser-console issue:
 
@@ -365,14 +382,14 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Helper preset reusable tests**
-   - If helper previews gain more templates, add narrow model tests for
-     `previewTemplateAuthoringHelpers` instead of relying only on browser
-     smoke coverage.
-
-2. **Saved template import review polish**
+1. **Saved template import review polish**
    - If import libraries get larger, show more conflict metadata in the review
      panel, such as imported kind, field count, and created/imported dates.
+
+2. **Helper preset expansion**
+   - If more templates gain helper presets, add them to
+     `templateHelperPreview.js` and extend the focused node tests before adding
+     browser-smoke assertions.
 
 ## Suggested First Files To Read Next Session
 
