@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after saved template import review choices
+Last updated: 2026-04-25 EDT after saved template import resolver tests
 
 ## Current Workspace
 
@@ -14,13 +14,12 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the saved template import review choices checkpoint. The latest
-passing slice adds an import-conflict review step for saved custom templates,
-letting authors rename duplicates, skip duplicates, or replace existing saved
-templates before writing to localStorage. The next recommended implementation
-slice is extracting the saved-template import conflict resolver into a small
-testable helper, because the browser smoke now covers the flow but the merge
-rules still live inside the React app handler.
+Resume from the saved template import resolver tests checkpoint. The latest
+passing slice extracts saved-template import normalization and conflict
+resolution into a shared helper and adds focused node tests for rename, skip,
+replace, duplicate labels inside one imported library, and the 25-template cap.
+The next recommended implementation slice is helper preset reusable tests,
+because helper-preview behavior is still covered mainly by browser smoke.
 
 Recent completed slices:
 
@@ -236,6 +235,15 @@ Recent completed slices:
     - Browser smoke verifies all three duplicate-import choices against an
       exported saved-template library.
 
+21. **Saved template import resolver tests**
+    - Saved-template normalization and import conflict resolution now live in
+      `apps/builder/src/lib/savedTemplateImport.js`.
+    - `App.tsx` delegates import merging to the shared resolver and keeps
+      localStorage writes in the app boundary.
+    - Focused node tests cover rename, skip, replace, duplicate labels inside
+      the same import file, and the 25-template library cap.
+    - Browser smoke still covers the visible import-review flow.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -247,6 +255,7 @@ Recent completed slices:
 - `apps/builder/src/lib/formModel.ts`
 - `apps/builder/src/lib/runnerFlow.js`
 - `apps/builder/src/lib/runnerValidation.js`
+- `apps/builder/src/lib/savedTemplateImport.js`
 - `apps/builder/src/components/BuildToolbox.tsx`
 - `apps/builder/src/components/ConditionEditor.tsx`
 - `apps/builder/src/components/InspectorPanel.tsx`
@@ -257,6 +266,7 @@ Recent completed slices:
 - `package.json`
 - `package-lock.json`
 - `tests/builder-smoke.mjs`
+- `tests/saved-template-import.test.mjs`
 
 ## Verified Commands
 
@@ -270,7 +280,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the saved template import review choices slice:
+Latest verification after the saved template import resolver tests slice:
 
 ```bash
 npm run builder:smoke
@@ -344,6 +354,8 @@ Confirmed:
   IDs and collision-safe suffixes for Contact and Identity helpers.
 - Automated smoke now verifies saved-template import conflict review choices:
   rename duplicates, skip duplicates, and replace existing.
+- Unit tests now verify saved-template import resolver behavior for rename,
+  skip, replace, same-file duplicate labels, and the 25-template cap.
 
 Known browser-console issue:
 
@@ -353,15 +365,14 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Saved template import resolver tests**
-   - Extract the saved-template import conflict resolution from `App.tsx` into
-     a small helper and add focused tests for rename, skip, replace, duplicate
-     labels inside the same import file, and the 25-template cap.
-
-2. **Helper preset reusable tests**
+1. **Helper preset reusable tests**
    - If helper previews gain more templates, add narrow model tests for
      `previewTemplateAuthoringHelpers` instead of relying only on browser
      smoke coverage.
+
+2. **Saved template import review polish**
+   - If import libraries get larger, show more conflict metadata in the review
+     panel, such as imported kind, field count, and created/imported dates.
 
 ## Suggested First Files To Read Next Session
 

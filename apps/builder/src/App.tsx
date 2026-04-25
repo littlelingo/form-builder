@@ -47,6 +47,10 @@ import {
   updatePage,
 } from './lib/formModel';
 import { emptyRuntimeState } from './lib/runnerRuntime';
+import {
+  normalizeCustomTemplates,
+  resolveSavedTemplateImport,
+} from './lib/savedTemplateImport';
 import type {
   LayoutWidth,
   ScreenTemplateId,
@@ -87,92 +91,11 @@ function countTemplateFields(components: AuthoringComponent[] = []): number {
   );
 }
 
-function savedTemplateFieldCount(template: Partial<SavedCustomTemplate>) {
-  if (typeof template.fieldCount === 'number' && Number.isFinite(template.fieldCount)) {
-    return Math.max(0, Math.floor(template.fieldCount));
-  }
-  if (template.kind === 'screen') return countTemplateFields(template.page?.components || []);
-  if (template.kind === 'section') return countTemplateFields(template.component?.children || []);
-  return 0;
-}
-
-function normalizeCustomTemplate(value: unknown): SavedCustomTemplate | null {
-  if (!value || typeof value !== 'object') return null;
-  const template = value as Partial<SavedCustomTemplate>;
-  if (
-    typeof template.id !== 'string' ||
-    typeof template.label !== 'string' ||
-    (template.kind !== 'screen' && template.kind !== 'section')
-  ) {
-    return null;
-  }
-
-  if (template.kind === 'screen') {
-    if (
-      !template.page ||
-      typeof template.page.id !== 'string' ||
-      typeof template.page.title !== 'string' ||
-      !Array.isArray(template.page.components)
-    ) {
-      return null;
-    }
-  }
-
-  if (template.kind === 'section') {
-    if (
-      !template.component ||
-      typeof template.component.id !== 'string' ||
-      typeof template.component.type !== 'string' ||
-      typeof template.component.label !== 'string'
-    ) {
-      return null;
-    }
-  }
-
-  return {
-    id: template.id,
-    kind: template.kind,
-    label: template.label,
-    description: typeof template.description === 'string' ? template.description : undefined,
-    createdAt: typeof template.createdAt === 'string' ? template.createdAt : new Date().toISOString(),
-    importedAt: typeof template.importedAt === 'string' ? template.importedAt : undefined,
-    fieldCount: savedTemplateFieldCount(template),
-    ...(template.kind === 'screen' ? { page: cloneJson(template.page) } : {}),
-    ...(template.kind === 'section' ? { component: cloneJson(template.component) } : {}),
-  };
-}
-
-function normalizeCustomTemplates(value: unknown) {
-  return Array.isArray(value)
-    ? value
-        .map(normalizeCustomTemplate)
-        .filter((template): template is SavedCustomTemplate => Boolean(template))
-    : [];
-}
-
-function uniqueImportedTemplateLabel(label: string, usedLabels: Set<string>) {
-  const baseLabel = label.trim() || 'Imported template';
-  const labelKey = baseLabel.toLowerCase();
-  if (!usedLabels.has(labelKey)) {
-    usedLabels.add(labelKey);
-    return baseLabel;
-  }
-
-  let index = 1;
-  let nextLabel = `${baseLabel} (imported)`;
-  while (usedLabels.has(nextLabel.toLowerCase())) {
-    index += 1;
-    nextLabel = `${baseLabel} (imported ${index})`;
-  }
-  usedLabels.add(nextLabel.toLowerCase());
-  return nextLabel;
-}
-
 function loadCustomTemplates(): SavedCustomTemplate[] {
   if (typeof window === 'undefined') return [];
   try {
     const parsed = JSON.parse(window.localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY) || '[]');
-    return normalizeCustomTemplates(parsed);
+    return normalizeCustomTemplates(parsed) as SavedCustomTemplate[];
   } catch {
     return [];
   }
@@ -497,62 +420,16 @@ export default function App() {
     templates: SavedCustomTemplate[],
     options: SavedTemplateImportOptions = {},
   ): SavedTemplateImportResult {
-    const conflictStrategy = options.conflictStrategy || 'rename';
-    const importedAt = new Date().toISOString();
-    const normalizedTemplates = normalizeCustomTemplates(templates);
-    const existingLabelKeys = new Set(customTemplates.map(template => template.label.toLowerCase()));
-    const replacementKeys = new Set<string>();
-    const usedLabels = new Set(existingLabelKeys);
-    let skippedCount = 0;
-    let replacedCount = 0;
-    let renamedCount = 0;
-    const importedTemplates = normalizedTemplates.flatMap((template, index) => {
-      const baseLabel = template.label.trim() || 'Imported template';
-      const labelKey = baseLabel.toLowerCase();
-      const conflictsWithExisting = existingLabelKeys.has(labelKey);
+    const { templates: next, result } = resolveSavedTemplateImport(customTemplates, templates, {
+      conflictStrategy: options.conflictStrategy,
+      idPrefix: `custom-imported-${Date.now()}`,
+      importedAt: new Date().toISOString(),
+    }) as { templates: SavedCustomTemplate[]; result: SavedTemplateImportResult };
+    if (result.importedCount === 0 && result.replacedCount === 0) return result;
 
-      if (conflictsWithExisting && conflictStrategy === 'skip') {
-        skippedCount += 1;
-        return [];
-      }
-
-      if (conflictsWithExisting && conflictStrategy === 'replace' && !replacementKeys.has(labelKey)) {
-        replacementKeys.add(labelKey);
-        usedLabels.delete(labelKey);
-        replacedCount += 1;
-      }
-
-      const label = uniqueImportedTemplateLabel(baseLabel, usedLabels);
-      if (label !== template.label) renamedCount += 1;
-      return [{
-        ...template,
-        id: `custom-imported-${Date.now()}-${index}`,
-        label,
-        createdAt: template.createdAt || new Date().toISOString(),
-        importedAt,
-      }];
-    });
-    if (importedTemplates.length === 0) {
-      return {
-        importedCount: 0,
-        renamedCount,
-        replacedCount,
-        skippedCount,
-      };
-    }
-
-    const retainedTemplates = customTemplates.filter(
-      template => !replacementKeys.has(template.label.toLowerCase()),
-    );
-    const next = [...importedTemplates, ...retainedTemplates].slice(0, 25);
     setCustomTemplates(next);
     saveCustomTemplates(next);
-    return {
-      importedCount: importedTemplates.length,
-      renamedCount,
-      replacedCount,
-      skippedCount,
-    };
+    return result;
   }
 
   function handleChapterChange(nextChapter: NonNullable<typeof selectedChapter>) {

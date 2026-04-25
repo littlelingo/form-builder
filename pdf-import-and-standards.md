@@ -16,10 +16,40 @@ This plan supersedes the prior draft. Differences from the prior version:
 - Sequencing reorganized as 8 vertical milestones, each independently shippable + testable.
 - Test fixtures generated synthetically via pdf-lib instead of shipping real PDFs.
 
+## Pilot Form + Minimum Quality Bar
+
+The two existing `examples/*.json` forms are the **floor**, not the ceiling. Importer output must match or exceed their quality on every form processed. Standards layer + LLM enricher + corpus exist to push beyond this baseline, not just match it.
+
+- `examples/27-8832-authoring.json` was previously produced by an LLM (Codex) converting `~/Downloads/VBA-27-8832-ARE.pdf` (a real VA AcroForm PDF). Floor for: chapter grouping, applicant-type conditional branching across chapters, multi-select checkbox groups, address blocks, no-prefill flow.
+- `examples/21-4140-authoring.json` floor for: list-loop chapters (employment), file upload with showIf gating, prefill mappings, computed values, contact summary.
+
+The importer's job is to reproduce these (or better) **from the source PDF alone**, inside the builder, without a human driving an external LLM session. The pilot bootstrap PDF is `VBA-27-8832-ARE.pdf` because we already have the floor-quality JSON to regression-test against.
+
+What "exceed the floor" means in practice:
+
+- Catch field types the original conversion missed or genericized (e.g., specific masked patterns, date subtypes).
+- Add hint text where original is bare (importer enricher should always attempt a hint).
+- Detect listLoop / repeated patterns the original may have flattened.
+- Apply standards-layer fixes the original predates (label length, required hint coverage, accessibility minimums).
+- Stamp provenance + confidence the original lacks entirely.
+
+Implications:
+
+- Both example JSONs are seeded into the corrections corpus as exemplars for structural patterns (chapter grouping, conditional rules, list-loop detection, prefill defaults) — not just for individual field labels.
+- LLM enricher prompt includes both example JSONs as few-shot exemplars so classification + grouping + conditional-logic output approximates the same shape.
+- Both example forms retro-stamped with `source` + `provenance` blocks during M1 migration so they look schema-identical to importer output.
+- Gold-standard regression test asserts importer output is **equal-or-better** than the seeded example: structural equivalence (chapter count, page count, conditional rules present, key field IDs present, listLoop chapters detected) is the floor; standards-audit warning count must be **≤** the seeded form's warning count; per-field hint coverage must be **≥**. Importer regressions fail the test; importer improvements pass and update the snapshot under explicit author confirmation.
+
+PDF storage convention:
+
+- Real source PDFs live under `fixtures-real/` (gitignored by default; opt-in commit if license + size permit).
+- `examples/<form-id>/source.pdf` is the canonical sidecar location once an example is regenerated through the importer.
+- Pilot PDF copy committed at `tests/fixtures/pilot/VBA-27-8832-ARE.pdf` only if redistribution is permitted; otherwise referenced by hash with `tests/fixtures/pilot/README.md` pointing to the public download URL.
+
 ## Locked Decisions (recap)
 
 - AcroForm PDFs only for V1.
-- Hybrid engine: deterministic first, LLM enricher fills semantic gaps. LLM optional, gated by `ANTHROPIC_API_KEY`.
+- Hybrid engine: deterministic first, LLM enricher fills semantic gaps. LLM optional. Provider-abstracted: local LLM (Ollama / OpenAI-compatible server) default, cloud LLM (Anthropic) opt-in. Government-data privacy posture favors local.
 - Coverage: any government PDF form.
 - Review UX: onboarding wizard at import open + inline confidence badge with accept/reject thereafter.
 - Learning loop: local corrections corpus (JSONL), nearest-neighbor exemplars, manual export/share.
@@ -37,12 +67,40 @@ This plan supersedes the prior draft. Differences from the prior version:
 | AcroForm extraction (`pdf-lib`) | Both | `pdf-lib` is isomorphic ESM, no worker. Same code path for CLI + browser. |
 | PDF page text + bbox (`pdfjs-dist`) | Both | Pin `pdfjs-dist@^4` legacy build for Node. Browser uses worker; Node skips worker via `disableWorker: true`. |
 | Confidence scoring, classify, corpus lookup | Both | Pure JS, isomorphic. |
-| LLM enricher (Claude API) | Node only (CLI) + dev proxy (browser) | Anthropic SDK requires API key. Browser path goes through a tiny local Express proxy at `apps/proxy/` started by `npm run builder:dev:proxy`. Without proxy or env var, importer still works with deterministic-only path. |
+| LLM enricher (any provider) | Node only (CLI) + dev proxy (browser) | Provider-abstracted (local Ollama default, OpenAI-compatible alt, Anthropic Claude opt-in). Browser path goes through `apps/proxy/` started by `npm run builder:dev:proxy`. Proxy forwards to whichever provider is configured. Without proxy or provider, importer still works deterministic-only. |
 | Sidecar PDF write | Node only | Browser exports zip via `JSZip` (already proposed in `form-route-to-va-gov.md`); CLI writes files. |
 
-### LLM optionality
+### LLM optionality + provider abstraction
 
-Importer succeeds with or without LLM. Without it: every component lands at `confidence ≤ 0.5` with `origin: pdf-field`, no semantic enrichment. With it: enrichment lifts confidence and adds hint/classification. Tests run in deterministic-only mode by default; LLM-mode tests gated on `ANTHROPIC_API_KEY` env var presence.
+Importer succeeds with or without LLM. Without it: every component lands at `confidence ≤ 0.5` with `origin: pdf-field`, no semantic enrichment. With it: enrichment lifts confidence and adds hint/classification.
+
+Provider interface (`src/import/llm/provider.mjs`):
+
+```
+{
+  name: string,
+  isAvailable(): Promise<boolean>,
+  enrich(payload, options): Promise<EnrichResult>
+}
+```
+
+Adapters shipped V1:
+
+- `ollama.mjs` — talks to local Ollama (`http://localhost:11434`). Default. Recommended model: `llama3.1:8b` or `qwen2.5:14b` (structured-output capable). Supports `format: 'json'` for JSON-mode output.
+- `openaiCompatible.mjs` — generic OpenAI-compatible chat completions endpoint. Works with LM Studio, llama.cpp server, vLLM, LocalAI. Configurable `baseUrl`.
+- `claude.mjs` — Anthropic SDK. Cloud opt-in. Requires `ANTHROPIC_API_KEY`. Best quality on edge cases.
+- `mock.mjs` — deterministic stub keyed on input hash. Used by tests + CI.
+
+Selection:
+
+- `IMPORT_LLM_PROVIDER=ollama|openai-compatible|claude|mock` (default `ollama`).
+- `IMPORT_LLM_MODEL=...` (per-provider default).
+- `IMPORT_LLM_BASE_URL=...` (for ollama + openai-compatible).
+- Fallback chain: configured provider → if `isAvailable()` false, log warning + drop to deterministic. No silent provider swap.
+
+Privacy default: local. Document in README that switching to cloud Claude sends extracted PDF text + field labels to a third party; require explicit opt-in. Government / VA-internal authors should leave default.
+
+Tests run in `mock` mode in CI. Local-LLM tests gated on `ollama` reachable. Cloud-LLM tests gated on `ANTHROPIC_API_KEY` env var presence.
 
 ### PDF library roles
 
@@ -225,11 +283,13 @@ PDF buffer
 
 ## LLM Enricher: Caching + Determinism
 
-- Model: `claude-sonnet-4-6` (default; override via env). Temperature 0.
-- Prompt cache: cache the long instructional prefix + standards-rule reference; per-form variable suffix. Per Anthropic SDK 4.x prompt caching pattern.
-- Per-import deterministic cache: SHA-256 of `{ pdfHash, prompt template version, model, temperature }` keys a file in `.cache/import/<key>.json`. Cache hit short-circuits LLM call. Cache committed only for fixtures, gitignored otherwise.
+- Default provider: Ollama with `llama3.1:8b` (override via `IMPORT_LLM_MODEL`). Cloud override: Anthropic `claude-sonnet-4-6`.
+- Temperature 0 across providers.
+- JSON-mode where supported (Ollama `format: 'json'`, Anthropic structured tool-use, OpenAI-compatible `response_format: { type: 'json_object' }`).
+- Prompt structure: stable instructional prefix + few-shot exemplars from existing example forms + standards-rule reference + per-form variable suffix. Stable prefix benefits provider-side caches when available (Anthropic prompt caching; Ollama keep-alive).
+- Per-import deterministic cache: SHA-256 of `{ pdfHash, promptVersion, providerName, modelId }` keys a file in `.cache/import/<key>.json`. Cache hit short-circuits LLM call. Cache committed only for fixtures, gitignored otherwise.
 - Token budget: hard cap at 30k input + 8k output per import. Refuse + fallback to deterministic if exceeded.
-- Mock mode: when `ANTHROPIC_API_KEY` unset OR `IMPORT_LLM_MOCK=1`, enricher returns deterministic stub output keyed on input hash. Lets tests run in CI without secrets.
+- Mock mode: `IMPORT_LLM_PROVIDER=mock` (or auto when no provider available) returns deterministic stub output keyed on input hash. Lets tests run in CI without local models or secrets.
 
 ## Review UX
 
@@ -276,9 +336,11 @@ Row shape (one per JSONL line):
 | Risk | Mitigation |
 |---|---|
 | `pdfjs-dist` Node integration brittleness | Pin to known-working version; use legacy build; integration test in CI. |
-| LLM cost runaway on large forms | Token budget cap + cache + mock mode. Hard refuse + fallback to deterministic on overrun. |
-| Browser API key exposure | LLM enricher only runs through local proxy in dev; never inline in browser bundle. |
-| Non-deterministic LLM output breaking tests | Temperature 0 + prompt cache + per-import file cache + fixture-locked golden snapshots. |
+| LLM cost runaway on cloud provider | Token budget cap + cache + mock mode. Hard refuse + fallback to deterministic on overrun. Local provider default = $0. |
+| Browser API key exposure | LLM enricher only runs through local proxy in dev; never inline in browser bundle. Local provider doesn't require a key. |
+| Non-deterministic LLM output breaking tests | Temperature 0 + JSON-mode + per-import file cache + fixture-locked golden snapshots. CI uses `mock` provider. |
+| Local model quality below floor on pilot | Document minimum model size (e.g., `qwen2.5:14b` over `llama3.1:8b` if floor fails). Pilot test failure on local prompts user to upgrade model or opt into cloud. |
+| Government data leakage to third party | Default provider is local (no network egress). Cloud opt-in requires explicit env var + documented in README. |
 | Standards rules too rigid, blocks valid forms | All rules `severity: warning` for V1; `error` requires explicit author flag. |
 | PDF binaries bloat repo | Test fixtures generated synthetically with `pdf-lib` at test setup; one real fixture only for manual verification (kept under `fixtures-real/` and gitignored). |
 | Schema migration framework over-engineered for non-breaking add | v1.0.0 → v1.1.0 migrator is no-op; framework exists but does nothing. Real value when v1.1.0 → v2.0.0 lands later. |
@@ -287,15 +349,19 @@ Row shape (one per JSONL line):
 
 Each milestone independently shippable + green-tested. Sequence chosen so each lands a usable slice; later milestones build on earlier without rework.
 
-### Milestone 1 — Schema + Migration Skeleton
+### Milestone 1 — Schema + Migration Skeleton + Retro-stamp
 
 Deliverables:
 
 - Bump `schemaVersion` to `1.1.0` in `src/schema/authoring-schema.json`. Add optional `source`, `lineage`, `provenance` per component.
 - Update `apps/builder/src/types.ts` with optional `AuthoringSource`, `AuthoringLineage`, `AuthoringProvenance` types; add to `AuthoringForm` and `AuthoringComponent`.
-- New: `src/schema/migrations/registry.mjs`, `src/schema/migrations/v1_0_0-to-v1_1_0.mjs` (no-op + version bump).
+- New: `src/schema/migrations/registry.mjs`, `src/schema/migrations/v1_0_0-to-v1_1_0.mjs` (no-op + version bump + back-fill `lineage.schemaHash`).
 - New: `tests/migrations.test.mjs` — load v1.0.0 fixture, run, assert v1.1.0 + still validates.
-- Existing examples re-saved through migrator to seed `lineage.schemaHash` (no behavior change).
+- Retro-stamp `examples/27-8832-authoring.json` and `examples/21-4140-authoring.json`:
+  - Form-level `source.kind: "pdf"`, `source.uri` pointing at the (gitignored or referenced) sidecar PDF, `source.hash` from the file when present.
+  - Form-level `lineage.schemaHash` computed.
+  - Per-component `provenance.origin: "hand-authored"`, `confidence: 1.0`, `reviewed: true` (these are the minimum-bar exemplars; treat as fully reviewed).
+- Both retro-stamped examples remain compile-clean through `compile:example` and `compile:example:27-8832`.
 
 Verification: `npm test` green. `npm run builder:build` green. `npm run compile:example` + `compile:example:27-8832` unchanged output.
 
@@ -328,9 +394,10 @@ Deliverables:
 - New: `src/import/confidence.mjs` — score per formula above.
 - New: `src/cli/import.mjs` — `node src/cli/import.mjs <pdf> --out examples/<form-id>` writes JSON + sidecar.
 - New: `tests/import.test.mjs` — generates synthetic AcroForm PDF with `pdf-lib` in test setup, runs importer, asserts schema validates, asserts deterministic output across two runs.
+- New: `tests/import-pilot.test.mjs` — gated on presence of `tests/fixtures/pilot/VBA-27-8832-ARE.pdf`. Runs importer in deterministic-only mode against the pilot PDF and asserts **structural floor**: chapter count ≥ seeded example, page count ≥ seeded example, all key field IDs from the seeded example present in importer output, conditional rules detected on `applicantType` chapters, no schema validation errors. Without LLM, this asserts the deterministic baseline; LLM-on run (M5+) asserts equal-or-better full match.
 - Add `npm run import` script to `package.json`.
 
-Verification: importer produces a valid authoring JSON for the synthetic fixture. Deterministic across runs. Loads in builder via existing import-JSON path.
+Verification: importer produces a valid authoring JSON for the synthetic fixture. Deterministic across runs. Loads in builder via existing import-JSON path. Pilot regression test passes at deterministic floor.
 
 ### Milestone 4 — Builder UI: Confidence Badge + Import Action + PDF Preview
 
@@ -346,34 +413,46 @@ Deliverables:
 
 Verification: in builder, choose Import PDF, pick fixture, see imported form with badges. Click badge → see provenance + PDF preview. Accept clears badge.
 
-### Milestone 5 — LLM Enricher with Cache + Mock
+### Milestone 5 — LLM Enricher (Provider-Abstracted) + Cache + Mock + Few-Shot Floor
 
 Deliverables:
 
-- Add dep: `@anthropic-ai/sdk`.
-- New: `src/import/llm/enricher.mjs` — Anthropic call with prompt caching. Reads `ANTHROPIC_API_KEY`, `IMPORT_LLM_MOCK`. Falls back to deterministic + warns if unavailable.
-- New: `src/import/llm/cache.mjs` — file-based cache keyed on `{pdfHash, promptVersion, model}` under `.cache/import/`.
-- New: `src/import/llm/mock.mjs` — deterministic stub for tests.
-- New: `apps/proxy/` — minimal Express/Fastify proxy: single `POST /api/enrich` route forwarding to Anthropic SDK. Started by `npm run builder:dev:proxy`. Requires `ANTHROPIC_API_KEY`.
-- Update: `src/import/pipeline.mjs` — wire enricher into step 7.
-- Update: `tests/import.test.mjs` — add LLM-mocked test asserting enriched output structure.
+- New: `src/import/llm/provider.mjs` — provider interface (`name`, `isAvailable`, `enrich`).
+- New: `src/import/llm/providers/ollama.mjs` — local Ollama adapter (default). HTTP to `http://localhost:11434/api/chat` with `format: 'json'`.
+- New: `src/import/llm/providers/openaiCompatible.mjs` — generic OpenAI-compatible chat completions. Configurable `baseUrl`. Works with LM Studio, llama.cpp, vLLM, LocalAI.
+- New: `src/import/llm/providers/claude.mjs` — Anthropic SDK adapter with prompt caching. Opt-in.
+- New: `src/import/llm/providers/mock.mjs` — deterministic stub keyed on input hash.
+- New: `src/import/llm/registry.mjs` — provider lookup by name + env-driven selection + availability check + fallback.
+- New: `src/import/llm/enricher.mjs` — provider-agnostic enrich orchestration. Reads provider via registry; respects `IMPORT_LLM_PROVIDER`, `IMPORT_LLM_MODEL`, `IMPORT_LLM_BASE_URL`.
+- New: `src/import/llm/prompts/` — versioned prompt templates. `system.txt` (role + standards summary + minimum-bar criteria), `fewshot.json` (loads `examples/27-8832-authoring.json` and `examples/21-4140-authoring.json` as exemplar input/output pairs alongside their source PDFs' extracted field lists), `user.tmpl` (per-import variable suffix). Identical across providers; per-provider request shaping is the adapter's job.
+- New: `src/import/llm/cache.mjs` — file-based cache keyed on `{pdfHash, promptVersion, providerName, modelId}` under `.cache/import/`. Prompt version bumps invalidate cache.
+- Add deps: `@anthropic-ai/sdk` (claude adapter only). Ollama + OpenAI-compatible adapters use `fetch` only — no extra deps.
+- New: `apps/proxy/` — minimal Express/Fastify proxy with single `POST /api/enrich` route. Reads provider config from env; forwards to whichever adapter is selected. Started by `npm run builder:dev:proxy`.
+- Update: `src/import/pipeline.mjs` — wire enricher into step 7. Enricher receives extracted fields + heuristic + corpus exemplars; returns refined classification, grouping, conditional-logic suggestions, hint text, and listLoop detection.
+- Update: `tests/import.test.mjs` — add LLM-mocked test asserting enriched output structure (provider = `mock`).
+- Update: `tests/import-pilot.test.mjs` — three tiers:
+  1. **mock provider** (CI default): assert structural floor + provenance shape.
+  2. **ollama provider** (gated on `ollama` reachable): assert importer output matches `examples/27-8832-authoring.json` at full equal-or-better threshold. Documents minimum local model required.
+  3. **claude provider** (gated on `ANTHROPIC_API_KEY` + explicit `IMPORT_RUN_CLOUD_TESTS=1`): same threshold; serves as ceiling reference.
+- New: `docs/import-llm-providers.md` — setup notes for Ollama (recommended models, install instructions), LM Studio, vLLM, Anthropic. Document privacy posture (local default, cloud opt-in).
 - Add `npm run builder:dev:proxy` script.
 
-Verification: with `IMPORT_LLM_MOCK=1`, importer test produces stable enriched output. With real `ANTHROPIC_API_KEY` (manual), proxy + browser import produce enriched form. Token budget cap respected.
+Verification: with `IMPORT_LLM_PROVIDER=mock`, importer test produces stable enriched output and meets pilot floor. With local Ollama + recommended model, pilot test meets equal-or-better threshold. With Claude key (manual), proxy + browser import produce enriched form. Token budget cap respected. No silent provider swap on adapter unavailability.
 
-### Milestone 6 — Corrections Corpus + Nearest-Neighbor
+### Milestone 6 — Corrections Corpus + Nearest-Neighbor + Seed From Examples
 
 Deliverables:
 
-- New: `src/import/corpus/corrections.jsonl` — empty seed file checked in.
+- New: `src/import/corpus/corrections.jsonl` — pre-seeded with rows derived from `examples/27-8832-authoring.json` + `examples/21-4140-authoring.json`. Each component in those examples becomes one exemplar row capturing its `pdfFieldName` (when known), `componentTypeAfter`, `labelAfter`, `validationsAfter`, `formFingerprint`. Generated by a one-shot script `src/import/corpus/seed.mjs` so re-runs are reproducible.
+- New: `src/import/corpus/seed.mjs` — Node script that walks the example forms + (optionally) source PDFs, emits seed JSONL.
 - New: `src/import/corpus/store.mjs` — read/append JSONL helpers (Node fs + browser localStorage).
-- New: `src/import/corpus/lookup.mjs` — token-set Jaccard nearest-neighbor.
-- Update: `src/import/pipeline.mjs` — step 6 (corpusLookup) consults corpus, lifts confidence on hit.
+- New: `src/import/corpus/lookup.mjs` — token-set Jaccard nearest-neighbor; also exposes structural exemplar lookup (chapter-pattern matching for listLoop detection, conditional-branching detection).
+- Update: `src/import/pipeline.mjs` — step 6 (corpusLookup) consults corpus for both per-field and structural exemplars, lifts confidence on hit.
 - Update: `apps/builder/src/lib/reviewState.ts` — accept/reject/edit appends row.
 - Update: `apps/builder/src/components/FormActions.tsx` — Export corrections / Import corrections buttons (mirror saved-template pattern).
-- New: `tests/corpus.test.mjs` — append, lookup, similarity, lift-confidence behavior.
+- New: `tests/corpus.test.mjs` — append, lookup, similarity, lift-confidence behavior, seed-script reproducibility.
 
-Verification: import same PDF twice, edit a label on first run, re-import → second run lifts confidence on that field via corpus hit.
+Verification: import same PDF twice, edit a label on first run, re-import → second run lifts confidence on that field via corpus hit. Pilot test confirms structural exemplars from examples lift listLoop + conditional-branching detection on the pilot PDF.
 
 ### Milestone 7 — Import Wizard + Review Panel
 
@@ -461,7 +540,7 @@ Tests:
 
 Package metadata:
 
-- `package.json` — add `pdf-lib`, `pdfjs-dist`, `@anthropic-ai/sdk`, `express` (proxy); add `import`, `builder:dev:proxy` scripts
+- `package.json` — add `pdf-lib`, `pdfjs-dist`, `@anthropic-ai/sdk` (cloud opt-in), `express` (proxy); add `import`, `builder:dev:proxy` scripts. Ollama + OpenAI-compatible adapters use `fetch` only.
 
 ## Reused Existing Pieces
 
