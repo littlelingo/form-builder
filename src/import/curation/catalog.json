@@ -1599,6 +1599,1134 @@
           }
         }
       ]
+    },
+    {
+      "id": "dd-form-293-discharge-review-2020-static",
+      "title": "DD Form 293 discharge review workflow",
+      "description": "Curates the static-text extraction fields from DD Form 293 (Application for the Review of Discharge from the Armed Forces) into a builder-native discharge-review workflow.",
+      "formFingerprint": "DD-FORM-293-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:dd[-_\\s]?form[-_\\s]?293|review of discharge|board for correction|discharge review board|reentry code|narrative reason)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:branchAtTimeOfInequityOrImpropriety",
+          "static:dischargeCharacterizationReceived",
+          "static:dischargeInequityStatement",
+          "static:dischargeImproprietyStatement",
+          "static:applicantSignature"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "branchOfService",
+          "selector": { "namePattern": "static:branchAtTimeOfInequityOrImpropriety$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceIdentity",
+          "pageTitle": "Service identity",
+          "component": {
+            "label": "Branch at time of inequity or impropriety"
+          }
+        },
+        {
+          "id": "componentOfService",
+          "selector": { "namePattern": "static:componentAtTimeOfInequityOrImpropriety$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceIdentity",
+          "pageTitle": "Service identity",
+          "component": {
+            "label": "Component at time of inequity or impropriety"
+          }
+        },
+        {
+          "id": "nameAtService",
+          "selector": { "namePattern": "static:nameWhileLast$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceIdentity",
+          "pageTitle": "Service identity",
+          "component": {
+            "label": "Name while in service"
+          }
+        },
+        {
+          "id": "currentName",
+          "selector": { "namePattern": "static:currentNameLast$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceIdentity",
+          "pageTitle": "Service identity",
+          "component": {
+            "label": "Current legal name"
+          }
+        },
+        {
+          "id": "mailingAddress",
+          "selector": { "namePattern": "static:mailingAddress$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceIdentity",
+          "pageTitle": "Service identity",
+          "component": {
+            "type": "address",
+            "label": "Mailing address"
+          }
+        },
+        {
+          "id": "highestEducation",
+          "selector": { "namePattern": "static:highestEducationAchieved$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "serviceIdentity",
+          "pageTitle": "Service identity",
+          "component": {
+            "label": "Highest education achieved"
+          }
+        },
+        {
+          "id": "dischargeDate",
+          "selector": { "namePattern": "static:dateOfDischargeIfMoreThan15$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "type": "date",
+            "label": "Date of discharge"
+          }
+        },
+        {
+          "id": "rankAtDischarge",
+          "selector": { "namePattern": "static:rankAtDischarge$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Rank at discharge"
+          }
+        },
+        {
+          "id": "highestRankHeld",
+          "selector": { "namePattern": "static:highestRankHeld$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Highest rank held"
+          }
+        },
+        {
+          "id": "dischargeCharacterization",
+          "selector": { "namePattern": "static:dischargeCharacterizationReceived$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Discharge characterization received"
+          }
+        },
+        {
+          "id": "separationAuthority",
+          "selector": { "namePattern": "static:separationAuthority$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Separation authority"
+          }
+        },
+        {
+          "id": "separationCode",
+          "selector": { "namePattern": "static:separationCode$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Separation code"
+          }
+        },
+        {
+          "id": "reentryCode",
+          "selector": { "namePattern": "static:reentryCode$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Reentry code"
+          }
+        },
+        {
+          "id": "narrativeReason",
+          "selector": { "namePattern": "static:narrativeReason$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "type": "textArea",
+            "label": "Narrative reason for discharge",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "unitAndLocation",
+          "selector": { "namePattern": "static:unitAndLocationAtDischarge$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "dischargeDetails",
+          "pageTitle": "Discharge details",
+          "component": {
+            "label": "Unit and location at discharge"
+          }
+        },
+        {
+          "id": "actionRequested",
+          "selector": { "namePattern": "static:actionRequested$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "reviewRequest",
+          "pageTitle": "Review request",
+          "component": {
+            "label": "Action requested"
+          }
+        },
+        {
+          "id": "typeOfReview",
+          "selector": { "namePattern": "static:typeOfReviewRequested$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "reviewRequest",
+          "pageTitle": "Review request",
+          "component": {
+            "label": "Type of review requested"
+          }
+        },
+        {
+          "id": "relatedRequest",
+          "selector": { "namePattern": "static:isThisRequestRelatedToAnyOf$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "reviewRequest",
+          "pageTitle": "Review request",
+          "component": {
+            "label": "Is this request related to any of the listed conditions?"
+          }
+        },
+        {
+          "id": "relatedIssues",
+          "selector": { "namePattern": "static:areAnyOfTheFollowingIssuesConditionsRelatedToYourRequest$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "reviewRequest",
+          "pageTitle": "Review request",
+          "component": {
+            "type": "textArea",
+            "label": "Related issues or conditions",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "dischargeInequity",
+          "selector": { "namePattern": "static:dischargeInequityStatement$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "statements",
+          "pageTitle": "Discharge statements",
+          "component": {
+            "type": "textArea",
+            "label": "Discharge inequity statement",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "dischargeImpropriety",
+          "selector": { "namePattern": "static:dischargeImproprietyStatement$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "statements",
+          "pageTitle": "Discharge statements",
+          "component": {
+            "type": "textArea",
+            "label": "Discharge impropriety statement",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "exampleGuidance",
+          "selector": { "namePattern": "static:forExampleIfYouRequestA$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "statements",
+          "pageTitle": "Discharge statements",
+          "component": {
+            "type": "textArea",
+            "label": "Example narrative",
+            "hint": "Free-form example narrative if needed.",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "referenceText",
+          "selector": { "namePattern": "static:theReference$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "statements",
+          "pageTitle": "Discharge statements",
+          "component": {
+            "type": "textArea",
+            "label": "Reference cited in statement",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "briefStatement",
+          "selector": { "namePattern": "static:briefPage2Paragraph1SentencesOneAndTwo$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "statements",
+          "pageTitle": "Discharge statements",
+          "component": {
+            "type": "textArea",
+            "label": "Brief statement of discharge facts",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "documentsInSupport",
+          "selector": { "namePattern": "static:documentsInSupportOfClaim$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "supportingDocuments",
+          "pageTitle": "Supporting documents",
+          "component": {
+            "type": "textArea",
+            "label": "Documents in support of claim",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "otherSupportingDocuments",
+          "selector": { "namePattern": "static:otherSupportingDocuments$" },
+          "chapterId": "militaryService",
+          "chapterTitle": "Military service",
+          "pageId": "supportingDocuments",
+          "pageTitle": "Supporting documents",
+          "component": {
+            "type": "textArea",
+            "label": "Other supporting documents",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "whyChangeRequested",
+          "selector": { "namePattern": "static:whyIsAChangeRequested$" },
+          "chapterId": "applicantInformation",
+          "chapterTitle": "Applicant information",
+          "pageId": "applicantDetails",
+          "pageTitle": "Applicant details",
+          "component": {
+            "type": "yesNo",
+            "label": "Is a change requested?"
+          }
+        },
+        {
+          "id": "applicantOrganization",
+          "selector": { "namePattern": "static:organization$" },
+          "chapterId": "applicantInformation",
+          "chapterTitle": "Applicant information",
+          "pageId": "applicantDetails",
+          "pageTitle": "Applicant details",
+          "component": {
+            "label": "Representing organization"
+          }
+        },
+        {
+          "id": "applicantMailingAddress",
+          "selector": { "namePattern": "static:mailingAddressStreet$" },
+          "chapterId": "applicantInformation",
+          "chapterTitle": "Applicant information",
+          "pageId": "applicantDetails",
+          "pageTitle": "Applicant details",
+          "component": {
+            "type": "address",
+            "label": "Applicant mailing address"
+          }
+        },
+        {
+          "id": "applicantSignature",
+          "selector": { "namePattern": "static:applicantSignature$" },
+          "chapterId": "applicantInformation",
+          "chapterTitle": "Applicant information",
+          "pageId": "applicantDetails",
+          "pageTitle": "Applicant details",
+          "component": {
+            "label": "Applicant signature",
+            "hint": "Type the applicant's full legal name."
+          }
+        },
+        {
+          "id": "electronicCorrespondence",
+          "selector": { "namePattern": "static:iWouldLikeToReceiveAllCorrespondenceDocumentsElectronically$" },
+          "chapterId": "applicantInformation",
+          "chapterTitle": "Applicant information",
+          "pageId": "applicantDetails",
+          "pageTitle": "Applicant details",
+          "component": {
+            "type": "yesNo",
+            "label": "Receive all correspondence and documents electronically?"
+          }
+        }
+      ]
+    },
+    {
+      "id": "va-form-21-22a-individual-representative-2020-static",
+      "title": "VA Form 21-22a individual representative appointment workflow",
+      "description": "Curates the static-text extraction fields from VA Form 21-22a (Appointment of Individual as Claimant's Representative) into a builder-native representative-appointment workflow.",
+      "formFingerprint": "VA-FORM-21-22A-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?form[-_\\s]?21[-_\\s]?22a|appointment of individual|claimant'?s representative|limitation of consent|representative's access to protected records)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:veteranSName",
+          "static:nameOfIndividualAppointedAsRepresentative",
+          "static:representativeSAccessToProtectedRecords",
+          "static:limitationOfConsent",
+          "static:limitationsOnRepresentation"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "veteranName",
+          "selector": { "namePattern": "static:veteranSName$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Veteran name" }
+        },
+        {
+          "id": "veteranSocialSecurityNumber",
+          "selector": { "namePattern": "static:veteranSSocialSecurityNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "maskedInput",
+            "label": "Veteran Social Security number",
+            "maxLength": 11
+          }
+        },
+        {
+          "id": "veteranFileNumber",
+          "selector": { "namePattern": "static:vAFileNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "VA file number" }
+        },
+        {
+          "id": "veteranDateOfBirth",
+          "selector": { "namePattern": "static:veteranSDateOfBirth$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "type": "date", "label": "Veteran date of birth" }
+        },
+        {
+          "id": "veteranServiceNumber",
+          "selector": { "namePattern": "static:veteranSServiceNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Veteran service number" }
+        },
+        {
+          "id": "branchOfService",
+          "selector": { "namePattern": "static:branchOfService$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Branch of service" }
+        },
+        {
+          "id": "veteranMailingAddress",
+          "selector": { "namePattern": "static:veteranSMailingAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "address", "label": "Veteran mailing address" }
+        },
+        {
+          "id": "veteranPhone",
+          "selector": { "namePattern": "static:veteranSTelephoneNumber$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "phone", "label": "Veteran telephone number" }
+        },
+        {
+          "id": "veteranEmail",
+          "selector": { "namePattern": "static:veteranSEmailAddress$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "email", "label": "Veteran email address" }
+        },
+        {
+          "id": "claimantName",
+          "selector": { "namePattern": "static:claimantSName$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": {
+            "label": "Claimant name",
+            "hint": "Complete only if the claimant is someone other than the Veteran."
+          }
+        },
+        {
+          "id": "claimantMailingAddress",
+          "selector": { "namePattern": "static:claimantSMailingAddress$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": { "type": "address", "label": "Claimant mailing address" }
+        },
+        {
+          "id": "claimantPhone",
+          "selector": { "namePattern": "static:claimantSTelephoneNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": { "type": "phone", "label": "Claimant telephone number" }
+        },
+        {
+          "id": "claimantEmail",
+          "selector": { "namePattern": "static:claimantSEmailAddress$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": { "type": "email", "label": "Claimant email address" }
+        },
+        {
+          "id": "claimantRelationship",
+          "selector": { "namePattern": "static:relationshipToVeteran$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantDetails",
+          "pageTitle": "Claimant details",
+          "component": { "label": "Relationship to Veteran" }
+        },
+        {
+          "id": "representativeName",
+          "selector": { "namePattern": "static:nameOfIndividualAppointedAsRepresentative$" },
+          "chapterId": "representativeAppointment",
+          "chapterTitle": "Representative appointment",
+          "pageId": "appointment",
+          "pageTitle": "Appointment",
+          "component": { "label": "Representative name" }
+        },
+        {
+          "id": "representativeRoleType",
+          "selector": { "namePattern": "static:individualIs$" },
+          "chapterId": "representativeAppointment",
+          "chapterTitle": "Representative appointment",
+          "pageId": "appointment",
+          "pageTitle": "Appointment",
+          "component": { "label": "Representative role" }
+        },
+        {
+          "id": "representativeAddress",
+          "selector": { "namePattern": "static:addressOfIndividualAppointedAsClaimantSRepresentative$" },
+          "chapterId": "representativeAppointment",
+          "chapterTitle": "Representative appointment",
+          "pageId": "appointment",
+          "pageTitle": "Appointment",
+          "component": { "type": "address", "label": "Representative address" }
+        },
+        {
+          "id": "representativeSignatureItem15a",
+          "selector": { "namePattern": "static:signatureOfRepresentativeNamedInItem15a$" },
+          "chapterId": "representativeAppointment",
+          "chapterTitle": "Representative appointment",
+          "pageId": "appointment",
+          "pageTitle": "Appointment",
+          "component": { "label": "Representative signature (item 15a)" }
+        },
+        {
+          "id": "individualNamedSignature",
+          "selector": { "namePattern": "static:signatureOfIndividualNamedInItem1Or10$" },
+          "chapterId": "representativeAppointment",
+          "chapterTitle": "Representative appointment",
+          "pageId": "appointment",
+          "pageTitle": "Appointment",
+          "component": { "label": "Veteran or claimant signature (item 1 or 10)" }
+        },
+        {
+          "id": "appointmentDateOfSignature",
+          "selector": { "namePattern": "static:dateOfSignature$" },
+          "chapterId": "representativeAppointment",
+          "chapterTitle": "Representative appointment",
+          "pageId": "appointment",
+          "pageTitle": "Appointment",
+          "component": { "type": "date" }
+        },
+        {
+          "id": "protectedRecordsAccess",
+          "selector": { "namePattern": "static:representativeSAccessToProtectedRecords$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "consent",
+          "pageTitle": "Consent",
+          "component": {
+            "type": "textArea",
+            "label": "Representative's access to protected records",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "limitationOfConsent",
+          "selector": { "namePattern": "static:limitationOfConsent$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "consent",
+          "pageTitle": "Consent",
+          "component": {
+            "type": "textArea",
+            "label": "Limitation of consent",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "authorizationChangeAddress",
+          "selector": { "namePattern": "static:authorizationToChangeClaimantSAddress$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "consent",
+          "pageTitle": "Consent",
+          "component": {
+            "type": "yesNo",
+            "label": "Authorization to change claimant's address"
+          }
+        },
+        {
+          "id": "individualPursuantTo14630",
+          "selector": { "namePattern": "static:ifTheIndividual$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "consent",
+          "pageTitle": "Consent",
+          "component": {
+            "type": "textArea",
+            "label": "Individual representation under 14.630",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "limitedOneTimeRepresentation",
+          "selector": { "namePattern": "static:limitedOneTimeRepresentation$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "consent",
+          "pageTitle": "Consent",
+          "component": {
+            "type": "yesNo",
+            "label": "Limited one-time representation"
+          }
+        },
+        {
+          "id": "limitationsOnRepresentation",
+          "selector": { "namePattern": "static:limitationsOnRepresentation$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "consent",
+          "pageTitle": "Consent",
+          "component": {
+            "type": "textArea",
+            "label": "Limitations on representation",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "claimantSignature",
+          "selector": { "namePattern": "static:signatureOfClaimant$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "signatures",
+          "pageTitle": "Signatures",
+          "component": { "label": "Claimant signature" }
+        },
+        {
+          "id": "representativeSignature",
+          "selector": { "namePattern": "static:signatureOfRepresentative$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "signatures",
+          "pageTitle": "Signatures",
+          "component": { "label": "Representative signature" }
+        }
+      ]
+    },
+    {
+      "id": "va-form-5655-financial-status-2020-static",
+      "title": "VA Form 5655 financial status report workflow",
+      "description": "Curates the static-text extraction fields from VA Form 5655 (Financial Status Report) into a builder-native financial-status workflow.",
+      "formFingerprint": "VA-FORM-5655-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?5655|financial status report|adjudicated bankrupt|net monthly income|monthly gross salary|trailers, boats, campers)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:specifyWhyYouAreCompletingThisForm",
+          "static:monthlyGrossSalary",
+          "static:netMonthlyIncomeLessExpenses",
+          "static:haveYouEverBeenAdjudicatedBankrupt",
+          "static:additionalFinancialInformation"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "veteranName",
+          "selector": { "namePattern": "static:firstMiddleLastNameOfPerson$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Veteran name" }
+        },
+        {
+          "id": "socialSecurityNumber",
+          "selector": { "namePattern": "static:socialSecurityNo$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "maskedInput",
+            "label": "Social Security number",
+            "maxLength": 11
+          }
+        },
+        {
+          "id": "vaFileNumber",
+          "selector": { "namePattern": "static:fileNo$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "VA file number" }
+        },
+        {
+          "id": "dateOfBirth",
+          "selector": { "namePattern": "static:dateOfBirth$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "type": "date", "label": "Date of birth" }
+        },
+        {
+          "id": "maritalStatus",
+          "selector": { "namePattern": "static:maritalStatus$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": { "label": "Marital status" }
+        },
+        {
+          "id": "purposeOfReport",
+          "selector": { "namePattern": "static:specifyWhyYouAreCompletingThisForm$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "textArea",
+            "label": "Reason for completing this form",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "address",
+          "selector": { "namePattern": "static:address$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "address", "label": "Mailing address" }
+        },
+        {
+          "id": "telephoneNumber",
+          "selector": { "namePattern": "static:telephoneNo$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "contact",
+          "pageTitle": "Contact",
+          "component": { "type": "phone", "label": "Telephone number" }
+        },
+        {
+          "id": "spouseName",
+          "selector": { "namePattern": "static:nameOfSpouse$" },
+          "chapterId": "household",
+          "chapterTitle": "Household",
+          "pageId": "family",
+          "pageTitle": "Family",
+          "component": { "label": "Spouse name" }
+        },
+        {
+          "id": "otherDependents",
+          "selector": { "namePattern": "static:ageOfOtherDependents$" },
+          "chapterId": "household",
+          "chapterTitle": "Household",
+          "pageId": "family",
+          "pageTitle": "Family",
+          "component": {
+            "type": "textArea",
+            "label": "Ages of other dependents",
+            "maxLength": 1000
+          }
+        },
+        {
+          "id": "yourEmployment",
+          "selector": { "namePattern": "static:yourEmploymentExperience$" },
+          "chapterId": "household",
+          "chapterTitle": "Household",
+          "pageId": "employment",
+          "pageTitle": "Employment",
+          "component": {
+            "type": "textArea",
+            "label": "Your employment experience",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "spouseEmployment",
+          "selector": { "namePattern": "static:yourSpouseSEmployment$" },
+          "chapterId": "household",
+          "chapterTitle": "Household",
+          "pageId": "employment",
+          "pageTitle": "Employment",
+          "component": {
+            "type": "textArea",
+            "label": "Spouse employment",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "monthlyGrossSalary",
+          "selector": { "namePattern": "static:monthlyGrossSalary$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyIncome",
+          "pageTitle": "Monthly income",
+          "component": { "label": "Monthly gross salary" }
+        },
+        {
+          "id": "payrollDeductions",
+          "selector": { "namePattern": "static:payrollDeductions$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyIncome",
+          "pageTitle": "Monthly income",
+          "component": { "label": "Payroll deductions" }
+        },
+        {
+          "id": "netTakeHomePay",
+          "selector": { "namePattern": "static:netTakeHomePay$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyIncome",
+          "pageTitle": "Monthly income",
+          "component": { "label": "Net take-home pay" }
+        },
+        {
+          "id": "vaBenefitsAndSocial",
+          "selector": { "namePattern": "static:vABenefitsSocial$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyIncome",
+          "pageTitle": "Monthly income",
+          "component": {
+            "type": "textInput",
+            "label": "VA benefits and social security income"
+          }
+        },
+        {
+          "id": "totalMonthlyNet",
+          "selector": { "namePattern": "static:totalMonthlyNet$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyIncome",
+          "pageTitle": "Monthly income",
+          "component": { "label": "Total monthly net income" }
+        },
+        {
+          "id": "rentOrMortgage",
+          "selector": { "namePattern": "static:rentOrMortgagePayment$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Rent or mortgage payment" }
+        },
+        {
+          "id": "utilitiesAndHeat",
+          "selector": { "namePattern": "static:utilitiesAndHeat$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Utilities and heat" }
+        },
+        {
+          "id": "otherLivingExpenses",
+          "selector": { "namePattern": "static:otherLivingExpenses$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Other living expenses" }
+        },
+        {
+          "id": "monthlyInstallmentPayments",
+          "selector": { "namePattern": "static:monthlyPaymentsOnInstallment$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Monthly payments on installment contracts" }
+        },
+        {
+          "id": "totalMonthlyExpenses",
+          "selector": { "namePattern": "static:totalMonthlyExpenses$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Total monthly expenses" }
+        },
+        {
+          "id": "netMonthlyIncomeLessExpenses",
+          "selector": { "namePattern": "static:netMonthlyIncomeLessExpenses$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Net monthly income minus expenses" }
+        },
+        {
+          "id": "amountTowardDebt",
+          "selector": { "namePattern": "static:amountYouCanPayOnAMonthlyBasisTowardYourDebt$" },
+          "chapterId": "incomeAndExpenses",
+          "chapterTitle": "Income and expenses",
+          "pageId": "monthlyExpenses",
+          "pageTitle": "Monthly expenses",
+          "component": { "label": "Monthly amount available toward debt" }
+        },
+        {
+          "id": "cashInBank",
+          "selector": { "namePattern": "static:cashInBankCheckingAndSavingsAccounts$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "cashAndSecurities",
+          "pageTitle": "Cash and securities",
+          "component": { "label": "Cash in bank (checking and savings)" }
+        },
+        {
+          "id": "cashOnHand",
+          "selector": { "namePattern": "static:cashOnHand$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "cashAndSecurities",
+          "pageTitle": "Cash and securities",
+          "component": { "label": "Cash on hand" }
+        },
+        {
+          "id": "usSavingsBonds",
+          "selector": { "namePattern": "static:uSSavingsBonds$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "cashAndSecurities",
+          "pageTitle": "Cash and securities",
+          "component": { "label": "U.S. savings bonds" }
+        },
+        {
+          "id": "stocksAndOtherBonds",
+          "selector": { "namePattern": "static:stocksAndOtherBonds$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "cashAndSecurities",
+          "pageTitle": "Cash and securities",
+          "component": { "label": "Stocks and other bonds" }
+        },
+        {
+          "id": "automobiles",
+          "selector": { "namePattern": "static:automobiles$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "property",
+          "pageTitle": "Property",
+          "component": { "label": "Automobiles" }
+        },
+        {
+          "id": "realEstateOwned",
+          "selector": { "namePattern": "static:realEstateOwned$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "property",
+          "pageTitle": "Property",
+          "component": {
+            "type": "textArea",
+            "label": "Real estate owned",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "trailersBoatsCampers",
+          "selector": { "namePattern": "static:trailersBoatsCampers$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "property",
+          "pageTitle": "Property",
+          "component": { "label": "Trailers, boats, and campers" }
+        },
+        {
+          "id": "otherAssets",
+          "selector": { "namePattern": "static:otherAssets$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "property",
+          "pageTitle": "Property",
+          "component": { "label": "Other assets" }
+        },
+        {
+          "id": "totalAssets",
+          "selector": { "namePattern": "static:totalAssets$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "property",
+          "pageTitle": "Property",
+          "component": { "label": "Total assets" }
+        },
+        {
+          "id": "totalsLine",
+          "selector": { "namePattern": "static:total$" },
+          "chapterId": "assets",
+          "chapterTitle": "Assets",
+          "pageId": "property",
+          "pageTitle": "Property",
+          "component": { "label": "Combined assets total" }
+        },
+        {
+          "id": "everAdjudicatedBankrupt",
+          "selector": { "namePattern": "static:haveYouEverBeenAdjudicatedBankrupt$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "bankruptcyHistory",
+          "pageTitle": "Bankruptcy history",
+          "component": {
+            "type": "yesNo",
+            "label": "Have you ever been adjudicated bankrupt?"
+          }
+        },
+        {
+          "id": "dischargeFromBankruptcyDate",
+          "selector": { "namePattern": "static:dateDischargedFromBankruptcy$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "bankruptcyHistory",
+          "pageTitle": "Bankruptcy history",
+          "component": { "type": "date", "label": "Date discharged from bankruptcy" }
+        },
+        {
+          "id": "courtLocation",
+          "selector": { "namePattern": "static:locationOfCourt$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "bankruptcyHistory",
+          "pageTitle": "Bankruptcy history",
+          "component": { "label": "Location of court" }
+        },
+        {
+          "id": "docketNumber",
+          "selector": { "namePattern": "static:docketNo$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "bankruptcyHistory",
+          "pageTitle": "Bankruptcy history",
+          "component": { "label": "Docket number" }
+        },
+        {
+          "id": "additionalFinancialInformation",
+          "selector": { "namePattern": "static:additionalFinancialInformation$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "signatures",
+          "pageTitle": "Signatures",
+          "component": {
+            "type": "textArea",
+            "label": "Additional financial information",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "yourSignature",
+          "selector": { "namePattern": "static:yourSignature$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "signatures",
+          "pageTitle": "Signatures",
+          "component": { "label": "Your signature" }
+        },
+        {
+          "id": "dateSigned",
+          "selector": { "namePattern": "static:dateSigned$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "signatures",
+          "pageTitle": "Signatures",
+          "component": { "type": "date", "label": "Date signed" }
+        },
+        {
+          "id": "spouseSignature",
+          "selector": { "namePattern": "static:signatureOfSpouse$" },
+          "chapterId": "bankruptcyAndCertification",
+          "chapterTitle": "Bankruptcy and certification",
+          "pageId": "signatures",
+          "pageTitle": "Signatures",
+          "component": { "label": "Spouse signature" }
+        }
+      ]
     }
   ]
 }

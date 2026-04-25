@@ -23,7 +23,7 @@ function allComponents(form) {
   );
 }
 
-test('DD Form 293 static correction board import has builder-native label quality', async t => {
+test('DD Form 293 static discharge review imports as a curated workflow', async t => {
   if (!(await fixtureAvailable(DD293_FIXTURE))) {
     t.skip('DD Form 293 sample fixture not present');
     return;
@@ -47,21 +47,53 @@ test('DD Form 293 static correction board import has builder-native label qualit
   });
 
   assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(
+    importReport.curation.recipe.recipeId,
+    'dd-form-293-discharge-review-2020-static',
+  );
+  assert.equal(importReport.curation.recipe.matchedFieldCount, 31);
+  assert.equal(importReport.curation.curatedFieldCount, 31);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
-  assert.equal(quality.level, 'builder-native');
+  assert.equal(quality.level, 'curated');
   assert.deepEqual(signals.veryLongLabels, []);
+  assert.deepEqual(signals.duplicateLabels, []);
 
-  assert.ok(labels.includes('Branch At Time Of Inequity Or Impropriety'));
-  assert.ok(labels.includes('Highest Education Achieved'));
-  assert.ok(labels.includes('Applicant Signature'));
-  assert.ok(labels.includes('Documents In Support Of Claim'));
-  assert.ok(labels.includes('Discharge Inequity Statement'));
-  assert.ok(labels.includes('Discharge Impropriety Statement'));
-  assert.equal(labels.some(label => label.length > 90), false);
   assert.deepEqual(
     form.chapters.map(chapter => chapter.title),
     ['Military service', 'Applicant information'],
   );
-  assert.equal(form.chapters[0].pages.length, 2);
+
+  const militaryService = form.chapters[0];
+  assert.deepEqual(
+    militaryService.pages.map(page => page.title),
+    [
+      'Service identity',
+      'Discharge details',
+      'Review request',
+      'Discharge statements',
+      'Supporting documents',
+    ],
+  );
+
+  assert.ok(labels.includes('Branch at time of inequity or impropriety'));
+  assert.ok(labels.includes('Highest education achieved'));
+  assert.ok(labels.includes('Discharge inequity statement'));
+  assert.ok(labels.includes('Discharge impropriety statement'));
+  assert.ok(labels.includes('Documents in support of claim'));
+  assert.ok(labels.includes('Applicant signature'));
+
+  const byId = id => components.find(component => component.id === id);
+  assert.equal(byId('narrativeReason')?.type, 'textArea');
+  assert.equal(byId('dischargeInequity')?.type, 'textArea');
+  assert.equal(byId('dischargeImpropriety')?.type, 'textArea');
+  assert.equal(byId('mailingAddress')?.type, 'address');
+  assert.equal(byId('dischargeDate')?.type, 'date');
+  assert.equal(byId('whyChangeRequested')?.type, 'yesNo');
+
+  assert.equal(
+    components.every(component => component.provenance.curation?.source === 'recipe'),
+    true,
+  );
 });

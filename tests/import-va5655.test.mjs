@@ -23,7 +23,7 @@ function allComponents(form) {
   );
 }
 
-test('VA5655 static financial status import has builder-native label quality', async t => {
+test('VA Form 5655 static financial status report imports as a curated workflow', async t => {
   if (!(await fixtureAvailable(VA5655_FIXTURE))) {
     t.skip('VA5655 sample fixture not present');
     return;
@@ -36,7 +36,6 @@ test('VA5655 static financial status import has builder-native label quality', a
   });
   const validation = validateAuthoringForm(form);
   const components = allComponents(form);
-  const byLabel = new Map(components.map(component => [component.label, component]));
   const labels = components.map(component => component.label);
   const signals = qualitySignals(form, importReport);
   const quality = assessImportQuality({
@@ -48,21 +47,47 @@ test('VA5655 static financial status import has builder-native label quality', a
   });
 
   assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.componentCount, 42);
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(
+    importReport.curation.recipe.recipeId,
+    'va-form-5655-financial-status-2020-static',
+  );
+  assert.equal(importReport.curation.recipe.matchedFieldCount, 42);
+  assert.equal(importReport.curation.curatedFieldCount, 42);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
-  assert.equal(quality.level, 'builder-native');
+  assert.equal(quality.level, 'curated');
   assert.deepEqual(signals.veryLongLabels, []);
   assert.deepEqual(signals.duplicateLabels, []);
 
   assert.deepEqual(
     form.chapters.map(chapter => chapter.title),
-    ['Financial information'],
+    [
+      'Veteran information',
+      'Household',
+      'Income and expenses',
+      'Assets',
+      'Bankruptcy and certification',
+    ],
   );
-  assert.equal(form.chapters[0].pages.length, 2);
-  assert.ok(labels.includes('Have You Ever Been Adjudicated Bankrupt?'));
-  assert.ok(labels.includes('Additional Financial Information'));
-  assert.equal(byLabel.get('Have You Ever Been Adjudicated Bankrupt?')?.type, 'yesNo');
-  assert.equal(byLabel.get('Additional Financial Information')?.type, 'textArea');
-  assert.equal(labels.some(label => label.length > 90), false);
-  assert.equal(importReport.componentCount, 42);
+
+  assert.ok(labels.includes('Have you ever been adjudicated bankrupt?'));
+  assert.ok(labels.includes('Additional financial information'));
+  assert.ok(labels.includes('Monthly gross salary'));
+  assert.ok(labels.includes('Net monthly income minus expenses'));
+
+  const byId = id => components.find(component => component.id === id);
+  assert.equal(byId('socialSecurityNumber')?.type, 'maskedInput');
+  assert.equal(byId('everAdjudicatedBankrupt')?.type, 'yesNo');
+  assert.equal(byId('additionalFinancialInformation')?.type, 'textArea');
+  assert.equal(byId('realEstateOwned')?.type, 'textArea');
+  assert.equal(byId('telephoneNumber')?.type, 'phone');
+  assert.equal(byId('address')?.type, 'address');
+  assert.equal(byId('dateOfBirth')?.type, 'date');
+
+  assert.equal(
+    components.every(component => component.provenance.curation?.source === 'recipe'),
+    true,
+  );
 });
