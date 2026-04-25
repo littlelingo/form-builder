@@ -15,6 +15,7 @@
     "builder:build": "npm --workspace @va/form-builder-ui run build",
     "builder:smoke": "node tests/builder-smoke.mjs",
     "import": "node src/cli/import.mjs",
+    "import:corpus": "node src/cli/import-corpus.mjs",
     "corpus:seed": "node src/import/corpus/seed.mjs",
     "llm:up": "docker compose -f docker-compose.ollama.yml up -d",
     "llm:down": "docker compose -f docker-compose.ollama.yml down",

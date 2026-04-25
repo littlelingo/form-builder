@@ -200,8 +200,11 @@ function buildPage(pageGroup, takenIds, corpus) {
 function buildChapter(chapter, takenIds, corpus) {
   return {
     id: chapter.id,
-    type: 'standard',
+    type: chapter.type || 'standard',
     title: chapter.title,
+    options: chapter.options,
+    itemNameLabel: chapter.itemNameLabel,
+    sectionIntro: chapter.sectionIntro,
     pages: chapter.pages.map(page => buildPage(page, takenIds, corpus)),
   };
 }

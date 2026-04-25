@@ -80,3 +80,99 @@ export async function buildSyntheticStaticPdf() {
 
   return doc.save();
 }
+
+export async function buildSyntheticInstructionAndStaticFieldsPdf() {
+  const doc = await PDFDocument.create();
+  const helvetica = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([612, 792]);
+
+  const draw = (text, y, size = 10) =>
+    page.drawText(text, {
+      x: 50,
+      y,
+      size,
+      font: helvetica,
+      color: rgb(0, 0, 0),
+    });
+
+  draw('IMPORTANT: Read the Privacy Act and Respondent Burden information before completing this form.', 730);
+  draw('SECTION I - VETERAN INFORMATION', 700, 12);
+  draw('1. VETERAN NAME', 670);
+  draw('2. SOCIAL SECURITY NUMBER', 640);
+  draw('3. VA FILE NUMBER', 610);
+  draw('4. DATE OF BIRTH', 580);
+  draw('5. MAILING ADDRESS', 550);
+  draw('9A. PROVIDER OR FACILITY NAME', 520);
+  draw('9B. DATE OF TREATMENT', 490);
+  draw('9C. PROVIDER/FACILITY STREET ADDRESS', 460);
+
+  return doc.save();
+}
+
+export async function buildSyntheticRepeatedProviderStaticPdf() {
+  const doc = await PDFDocument.create();
+  const helvetica = await doc.embedFont(StandardFonts.Helvetica);
+
+  const drawPage = (page, rows) => {
+    for (const [text, y] of rows) {
+      page.drawText(text, {
+        x: 50,
+        y,
+        size: 10,
+        font: helvetica,
+        color: rgb(0, 0, 0),
+      });
+    }
+  };
+
+  const page1 = doc.addPage([612, 792]);
+  drawPage(page1, [
+    ['AUTHORIZATION TO DISCLOSE INFORMATION', 730],
+    ['1. VETERAN NAME', 700],
+    ['2. SOCIAL SECURITY NUMBER', 670],
+    ['3. VA FILE NUMBER', 640],
+    ['4. DATE OF BIRTH', 610],
+    ['9A. PROVIDER OR FACILITY NAME', 560],
+    ['9B. DATE OF TREATMENT', 530],
+    ['9C. PROVIDER/FACILITY STREET ADDRESS', 500],
+  ]);
+
+  const page2 = doc.addPage([612, 792]);
+  drawPage(page2, [
+    ['11A. PROVIDER OR FACILITY NAME', 730],
+    ['11B. DATE OF TREATMENT', 700],
+    ['11C. PROVIDER/FACILITY STREET ADDRESS', 670],
+  ]);
+
+  return doc.save();
+}
+
+export async function buildSyntheticSf180StaticPdf() {
+  const doc = await PDFDocument.create();
+  const helvetica = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([612, 792]);
+
+  const rows = [
+    ['1. NAME USED DURING SERVICE (last, first, full middle)', 730],
+    ['2. SOCIAL SECURITY #', 700],
+    ['3. DATE OF BIRTH', 670],
+    ['4. PLACE OF BIRTH', 640],
+    ['6. IS THIS PERSON DECEASED? NO YES - MUST provide Date of Death if veteran is deceased', 610],
+    ['7. DID THIS PERSON RETIRE FROM MILITARY SERVICE? NO YES', 580],
+    ['2. PURPOSE: (Providing information about the purpose of the request is strictly voluntary; however, it may help to provide the best possible response and may', 550],
+    ['2. I am the MILITARY SERVICE MEMBER OR VETERAN identified in Section I am the VETERAN S LEGAL GUARDIAN (MUST submit copy of Court', 520],
+    ['4. AUTHORIZATION SIGNATURE: I declare (or certify, verify, or', 490],
+  ];
+
+  for (const [text, y] of rows) {
+    page.drawText(text, {
+      x: 50,
+      y,
+      size: 10,
+      font: helvetica,
+      color: rgb(0, 0, 0),
+    });
+  }
+
+  return doc.save();
+}

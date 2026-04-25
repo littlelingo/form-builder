@@ -2,6 +2,8 @@
 
 Standalone foundation for a low-code form builder.
 
+> **Using the builder?** See the [end-user guide](docs/user-guide/README.md) — task-oriented walkthrough of every panel, field, condition, handler, and setting for non-engineer form authors.
+
 This package intentionally lives outside `vets-website-main`. It does not modify VA source, and the builder UI does not use VA.gov Design System components. It provides:
 
 - A versioned authoring schema contract.

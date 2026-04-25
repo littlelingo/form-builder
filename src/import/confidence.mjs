@@ -8,6 +8,12 @@ function clamp01(value) {
 export function computeAcroformSignal(field) {
   if (!field) return 0;
   if (field.staticSource === 'text-layout' || field.provenanceOrigin === 'pdf-static-region') {
+    const strongNumberedLabel =
+      !!field.bbox &&
+      /^(\d{1,2}[A-Z]?\.)\s+/.test(field.neighborText || '') &&
+      String(field.closestLabel || '').length > 0 &&
+      String(field.closestLabel || '').length < 80;
+    if (strongNumberedLabel) return 0.75;
     return field.bbox ? 0.35 : 0.2;
   }
   const hasName = !!field.name;
@@ -35,6 +41,12 @@ export function computeValidationMatch(field, componentType) {
   if (componentType === 'date' && /\b(date|dob|birth)\b/i.test(field?.name || '')) score += 0.3;
   if (componentType === 'email') score += 0.3;
   if (componentType === 'phone') score += 0.3;
+  if (
+    componentType === 'yesNo' &&
+    (/\b(no\s+yes|yes\s+no)\b/i.test(field?.neighborText || '') || /\?$/.test(field?.closestLabel || ''))
+  ) {
+    score += 0.3;
+  }
   return clamp01(score);
 }
 

@@ -4,7 +4,13 @@ import { test } from 'node:test';
 import { validateAuthoringForm } from '../src/index.mjs';
 import { auditFormAgainstDefaults } from '../src/standards/index.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
-import { buildSyntheticAcroFormPdf, buildSyntheticStaticPdf } from './fixtures/syntheticPdf.mjs';
+import {
+  buildSyntheticAcroFormPdf,
+  buildSyntheticInstructionAndStaticFieldsPdf,
+  buildSyntheticRepeatedProviderStaticPdf,
+  buildSyntheticSf180StaticPdf,
+  buildSyntheticStaticPdf,
+} from './fixtures/syntheticPdf.mjs';
 
 async function runImport(pdfBytes, options = {}) {
   return importPdf(pdfBytes, {
@@ -80,6 +86,93 @@ test('importPdf infers draft components from static PDFs without fillable fields
   assert.equal(components[0].provenance.confidenceBand, 'low');
   assert.ok(components.find(component => component.label === 'Name of veteran'));
   assert.ok(components.find(component => component.label === 'Claim file number'));
+});
+
+test('importPdf keeps static field pages that also mention instructions', async () => {
+  const pdfBytes = await buildSyntheticInstructionAndStaticFieldsPdf();
+  const { form, importReport } = await runImport(pdfBytes, {
+    filename: 'mixed-instructions-static.pdf',
+    enrich: false,
+  });
+
+  assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
+  assert.ok(importReport.componentCount >= 8);
+
+  const labels = form.chapters.flatMap(chapter =>
+    chapter.pages.flatMap(page => page.components.map(component => component.label)),
+  );
+  assert.ok(labels.includes('Veteran Name'));
+  assert.ok(labels.includes('Social Security Number'));
+  assert.ok(labels.includes('Mailing Address'));
+  assert.ok(labels.includes('Provider Or Facility Name'));
+  assert.ok(labels.includes('Date Of Treatment'));
+  assert.ok(labels.includes('Provider/Facility Street Address'));
+  assert.equal(labels.includes('Item 9'), false);
+});
+
+test('importPdf promotes repeated static provider rows into a list-loop chapter', async () => {
+  const pdfBytes = await buildSyntheticRepeatedProviderStaticPdf();
+  const { form, importReport } = await runImport(pdfBytes, {
+    filename: 'repeated-provider-static.pdf',
+    enrich: false,
+  });
+
+  assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
+
+  const providerChapter = form.chapters.find(chapter => chapter.id === 'treatmentProviders');
+  assert.ok(providerChapter, 'repeated provider fields should become a treatmentProviders chapter');
+  assert.equal(providerChapter.type, 'listLoop');
+  assert.equal(providerChapter.options.nounSingular, 'provider');
+  assert.equal(providerChapter.options.nounPlural, 'providers');
+  assert.equal(providerChapter.pages.length, 1);
+
+  const providerLabels = providerChapter.pages.flatMap(page =>
+    page.components.map(component => component.label),
+  );
+  assert.deepEqual(providerLabels, [
+    'Provider Or Facility Name',
+    'Date Of Treatment',
+    'Provider/Facility Street Address',
+  ]);
+
+  const duplicateProviderFields = providerLabels.filter(label => label === 'Provider Or Facility Name');
+  assert.equal(duplicateProviderFields.length, 1);
+  assert.equal(providerChapter.pages[0].components[0].summaryCard, true);
+});
+
+test('importPdf cleans SF-180-style static prose labels and raises numbered-label confidence', async () => {
+  const pdfBytes = await buildSyntheticSf180StaticPdf();
+  const { form, importReport } = await runImport(pdfBytes, {
+    filename: 'standard-form-180-like.pdf',
+    enrich: false,
+  });
+
+  assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
+
+  const components = form.chapters.flatMap(chapter =>
+    chapter.pages.flatMap(page => page.components),
+  );
+  const byLabel = Object.fromEntries(components.map(component => [component.label, component]));
+
+  assert.ok(byLabel['Purpose Of Request']);
+  assert.ok(byLabel['Requester Relationship To Service Member']);
+  assert.ok(byLabel['Authorization Signature']);
+  assert.equal(byLabel['Place Of Birth'].type, 'textInput');
+  assert.equal(byLabel['Is This Person Deceased?'].type, 'yesNo');
+  assert.equal(byLabel['Did This Person Retire From Military Service?'].type, 'yesNo');
+  assert.equal(
+    components.some(component => component.label.length > 90),
+    false,
+    'cleaned SF-180 labels should not carry prose paragraphs',
+  );
+  assert.equal(
+    components.every(component => component.provenance.confidence >= 0.5),
+    true,
+    'clean numbered static labels should not remain low confidence',
+  );
 });
 
 test('importPdf can curate sections from caller-provided recipe data', async () => {

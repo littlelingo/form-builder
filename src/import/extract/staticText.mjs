@@ -97,7 +97,7 @@ function normalizeLabel(label) {
 }
 
 function humanizeStaticLabel(label) {
-  const cleaned = normalizeLabel(label)
+  const cleaned = cleanStaticLabel(label)
     .replace(/^\d{1,2}[A-Z]?\.\s*/, '')
     .replace(/\s*\([^)]*\)\s*/g, ' ')
     .replace(/\bI AM HOMELESS\b/i, '')
@@ -110,6 +110,26 @@ function humanizeStaticLabel(label) {
     .replace(/'S\b/g, "'s")
     .replace(/\bVa\b/g, 'VA')
     .replace(/\bSsn\b/g, 'SSN');
+}
+
+function cleanStaticLabel(label) {
+  const text = normalizeLabel(label);
+  if (/^purpose\s*:/i.test(text)) {
+    return 'Purpose of request';
+  }
+  if (/^authorization signature\s*:/i.test(text)) {
+    return 'Authorization signature';
+  }
+  if (/^i am the military service member or veteran identified in section/i.test(text)) {
+    return 'Requester relationship to service member';
+  }
+  if (/^is this person deceased\?/i.test(text)) {
+    return 'Is this person deceased?';
+  }
+  if (/^did this person retire from military service\?/i.test(text)) {
+    return 'Did this person retire from military service?';
+  }
+  return text;
 }
 
 function toStaticKey(label, fallback) {
@@ -131,10 +151,11 @@ function inferStaticType(label) {
   const text = label.toLowerCase();
   if (/\b(e-mail|email)\b/.test(text)) return 'email';
   if (/\b(phone|telephone)\b/.test(text)) return 'phone';
-  if (/\b(date|birth)\b/.test(text)) return 'date';
+  if (/\b(no\s+yes|yes\s+no)\b/.test(text) || /\?$/.test(text)) return 'yesNo';
+  if (/\b(date|dob)\b/.test(text) || /\b(date of birth|birth date)\b/.test(text)) return 'date';
   if (/\b(ssn|social security)\b/.test(text)) return 'text';
   if (/\b(address|street|p\.o\.|zip|mailing)\b/.test(text)) return 'text';
-  if (/\b(issue|remarks|explain|why|additional)\b/.test(text)) return 'text';
+  if (/\b(issue|remarks|explain|why|additional|purpose)\b/.test(text)) return 'text';
   return 'text';
 }
 
@@ -143,6 +164,8 @@ function staticComponentOverrides(label, type) {
   if (type === 'email') return { type: 'email' };
   if (type === 'phone') return { type: 'phone' };
   if (type === 'date') return { type: 'date' };
+  if (type === 'yesNo') return { type: 'yesNo' };
+  if (/^place of birth$/i.test(text)) return { type: 'textInput' };
   if (/\b(ssn|social security)\b/.test(text)) {
     return {
       type: 'maskedInput',
@@ -153,7 +176,7 @@ function staticComponentOverrides(label, type) {
   if (/\b(address|street|p\.o\.|zip|mailing)\b/.test(text)) {
     return { type: 'address' };
   }
-  if (/\b(issue|remarks|explain|why|additional)\b/.test(text)) {
+  if (/\b(issue|remarks|explain|why|additional|purpose)\b/.test(text)) {
     return { type: 'textArea', maxLength: 2000 };
   }
   return {};
@@ -161,6 +184,7 @@ function staticComponentOverrides(label, type) {
 
 function isInstructionPage(page, lines) {
   const text = lines.map(line => line.text).join(' ');
+  if (parseNumberedLabels(text).length >= 4) return false;
   return /\b(INFORMATION AND DETAILED INSTRUCTIONS|OVERVIEW OF .* FORM SECTIONS|PRIVACY ACT STATEMENT|RESPONDENT BURDEN)\b/i.test(text) &&
     !/\bPART I\b|\bSECTION I\b/.test(text.slice(0, 500));
 }
@@ -170,14 +194,18 @@ function isWeakStaticQuestion(label) {
   return (
     text.length < 5 ||
     /^\([^)]*\)$/.test(text) ||
+    /^page\s+\d+$/i.test(text) ||
+    /^item\s+\d+[a-z]?$/i.test(text) ||
     /^(part|section)\s+[ivx]+/.test(text) ||
-    /\b(instructions?|note|penalty|privacy act|respondent burden|omb approved|expiration date|va form)\b/.test(text)
+    /\b(instructions?|note|penalty|privacy act|respondent burden|omb approved|expiration date|va form)\b/.test(text) ||
+    /\b(general information|how to submit|what you need to do|how va will help|where to send|evidence must show|va forms are available|www\.|va\.gov|for free help|do not send completed forms|public reporting burden|requested information|disclosure of the information|definitions and abbreviations|archival records|personnel records|national archives trust fund|not available|example evidence|mail your form|this pension center)\b/.test(text) ||
+    /^(if you|the service member or|where reply may be sent|the complete|service completed before|html on|in rare cases|hearing loss noise|diabetes agent orange|left knee)/.test(text)
   );
 }
 
 function parseNumberedLabels(text) {
   const normalized = normalizeLabel(text);
-  const pattern = /(\d{1,2})([A-Z])?\.\s+(.+?)(?=\s+\d{1,2}[A-Z]?\.\s+|$)/g;
+  const pattern = /(?:^|\s)(\d{1,2})([A-Z])?\.\s+(.+?)(?=\s+\d{1,2}[A-Z]?\.\s+|$)/g;
   const matches = [];
   let match;
   while ((match = pattern.exec(normalized))) {
@@ -219,10 +247,8 @@ function inferGenericStaticFieldsForPage(page) {
     const base = items.find(item => !item.parsed.suffix);
     const suffixed = items.filter(item => item.parsed.suffix);
 
-    if (suffixed.length >= 2) {
-      let label = base
-        ? humanizeStaticLabel(base.parsed.label)
-        : humanizeStaticLabel(`Item ${number}`);
+    if (base && suffixed.length >= 2) {
+      let label = humanizeStaticLabel(base.parsed.label);
       if (/following review options|review option/i.test(base?.parsed.label || '')) {
         label = 'Board Review Option';
       }
