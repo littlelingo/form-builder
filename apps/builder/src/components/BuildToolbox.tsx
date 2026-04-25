@@ -4,6 +4,7 @@ import { paletteCategories, paletteComponents, sectionTemplates } from '../lib/f
 import type {
   ScreenTemplateId,
   SectionTemplateId,
+  TemplateHelperPreview,
   TemplateInsertionOptions,
 } from '../lib/formModel';
 import type { PaletteDragItem, SavedCustomTemplate } from '../types';
@@ -39,6 +40,7 @@ interface BuildToolboxProps {
   onPaletteDragStart: (item: PaletteDragItem) => void;
   customTemplates: SavedCustomTemplate[];
   canSaveCustomTemplate?: boolean;
+  helperPresetPreviews: TemplateHelperPreview[];
   saveCustomTemplateDefaultName?: string;
   saveCustomTemplateLabel?: string;
 }
@@ -83,28 +85,6 @@ const advancedTemplateIds = new Set<SectionTemplateId>([
   'dependentLoop',
 ]);
 
-const helperPresetDetails = [
-  {
-    template: 'Contact information',
-    prefill: [
-      'profile.mailingAddress -> Current mailing address',
-      'profile.email -> Email address',
-      'profile.phone -> Phone number',
-    ],
-    computed: ['metadata.contactSummary from Email address + Phone number'],
-  },
-  {
-    template: 'Identity',
-    prefill: [
-      'profile.fullName -> Full name',
-      'profile.dateOfBirth -> Date of birth',
-      'profile.ssn -> Social Security number',
-      'profile.vaFileNumber -> VA file number',
-    ],
-    computed: ['metadata.identitySummary from Full name + Date of birth'],
-  },
-];
-
 export function BuildToolbox({
   disabled = false,
   onAddField,
@@ -120,6 +100,7 @@ export function BuildToolbox({
   onPaletteDragStart,
   customTemplates,
   canSaveCustomTemplate = false,
+  helperPresetPreviews,
   saveCustomTemplateDefaultName = 'Saved template',
   saveCustomTemplateLabel = 'Save current screen',
 }: BuildToolboxProps) {
@@ -351,16 +332,24 @@ export function BuildToolbox({
               <summary>Review helper presets</summary>
               {includeTemplateHelpers ? (
                 <div className="builder-template-helper-details__body">
-                  {helperPresetDetails.map(detail => (
-                    <div className="builder-template-helper-detail" key={detail.template}>
-                      <strong>{detail.template}</strong>
+                  {helperPresetPreviews.map(detail => (
+                    <div className="builder-template-helper-detail" key={detail.templateId}>
+                      <strong>{detail.templateLabel}</strong>
                       <p>Prefill mappings</p>
                       <ul>
-                        {detail.prefill.map(item => <li key={item}>{item}</li>)}
+                        {detail.prefill.map(item => (
+                          <li key={`${item.source}:${item.target}`}>
+                            {item.source} -&gt; {item.target} ({item.targetLabel})
+                          </li>
+                        ))}
                       </ul>
                       <p>Computed values</p>
                       <ul>
-                        {detail.computed.map(item => <li key={item}>{item}</li>)}
+                        {detail.computed.map(item => (
+                          <li key={item.id}>
+                            {item.id} writes {item.target} from {item.sources.join(' + ')} ({item.sourceLabels.join(' + ')})
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   ))}

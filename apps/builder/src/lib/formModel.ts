@@ -24,6 +24,24 @@ export type ScreenTemplateId = 'blank' | ReusableSectionTemplateId;
 export interface TemplateInsertionOptions {
   includeAuthoringHelpers?: boolean;
 }
+type HelperPresetTemplateId = 'contact' | 'identity';
+export interface TemplateHelperMappingPreview {
+  source: string;
+  target: string;
+  targetLabel: string;
+}
+export interface TemplateHelperComputedPreview {
+  id: string;
+  target: string;
+  sources: string[];
+  sourceLabels: string[];
+}
+export interface TemplateHelperPreview {
+  templateId: HelperPresetTemplateId;
+  templateLabel: string;
+  prefill: TemplateHelperMappingPreview[];
+  computed: TemplateHelperComputedPreview[];
+}
 
 export const paletteCategories = [
   { id: 'fields', label: 'Fields' },
@@ -443,6 +461,117 @@ function addComputedValue(
       },
     ],
   };
+}
+
+function newPrefillMappingPreviews(
+  form: AuthoringForm,
+  mappings: Array<{ source: string; target?: string; targetLabel?: string }>,
+): TemplateHelperMappingPreview[] {
+  const existingMappings = form.prefill?.mappings || [];
+  return mappings
+    .filter(
+      (mapping): mapping is { source: string; target: string; targetLabel: string } =>
+        Boolean(mapping.target && mapping.targetLabel),
+    )
+    .filter(
+      mapping =>
+        !existingMappings.some(item => item.source === mapping.source && item.target === mapping.target),
+    )
+    .map(mapping => ({
+      source: mapping.source,
+      target: mapping.target,
+      targetLabel: mapping.targetLabel,
+    }));
+}
+
+function newComputedValuePreview(
+  form: AuthoringForm,
+  definition: ComputedValueDefinition,
+  components: AuthoringComponent[],
+): TemplateHelperComputedPreview | undefined {
+  if (!definition.sources?.length) return undefined;
+  const computedValues = form.computedValues || [];
+  const existing = computedValues.some(
+    item => item.operation === definition.operation && sameSources(item.sources, definition.sources),
+  );
+  if (existing) return undefined;
+
+  return {
+    id: uniqueComputedId(definition.id, computedValues),
+    target: uniqueComputedTarget(definition.target, computedValues),
+    sources: definition.sources,
+    sourceLabels: definition.sources.map(
+      source => flattenComponents(components).find(component => component.id === source)?.label || source,
+    ),
+  };
+}
+
+function previewContactTemplateHelpers(form: AuthoringForm, components: AuthoringComponent[]) {
+  const address = componentByType(components, 'address');
+  const email = componentByType(components, 'email');
+  const phone = componentByType(components, 'phone');
+  const summarySources = [email?.id, phone?.id].filter(Boolean) as string[];
+  const computed = newComputedValuePreview(form, {
+    id: 'contactSummary',
+    target: 'metadata.contactSummary',
+    operation: 'concat',
+    sources: summarySources,
+    separator: ' | ',
+  }, components);
+
+  return {
+    prefill: newPrefillMappingPreviews(form, [
+      { source: 'profile.mailingAddress', target: address?.id, targetLabel: address?.label },
+      { source: 'profile.email', target: email?.id, targetLabel: email?.label },
+      { source: 'profile.phone', target: phone?.id, targetLabel: phone?.label },
+    ]),
+    computed: computed ? [computed] : [],
+  };
+}
+
+function previewIdentityTemplateHelpers(form: AuthoringForm, components: AuthoringComponent[]) {
+  const fullName = componentByLabel(components, /^Full name$/i);
+  const dateOfBirth = componentByLabel(components, /date of birth/i);
+  const ssn = componentByLabel(components, /social security number/i);
+  const vaFileNumber = componentByLabel(components, /VA file number/i);
+  const summarySources = [fullName?.id, dateOfBirth?.id].filter(Boolean) as string[];
+  const computed = newComputedValuePreview(form, {
+    id: 'identitySummary',
+    target: 'metadata.identitySummary',
+    operation: 'concat',
+    sources: summarySources,
+    separator: ' | ',
+  }, components);
+
+  return {
+    prefill: newPrefillMappingPreviews(form, [
+      { source: 'profile.fullName', target: fullName?.id, targetLabel: fullName?.label },
+      { source: 'profile.dateOfBirth', target: dateOfBirth?.id, targetLabel: dateOfBirth?.label },
+      { source: 'profile.ssn', target: ssn?.id, targetLabel: ssn?.label },
+      { source: 'profile.vaFileNumber', target: vaFileNumber?.id, targetLabel: vaFileNumber?.label },
+    ]),
+    computed: computed ? [computed] : [],
+  };
+}
+
+export function previewTemplateAuthoringHelpers(form: AuthoringForm): TemplateHelperPreview[] {
+  return (['contact', 'identity'] satisfies HelperPresetTemplateId[]).map(templateId => {
+    const page = createScreenFromTemplate(
+      templateId,
+      new Set(allPageIds(form)),
+      new Set(allComponentIds(form)),
+    );
+    const helpers =
+      templateId === 'contact'
+        ? previewContactTemplateHelpers(form, page.components)
+        : previewIdentityTemplateHelpers(form, page.components);
+    const template = sectionTemplates.find(item => item.id === templateId);
+    return {
+      templateId,
+      templateLabel: template?.label || templateId,
+      ...helpers,
+    };
+  });
 }
 
 function addContactTemplateHelpers(form: AuthoringForm, components: AuthoringComponent[]) {

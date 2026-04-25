@@ -35,6 +35,7 @@ import {
   moveChapterToIndex,
   moveComponentToPageAt,
   movePageToIndex,
+  previewTemplateAuthoringHelpers,
   removeChapter,
   removeComponent,
   removePage,
@@ -236,6 +237,7 @@ export default function App() {
   const selectedChapter = findChapter(form, selected.chapterId);
   const selectedPage = findPage(form, selected);
   const availableFields = allComponents(form);
+  const helperPresetPreviews = previewTemplateAuthoringHelpers(form);
 
   function commitForm(nextForm: AuthoringForm) {
     setHistory(current => ({
@@ -767,6 +769,7 @@ export default function App() {
               canSaveCustomTemplate={Boolean(selectedPage)}
               customTemplates={customTemplates}
               disabled={canvasMode === 'preview'}
+              helperPresetPreviews={helperPresetPreviews}
               saveCustomTemplateDefaultName={
                 selectedComponent?.type === 'sectionGroup'
                   ? selectedComponent.label

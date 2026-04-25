@@ -213,19 +213,29 @@ async function smokeHelperPresetReview(page) {
   await page.getByText('Review helper presets').click();
   await expectVisible(
     page,
-    page.getByText('profile.email -> Email address'),
-    'Expected helper preset review to show Contact prefill mappings.',
+    page.getByText('profile.email -> emailAddress (Email address)'),
+    'Expected helper preset review to show Contact prefill targets with generated IDs.',
   );
   await expectVisible(
     page,
-    page.getByText('metadata.identitySummary from Full name + Date of birth'),
-    'Expected helper preset review to show Identity computed values.',
+    page.getByText('identitySummary writes metadata.identitySummary from fullName + dateOfBirth'),
+    'Expected helper preset review to show Identity computed targets with generated IDs.',
   );
 }
 
 async function smokeSavedTemplateLibrary(page) {
   await page.getByRole('button', { name: 'Add Contact information' }).click();
   await expectMetric(page, 'Fields', 2);
+  await expectVisible(
+    page,
+    page.getByText('profile.email -> emailAddress2 (Email address)'),
+    'Expected helper preset review to preview collision-safe Contact target IDs.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('contactSummary2 writes metadata.contactSummary2 from emailAddress2 + phoneNumber2'),
+    'Expected helper preset review to preview collision-safe Contact computed targets.',
+  );
 
   await page.getByLabel('Template name').fill('Smoke saved contact');
   await page.getByRole('button', { name: 'Save section' }).click();

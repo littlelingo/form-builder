@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after runner smoke factoring
+Last updated: 2026-04-25 EDT after helper preset precision
 
 ## Current Workspace
 
@@ -14,13 +14,13 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the runner smoke factoring checkpoint. The latest passing slice
-split the long browser smoke into named helper flows for blank authoring,
-helper presets, saved templates, reusable templates, promoted controls, and
-the 27-8832 veteran/dependent runner paths. The next recommended implementation
-slice is helper preset precision, because authors can review helper mappings
-today, but the preview still describes template targets by label rather than
-the exact generated IDs for the current form state.
+Resume from the helper preset precision checkpoint. The latest passing slice
+makes the Patterns-panel helper preset review derive target IDs from the
+current authoring form, so Contact and Identity helper previews show the exact
+prefill and computed-value IDs that insertion will create, including collision
+safe suffixes. The next recommended implementation slice is saved template
+overwrite/merge choices, because imports currently rename conflicts
+automatically without letting authors choose skip, rename, or replace.
 
 Recent completed slices:
 
@@ -216,6 +216,17 @@ Recent completed slices:
     - Browser error tracking now lives in a dedicated helper while preserving
       the existing favicon 404 exception.
 
+19. **Helper preset precision**
+    - `formModel.ts` now exposes `previewTemplateAuthoringHelpers(form)` for
+      Contact and Identity helper presets.
+    - `BuildToolbox` uses the current-form preview instead of static helper
+      review text.
+    - Helper preset review now shows exact generated prefill targets such as
+      `emailAddress` or `emailAddress2`, plus computed IDs and targets such as
+      `contactSummary2` and `metadata.contactSummary2`.
+    - Browser smoke verifies both the initial helper preview and the
+      collision-safe Contact preview after a Contact template already exists.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -250,7 +261,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the runner smoke factoring slice:
+Latest verification after the helper preset precision slice:
 
 ```bash
 npm run builder:smoke
@@ -320,6 +331,8 @@ Confirmed:
   import message for renamed duplicates.
 - Automated smoke is now organized into named helper flows for easier failure
   triage as runner and template coverage grows.
+- Automated smoke now verifies helper preset review displays generated target
+  IDs and collision-safe suffixes for Contact and Identity helpers.
 
 Known browser-console issue:
 
@@ -329,13 +342,14 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Helper preset precision**
-   - If authors need generated IDs before insertion, preview the exact IDs for
-     the current form state rather than field-label mappings.
-
-2. **Saved template overwrite/merge choices**
+1. **Saved template overwrite/merge choices**
    - If imported libraries become larger, consider an explicit import review
      step for skip, rename, or replace decisions.
+
+2. **Helper preset reusable tests**
+   - If helper previews gain more templates, add narrow model tests for
+     `previewTemplateAuthoringHelpers` instead of relying only on browser
+     smoke coverage.
 
 ## Suggested First Files To Read Next Session
 
