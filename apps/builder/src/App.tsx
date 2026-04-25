@@ -46,7 +46,12 @@ import {
   updatePage,
 } from './lib/formModel';
 import { emptyRuntimeState } from './lib/runnerRuntime';
-import type { LayoutWidth, ScreenTemplateId, SectionTemplateId } from './lib/formModel';
+import type {
+  LayoutWidth,
+  ScreenTemplateId,
+  SectionTemplateId,
+  TemplateInsertionOptions,
+} from './lib/formModel';
 import type {
   AuthoringComponent,
   AuthoringForm,
@@ -290,8 +295,9 @@ export default function App() {
     index?: number,
     layoutWidth: LayoutWidth = 'full',
     siblingId?: string,
+    options?: TemplateInsertionOptions,
   ) {
-    const result = addSectionTemplateToPage(form, selected, templateId, index, layoutWidth);
+    const result = addSectionTemplateToPage(form, selected, templateId, index, layoutWidth, options);
     const nextForm = siblingId
       ? setComponentLayoutWidth(
           result.form,
@@ -304,9 +310,12 @@ export default function App() {
     setPropertiesPanel('properties');
   }
 
-  function handleAddScreenTemplate(templateId: ScreenTemplateId) {
+  function handleAddScreenTemplate(
+    templateId: ScreenTemplateId,
+    options?: TemplateInsertionOptions,
+  ) {
     const section = addSectionFromTemplate(form, 'standard');
-    const result = addScreenTemplateToChapter(section.form, section.selected.chapterId, templateId);
+    const result = addScreenTemplateToChapter(section.form, section.selected.chapterId, templateId, options);
     const chapter = result.form.chapters.find(item => item.id === section.selected.chapterId);
     const pages = chapter?.pages || [];
     const firstBlankPage = pages[0];
@@ -708,7 +717,9 @@ export default function App() {
               onAddCustomTemplate={handleAddCustomTemplate}
               onAddField={handleAddComponent}
               onAddScreen={handleAddScreenTemplate}
-              onAddSection={handleAddSectionTemplate}
+              onAddSection={(templateId, options) =>
+                handleAddSectionTemplate(templateId, undefined, 'full', undefined, options)
+              }
               onExportCustomTemplates={handleExportCustomTemplates}
               onImportCustomTemplates={handleImportCustomTemplates}
               onRemoveCustomTemplate={handleRemoveCustomTemplate}

@@ -200,8 +200,8 @@ export interface PaletteComponent {
 
 export type PaletteDragItem =
   | { kind: 'component'; type: string }
-  | { kind: 'screen'; templateId: string }
-  | { kind: 'section'; templateId: string }
+  | { kind: 'screen'; templateId: string; includeAuthoringHelpers?: boolean }
+  | { kind: 'section'; templateId: string; includeAuthoringHelpers?: boolean }
   | { kind: 'customTemplate'; templateId: string };
 
 export type PreviewData = Record<string, unknown>;

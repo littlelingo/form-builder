@@ -99,11 +99,40 @@ async function expectVisible(page, locator, message) {
   assert.ok(await locator.isVisible(), message);
 }
 
+async function checkLabeledControl(page, label) {
+  const control =
+    typeof label === 'string'
+      ? page.getByLabel(label, { exact: true })
+      : page.getByLabel(label);
+  const visibleLabel =
+    typeof label === 'string'
+      ? page.getByText(label, { exact: true })
+      : page.getByText(label);
+  await visibleLabel.click();
+  assert.equal(await control.isChecked(), true, `Expected "${String(label)}" to be checked.`);
+}
+
+async function authoringForm(page) {
+  await page.getByRole('tab', { name: 'Code' }).click();
+  const authoringJson = await page
+    .locator('.builder-output__panel')
+    .first()
+    .locator('pre')
+    .textContent();
+  return JSON.parse(authoringJson || '{}');
+}
+
 function collectComponentIds(components = []) {
   return components.flatMap(component => [
     component.id,
     ...collectComponentIds(component.children || []),
   ]);
+}
+
+function flattenComponents(form) {
+  return form.chapters.flatMap(chapter =>
+    chapter.pages.flatMap(screen => screen.components),
+  );
 }
 
 async function main() {
@@ -114,7 +143,10 @@ async function main() {
   try {
     await waitForServer(server);
     browser = await chromium.launch();
-    context = await browser.newContext({ acceptDownloads: true });
+    context = await browser.newContext({
+      acceptDownloads: true,
+      viewport: { width: 1600, height: 1200 },
+    });
     const page = await context.newPage();
     const browserErrors = [];
 
@@ -170,6 +202,16 @@ async function main() {
 
     await page.getByRole('tab', { name: 'Canvas' }).click();
     await page.getByRole('tab', { name: 'Patterns' }).click();
+    await expectVisible(
+      page,
+      page.getByRole('checkbox', { name: 'Include helper presets' }),
+      'Expected template helper preset control to render.',
+    );
+    assert.equal(
+      await page.getByRole('checkbox', { name: 'Include helper presets' }).isChecked(),
+      true,
+      'Expected template helper presets to be included by default.',
+    );
     await page.getByRole('button', { name: 'Add Contact information' }).click();
     await expectMetric(page, 'Fields', 2);
 
@@ -186,13 +228,7 @@ async function main() {
       .dragTo(page.getByLabel('Drop at end'));
     await expectMetric(page, 'Fields', 3);
 
-    await page.getByRole('tab', { name: 'Code' }).click();
-    const authoringJson = await page
-      .locator('.builder-output__panel')
-      .first()
-      .locator('pre')
-      .textContent();
-    const parsed = JSON.parse(authoringJson || '{}');
+    const parsed = await authoringForm(page);
     const componentIds = parsed.chapters.flatMap(chapter =>
       chapter.pages.flatMap(screen => collectComponentIds(screen.components)),
     );
@@ -259,6 +295,146 @@ async function main() {
           definition.sources?.includes('dateOfBirth'),
       ),
       'Expected identity template computed summary.',
+    );
+
+    await page.getByRole('button', { name: 'Add Employment list' }).click();
+    const withEmploymentList = await authoringForm(page);
+    const employmentChapter = withEmploymentList.chapters.find(chapter => chapter.id.includes('employment'));
+    assert.equal(employmentChapter?.type, 'listLoop', 'Expected Employment list to create a list-loop chapter.');
+    assert.equal(employmentChapter?.options?.nounSingular, 'employer');
+    assert.equal(employmentChapter?.options?.nounPlural, 'employers');
+    assert.ok(
+      employmentChapter?.pages?.some(screen =>
+        screen.components?.some(component => component.label === 'Average monthly income'),
+      ),
+      'Expected Employment list to include the average monthly income field.',
+    );
+
+    await page.getByRole('tab', { name: 'Canvas' }).click();
+    await page.getByRole('tab', { name: 'Fields' }).click();
+    await page.getByRole('button', { name: 'Add Table' }).click();
+    await expectVisible(
+      page,
+      page.getByRole('checkbox', { name: 'Use first row as table header' }),
+      'Expected table header-row control to render.',
+    );
+    assert.equal(
+      await page.getByRole('checkbox', { name: 'Use first row as table header' }).isChecked(),
+      true,
+      'Expected new tables to default to header rows.',
+    );
+    await expectVisible(
+      page,
+      page.locator('table.usa-table th[scope="col"]').first(),
+      'Expected table preview to render column header cells.',
+    );
+
+    await page.getByRole('button', { name: 'Add Date range' }).click();
+    await page.getByText('Date and time').click();
+    await expectVisible(
+      page,
+      page.getByRole('checkbox', { name: 'Allow future dates' }),
+      'Expected Date range inspector to expose the Allow future dates toggle.',
+    );
+    await page.getByText('Allow future dates').click();
+    assert.equal(
+      await page.getByRole('checkbox', { name: 'Allow future dates' }).isChecked(),
+      true,
+      'Expected Allow future dates to be checked after toggling the control.',
+    );
+    const withDateRange = await authoringForm(page);
+    const dateRange = flattenComponents(withDateRange).find(component => component.type === 'dateRange');
+    assert.equal(dateRange?.allowFutureDates, true, 'Expected Date range future-date setting to persist.');
+
+    const prefillCountBeforeDecline = withDateRange.prefill?.mappings?.length || 0;
+    const computedCountBeforeDecline = withDateRange.computedValues?.length || 0;
+    await page.getByRole('tab', { name: 'Canvas' }).click();
+    await page.getByRole('tab', { name: 'Patterns' }).click();
+    await page.getByText('Include helper presets').click();
+    assert.equal(
+      await page.getByRole('checkbox', { name: 'Include helper presets' }).isChecked(),
+      false,
+      'Expected helper presets to be declined before inserting another template.',
+    );
+    await page.getByRole('button', { name: 'Add Contact information' }).click();
+    const withDeclinedHelpers = await authoringForm(page);
+    assert.equal(
+      withDeclinedHelpers.prefill?.mappings?.length || 0,
+      prefillCountBeforeDecline,
+      'Expected declined helper preset insertion to leave prefill mappings unchanged.',
+    );
+    assert.equal(
+      withDeclinedHelpers.computedValues?.length || 0,
+      computedCountBeforeDecline,
+      'Expected declined helper preset insertion to leave computed values unchanged.',
+    );
+
+    await page.getByRole('tab', { name: 'Canvas' }).click();
+    await page.getByRole('tab', { name: 'Files' }).click();
+    await page.getByRole('button', { name: 'Personalized Career Planning and Guidance (27-8832)' }).click();
+    await expectMetric(page, 'Fields', 37);
+    await page.getByRole('tab', { name: 'Run' }).click();
+    await expectVisible(
+      page,
+      page.getByRole('heading', { name: 'Personalized career planning and guidance', exact: true }),
+      'Expected 27-8832 runner to open on the eligibility page.',
+    );
+
+    await checkLabeledControl(page, 'Educational services');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await checkLabeledControl(page, 'Veteran or service member');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel("Veteran or service member's full name").fill('Pat Veteran');
+    await page.getByLabel("Veteran or service member's Social Security number").fill('123456789');
+    await page.getByLabel("Veteran or service member's date of birth").fill('1980-01-01');
+    await page.getByLabel('VA file number').fill('12345678');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel('Street address').fill('123 Main St');
+    await page.getByLabel('City').fill('Washington');
+    await page.getByLabel('State').fill('DC');
+    await page.getByLabel('ZIP code').fill('20001');
+    await page.getByLabel("Veteran or service member's phone number").fill('2025550100');
+    await page.getByLabel("Veteran or service member's email address").fill('pat.veteran@example.com');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await checkLabeledControl(page, 'No');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel('Date entered active duty').fill('2001-01-01');
+    await page.getByLabel('Date separated from active duty or projected separation date').fill('2005-01-01');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await checkLabeledControl(page, 'Army');
+    await checkLabeledControl(page, 'Active');
+    await checkLabeledControl(page, 'Honorable');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByRole('textbox', { name: 'Remarks' }).fill('Smoke test remarks.');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await checkLabeledControl(page, /I certify that I have completed this statement/);
+    await page.getByLabel('Veteran, service member, or claimant typed signature').fill('Pat Veteran');
+    await page.getByLabel('Date signed').fill('2026-04-25');
+    await checkLabeledControl(page, 'No');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expectVisible(
+      page,
+      page.getByRole('heading', { name: 'Submit this mock form' }),
+      'Expected 27-8832 runner review and submit page.',
+    );
+    assert.equal(
+      await page.getByRole('heading', { name: 'Claimant identity' }).count(),
+      0,
+      'Expected 27-8832 veteran path to skip claimant-only review sections.',
+    );
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expectVisible(
+      page,
+      page.getByLabel('Submit this mock form').getByText('Mock submitted'),
+      'Expected 27-8832 mock submit to complete successfully.',
     );
 
     assert.deepEqual(browserErrors, [], `Unexpected browser errors:\n${browserErrors.join('\n')}`);

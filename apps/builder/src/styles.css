@@ -589,6 +589,26 @@ textarea {
   padding: 0.35rem 0.45rem;
 }
 
+.builder-template-helper-control {
+  background: #f7f9fb;
+  border: 1px solid var(--builder-line);
+  border-radius: 0.4rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem;
+}
+
+.builder-template-helper-control .usa-checkbox {
+  margin: 0;
+}
+
+.builder-template-helper-control p {
+  color: var(--builder-ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
 .builder-custom-template-list {
   display: grid;
   gap: 0.35rem;

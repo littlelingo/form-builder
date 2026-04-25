@@ -21,6 +21,9 @@ type ReusableSectionTemplateId =
 type ListSectionTemplateId = 'repeatable' | 'employmentLoop' | 'dependentLoop';
 export type SectionTemplateId = 'standard' | ReusableSectionTemplateId | ListSectionTemplateId;
 export type ScreenTemplateId = 'blank' | ReusableSectionTemplateId;
+export interface TemplateInsertionOptions {
+  includeAuthoringHelpers?: boolean;
+}
 
 export const paletteCategories = [
   { id: 'fields', label: 'Fields' },
@@ -486,7 +489,9 @@ function addTemplateAuthoringHelpers(
   form: AuthoringForm,
   templateId: SectionTemplateId | ScreenTemplateId,
   components: AuthoringComponent[],
+  options: TemplateInsertionOptions = {},
 ) {
+  if (options.includeAuthoringHelpers === false) return form;
   if (templateId === 'contact') return addContactTemplateHelpers(form, components);
   if (templateId === 'identity') return addIdentityTemplateHelpers(form, components);
   return form;
@@ -1166,6 +1171,7 @@ export function addChapter(
 export function addSectionFromTemplate(
   form: AuthoringForm,
   templateId: SectionTemplateId,
+  options: TemplateInsertionOptions = {},
 ): { form: AuthoringForm; selected: SelectedNode } {
   const chapter = createSectionFromTemplate(
     templateId,
@@ -1176,7 +1182,7 @@ export function addSectionFromTemplate(
   const nextForm = addTemplateAuthoringHelpers({
     ...form,
     chapters: [...form.chapters, chapter],
-  }, templateId, chapter.pages.flatMap(page => page.components));
+  }, templateId, chapter.pages.flatMap(page => page.components), options);
 
   return {
     form: nextForm,
@@ -1194,13 +1200,14 @@ export function addSectionTemplateToPage(
   templateId: SectionTemplateId,
   index = Number.MAX_SAFE_INTEGER,
   layoutWidth: LayoutWidth = 'full',
+  options: TemplateInsertionOptions = {},
 ): { form: AuthoringForm; selected: SelectedNode } {
   if (
     templateId === 'repeatable' ||
     templateId === 'employmentLoop' ||
     templateId === 'dependentLoop'
   ) {
-    return addSectionFromTemplate(form, templateId);
+    return addSectionFromTemplate(form, templateId, options);
   }
 
   const currentSelection =
@@ -1262,7 +1269,7 @@ export function addSectionTemplateToPage(
       components: nextComponents,
     };
   });
-  const withHelpers = addTemplateAuthoringHelpers(nextForm, templateId, group.children || []);
+  const withHelpers = addTemplateAuthoringHelpers(nextForm, templateId, group.children || [], options);
 
   return {
     form: withHelpers,
@@ -1310,13 +1317,14 @@ export function addScreenTemplateToChapter(
   form: AuthoringForm,
   chapterId: string,
   templateId: ScreenTemplateId,
+  options: TemplateInsertionOptions = {},
 ): { form: AuthoringForm; selected: SelectedNode } {
   const page = createScreenFromTemplate(templateId, allPageIds(form), allComponentIds(form));
   const nextForm = updateChapter(form, chapterId, chapter => ({
     ...chapter,
     pages: [...chapter.pages, page],
   }));
-  const withHelpers = addTemplateAuthoringHelpers(nextForm, templateId, page.components);
+  const withHelpers = addTemplateAuthoringHelpers(nextForm, templateId, page.components, options);
 
   return {
     form: withHelpers,

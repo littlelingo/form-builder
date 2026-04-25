@@ -1,12 +1,12 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after saved template hardening
+Last updated: 2026-04-25 EDT after template helper preset controls
 
 ## Current Workspace
 
 The standalone VA Form Builder lives at:
 
-`/Users/clint/Workspace/va/va-form-builder`
+`/Users/clint/Workspace/va/form-builder`
 
 Use this workspace first when resuming. The accepted direction is a standalone
 low-code VA.gov form authoring tool that keeps authoring JSON as the source of
@@ -14,11 +14,12 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the saved-template hardening checkpoint. The latest passing slice
-added saved-template export/import, draggable saved-template insertion, and
-browser smoke coverage for those flows. The next recommended implementation
-slice is to broaden browser smoke coverage for list-loop templates,
-table/date-range controls, and the 27-8832 runner path.
+Resume from the template helper preset controls checkpoint. The latest passing
+slice added an explicit Patterns-panel toggle for including generated helper
+presets when built-in templates are inserted, and routes that choice through
+click and drag insertion. The next recommended implementation slice is saved
+template library polish, focused on rename/import metadata and clearer saved
+template details.
 
 Recent completed slices:
 
@@ -137,6 +138,30 @@ Recent completed slices:
     - Browser smoke covers saved-template drag insertion, export, delete,
       import, and delete-after-import.
 
+12. **Broadened browser smoke coverage**
+    - `npm run builder:smoke` now uses a desktop viewport for the operational
+      builder layout.
+    - The smoke script checks Employment list insertion creates a real
+      `listLoop` chapter with employer nouns and the monthly income field.
+    - The smoke script checks new Table components expose the header-row toggle
+      and render preview `<th scope="col">` cells.
+    - The smoke script checks Date range exposes and persists the "Allow future
+      dates" inspector toggle.
+    - The smoke script loads the 27-8832 example, completes the Veteran/service
+      member path through review, confirms claimant-only sections are skipped,
+      and completes mock submit.
+
+13. **Template helper preset controls**
+    - Patterns now includes an accessible "Include helper presets" checkbox.
+    - The setting defaults on, preserving existing Contact/Identity template
+      behavior that adds prefill mappings and computed summary definitions.
+    - Turning the setting off inserts the same template fields without adding
+      generated prefill/computed helper definitions.
+    - Click and drag insertion both carry the helper-preset choice into the
+      template insertion helpers.
+    - Browser smoke now verifies the default helper behavior and the declined
+      helper path.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -161,7 +186,7 @@ Recent completed slices:
 
 ## Verified Commands
 
-Run from `/Users/clint/Workspace/va/va-form-builder`:
+Run from `/Users/clint/Workspace/va/form-builder`:
 
 ```bash
 npm test
@@ -171,8 +196,16 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-All five commands passed after the saved template hardening slice. The browser
-smoke command may need local-server permissions in sandboxed
+Latest verification after the template helper preset controls slice:
+
+```bash
+npm run builder:smoke
+npm test
+npm run builder:build
+```
+
+All three commands passed in `/Users/clint/Workspace/va/form-builder`. The
+browser smoke command may need local-server permissions in sandboxed
 environments and requires the Playwright Chromium browser to be installed with
 `npx playwright install chromium`.
 
@@ -216,6 +249,12 @@ Confirmed:
   prefill mappings and computed summary definitions to authoring JSON.
 - Automated smoke now verifies saved-template drag insertion, export, import,
   and post-import delete behavior.
+- Automated smoke now verifies Employment list authoring structure, Table
+  header-row preview semantics, Date range future-date settings, and the
+  27-8832 Veteran runner path through mock submit.
+- Automated smoke now verifies the Patterns-panel helper preset control is on
+  by default and that turning it off prevents additional Contact template
+  prefill/computed helpers from being inserted.
 
 Known browser-console issue:
 
@@ -225,18 +264,18 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Broaden browser smoke coverage**
-   - Add scripted checks for list-loop templates, table/date-range controls, and
-     27-8832 example runner behavior.
-
-2. **Template helper presets**
-   - Add a small UI affordance for accepting/removing generated helper presets
-     when a template is inserted, if automatic insertion starts to feel too
-     implicit.
-
-3. **Saved template library polish**
+1. **Saved template library polish**
    - Consider renaming saved templates after import and showing imported
-     metadata such as kind, field count, and created date.
+   metadata such as kind, field count, and created date.
+
+2. **Additional runner smoke depth**
+   - Add a smaller follow-up browser check for the 27-8832 dependent claimant
+     path and the Dependent list template if runner coverage needs another
+     layer.
+
+3. **Template helper review details**
+   - If authors need more visibility, show the exact helper mappings that will
+     be inserted before applying a built-in template.
 
 ## Suggested First Files To Read Next Session
 

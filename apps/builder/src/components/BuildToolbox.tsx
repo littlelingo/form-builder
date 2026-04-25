@@ -1,7 +1,11 @@
 import { useRef, useState } from 'react';
 
 import { paletteCategories, paletteComponents, sectionTemplates } from '../lib/formModel';
-import type { ScreenTemplateId, SectionTemplateId } from '../lib/formModel';
+import type {
+  ScreenTemplateId,
+  SectionTemplateId,
+  TemplateInsertionOptions,
+} from '../lib/formModel';
 import type { PaletteDragItem, SavedCustomTemplate } from '../types';
 
 type BuildTab = 'fields' | 'patterns';
@@ -22,8 +26,8 @@ interface BuildToolboxProps {
   disabled?: boolean;
   onAddField: (type: string) => void;
   onAddCustomTemplate: (templateId: string) => void;
-  onAddScreen: (templateId: ScreenTemplateId) => void;
-  onAddSection: (templateId: SectionTemplateId) => void;
+  onAddScreen: (templateId: ScreenTemplateId, options?: TemplateInsertionOptions) => void;
+  onAddSection: (templateId: SectionTemplateId, options?: TemplateInsertionOptions) => void;
   onExportCustomTemplates: () => void;
   onImportCustomTemplates: (templates: SavedCustomTemplate[]) => number;
   onRemoveCustomTemplate: (templateId: string) => void;
@@ -96,6 +100,7 @@ export function BuildToolbox({
   const customTemplateInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTab, setActiveTab] = useState<BuildTab>('fields');
   const [customTemplateName, setCustomTemplateName] = useState('');
+  const [includeTemplateHelpers, setIncludeTemplateHelpers] = useState(true);
   const [templateTransferMessage, setTemplateTransferMessage] = useState('');
   const screenSectionTemplates = sectionTemplates.filter(
     template => !advancedTemplateIds.has(template.id) && template.id !== 'standard',
@@ -130,8 +135,16 @@ export function BuildToolbox({
 
     event.dataTransfer.effectAllowed = 'copy';
     event.dataTransfer.setData('application/x-va-section-template', templateId);
+    event.dataTransfer.setData(
+      'application/x-va-template-helpers',
+      includeTemplateHelpers ? 'include' : 'skip',
+    );
     event.dataTransfer.setData('text/plain', `section:${templateId}`);
-    onPaletteDragStart({ kind: 'section', templateId });
+    onPaletteDragStart({
+      kind: 'section',
+      templateId,
+      includeAuthoringHelpers: includeTemplateHelpers,
+    });
   }
 
   function handleCustomTemplateDragStart(
@@ -232,11 +245,33 @@ export function BuildToolbox({
             disabled={disabled}
             type="button"
             onClick={() => {
-              if (!disabled) onAddScreen('blank');
+              if (!disabled) onAddScreen('blank', {
+                includeAuthoringHelpers: includeTemplateHelpers,
+              });
             }}
           >
             + Blank screen
           </button>
+
+          <div className="builder-template-helper-control">
+            <div className="usa-checkbox">
+              <input
+                aria-describedby="template-helper-presets-hint"
+                checked={includeTemplateHelpers}
+                className="usa-checkbox__input"
+                disabled={disabled}
+                id="template-helper-presets"
+                type="checkbox"
+                onChange={event => setIncludeTemplateHelpers(event.target.checked)}
+              />
+              <label className="usa-checkbox__label" htmlFor="template-helper-presets">
+                Include helper presets
+              </label>
+            </div>
+            <p id="template-helper-presets-hint">
+              Applies template prefill mappings and computed summaries when available.
+            </p>
+          </div>
 
           <div className="builder-save-template-control">
             <label htmlFor="custom-template-name">Template name</label>
@@ -349,7 +384,9 @@ export function BuildToolbox({
                   title={template.description}
                   wide
                   onClick={() => {
-                    if (!disabled) onAddSection(template.id);
+                    if (!disabled) onAddSection(template.id, {
+                      includeAuthoringHelpers: includeTemplateHelpers,
+                    });
                   }}
                   onDragEnd={onPaletteDragEnd}
                   onDragStart={event => handleTemplateDragStart(event, template.id)}
@@ -371,7 +408,9 @@ export function BuildToolbox({
                     title={template.description}
                     wide
                     onClick={() => {
-                      if (!disabled) onAddSection(template.id);
+                      if (!disabled) onAddSection(template.id, {
+                        includeAuthoringHelpers: includeTemplateHelpers,
+                      });
                     }}
                     onDragEnd={onPaletteDragEnd}
                     onDragStart={event => handleTemplateDragStart(event, template.id)}

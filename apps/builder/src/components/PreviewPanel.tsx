@@ -1,7 +1,12 @@
 import { Fragment, useState } from 'react';
 
 import { applyComputedValues, evaluateRule } from '../lib/core';
-import type { LayoutWidth, ScreenTemplateId, SectionTemplateId } from '../lib/formModel';
+import type {
+  LayoutWidth,
+  ScreenTemplateId,
+  SectionTemplateId,
+  TemplateInsertionOptions,
+} from '../lib/formModel';
 import type { ReactNode } from 'react';
 import type {
   AuthoringChapter,
@@ -32,12 +37,16 @@ interface PreviewPanelProps {
     layoutWidth?: LayoutWidth,
     siblingId?: string,
   ) => void;
-  onAddScreenTemplate: (templateId: ScreenTemplateId) => void;
+  onAddScreenTemplate: (
+    templateId: ScreenTemplateId,
+    options?: TemplateInsertionOptions,
+  ) => void;
   onAddSectionTemplate: (
     templateId: SectionTemplateId,
     index?: number,
     layoutWidth?: LayoutWidth,
     siblingId?: string,
+    options?: TemplateInsertionOptions,
   ) => void;
   onDuplicateComponent: (source: SelectedNode) => void;
   onMoveComponent: (
@@ -239,6 +248,21 @@ function paletteScreenTemplate(paletteDragItem: PaletteDragItem | null) {
 
 function paletteCustomTemplate(paletteDragItem: PaletteDragItem | null) {
   return paletteDragItem?.kind === 'customTemplate' ? paletteDragItem.templateId : '';
+}
+
+function templateInsertionOptions(
+  event: React.DragEvent<HTMLElement>,
+  paletteDragItem: PaletteDragItem | null,
+): TemplateInsertionOptions {
+  const helperSetting = event.dataTransfer.getData('application/x-va-template-helpers');
+  if (helperSetting === 'skip') return { includeAuthoringHelpers: false };
+  if (
+    (paletteDragItem?.kind === 'section' || paletteDragItem?.kind === 'screen') &&
+    paletteDragItem.includeAuthoringHelpers === false
+  ) {
+    return { includeAuthoringHelpers: false };
+  }
+  return { includeAuthoringHelpers: true };
 }
 
 function FieldShell({
@@ -1057,13 +1081,14 @@ export function PreviewPanel({
       fallbackCustomTemplate(event) ||
       paletteCustomTemplate(paletteDragItem);
     const fieldNode = event.dataTransfer.getData('application/x-va-field-node');
+    const insertionOptions = templateInsertionOptions(event, paletteDragItem);
 
     if (componentType) {
       onAddComponent(componentType, index);
     } else if (screenTemplate) {
-      onAddScreenTemplate(screenTemplate as ScreenTemplateId);
+      onAddScreenTemplate(screenTemplate as ScreenTemplateId, insertionOptions);
     } else if (sectionTemplate) {
-      onAddSectionTemplate(sectionTemplate as SectionTemplateId, index);
+      onAddSectionTemplate(sectionTemplate as SectionTemplateId, index, undefined, undefined, insertionOptions);
     } else if (customTemplate) {
       onAddCustomTemplate(customTemplate, index);
     } else if (fieldNode) {
@@ -1099,13 +1124,14 @@ export function PreviewPanel({
       fallbackCustomTemplate(event) ||
       paletteCustomTemplate(paletteDragItem);
     const fieldNode = event.dataTransfer.getData('application/x-va-field-node');
+    const insertionOptions = templateInsertionOptions(event, paletteDragItem);
 
     if (componentType) {
       onAddComponent(componentType, index, 'half', siblingId);
     } else if (screenTemplate) {
-      onAddScreenTemplate(screenTemplate as ScreenTemplateId);
+      onAddScreenTemplate(screenTemplate as ScreenTemplateId, insertionOptions);
     } else if (sectionTemplate) {
-      onAddSectionTemplate(sectionTemplate as SectionTemplateId, index, 'half', siblingId);
+      onAddSectionTemplate(sectionTemplate as SectionTemplateId, index, 'half', siblingId, insertionOptions);
     } else if (customTemplate) {
       onAddCustomTemplate(customTemplate, index, 'half', siblingId);
     } else if (fieldNode) {
