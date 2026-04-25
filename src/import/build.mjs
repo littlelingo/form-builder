@@ -1,0 +1,223 @@
+import { classifyComponent } from './heuristic/classify.mjs';
+import { segmentIntoChapters, segmentIntoPages } from './heuristic/segment.mjs';
+import {
+  band,
+  computeAcroformSignal,
+  computeConfidence,
+  computeLabelDistance,
+  computeValidationMatch,
+} from './confidence.mjs';
+import { findNearestExemplar } from './corpus/lookup.mjs';
+
+function toCamelCase(input) {
+  if (!input) return '';
+  const cleaned = input
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (cleaned.length === 0) return '';
+  const [first, ...rest] = cleaned;
+  return (
+    first.charAt(0).toLowerCase() +
+    first.slice(1) +
+    rest.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+  );
+}
+
+function makeUniqueId(base, taken) {
+  let candidate = base || 'field';
+  if (!candidate.match(/^[a-z]/)) candidate = `f${candidate}`;
+  let suffix = 1;
+  let unique = candidate;
+  while (taken.has(unique)) {
+    suffix += 1;
+    unique = `${candidate}${suffix}`;
+  }
+  taken.add(unique);
+  return unique;
+}
+
+function deriveLabel(field) {
+  if (field.closestLabel && field.closestLabel.trim().length > 0) {
+    return field.closestLabel.trim();
+  }
+  if (field.name) {
+    return field.name
+      .replace(/[._-]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  return 'Untitled field';
+}
+
+function buildResponseOptions(field) {
+  if (!Array.isArray(field.options) || field.options.length === 0) return undefined;
+  return field.options.map(opt => ({
+    value: toCamelCase(opt) || opt,
+    label: opt,
+  }));
+}
+
+function buildComponent(field, takenIds, corpus = []) {
+  const heuristic = classifyComponent(field);
+  const enriched = field.enriched || null;
+  // After-LLM-enrich, we re-pair the field's "closest label" with the cleaned
+  // label so corpus lookup uses the cleaned label tokens.
+  const fieldForCorpus = enriched
+    ? { ...field, closestLabel: enriched.label || field.closestLabel }
+    : field;
+  const exemplarMatch = findNearestExemplar(fieldForCorpus, corpus);
+
+  let componentType = heuristic.componentType;
+  let classificationCertainty = heuristic.heuristicConfidence;
+  let exemplarId = null;
+  let exemplarLabel = null;
+  let corpusSimilarity = 0;
+
+  if (enriched) {
+    if (enriched.type) componentType = enriched.type;
+    if (typeof enriched.classificationCertainty === 'number') {
+      classificationCertainty = Math.max(classificationCertainty, enriched.classificationCertainty);
+    }
+  }
+
+  if (exemplarMatch) {
+    exemplarId = exemplarMatch.exemplar.exemplarId;
+    exemplarLabel = exemplarMatch.exemplar.labelAfter || null;
+    corpusSimilarity = Number(exemplarMatch.similarity.toFixed(3));
+    if (exemplarMatch.exemplar.componentTypeAfter && !enriched) {
+      componentType = exemplarMatch.exemplar.componentTypeAfter;
+      classificationCertainty = Math.max(classificationCertainty, exemplarMatch.similarity);
+    }
+  }
+
+  const baseId = toCamelCase(enriched?.label || field.name) || toCamelCase(field.closestLabel) || 'field';
+  const id = makeUniqueId(baseId, takenIds);
+  const label = enriched?.label || exemplarLabel || deriveLabel(field);
+
+  const component = {
+    id,
+    type: componentType,
+    label,
+    provenance: {
+      origin: 'pdf-field',
+      pdfFieldName: field.name || null,
+      pdfPage: field.bbox?.page ?? null,
+      bbox: field.bbox || null,
+      confidence: 0,
+      reviewed: false,
+      lastCorrectedBy: null,
+      exemplarId,
+    },
+  };
+
+  if (field.required) component.required = true;
+  if (field.maxLength && componentType !== 'checkbox' && componentType !== 'radioButton') {
+    component.maxLength = field.maxLength;
+  }
+  const responseOptions = buildResponseOptions(field);
+  if (responseOptions && (componentType === 'radioButton' || componentType === 'checkbox' || componentType === 'select')) {
+    component.responseOptions = responseOptions;
+  }
+  if (enriched?.hint && !component.hint) {
+    component.hint = enriched.hint;
+  }
+  if (exemplarMatch?.exemplar?.hint && !component.hint) {
+    component.hint = exemplarMatch.exemplar.hint;
+  }
+  if (!component.hint && field.neighborText && field.neighborText.length > 0 && field.neighborText !== label) {
+    component.hint = field.neighborText.slice(0, 240);
+  }
+  if (enriched?.autocomplete && !component.autocomplete) {
+    component.autocomplete = enriched.autocomplete;
+  }
+  if (exemplarMatch?.exemplar?.autocomplete && !component.autocomplete) {
+    component.autocomplete = exemplarMatch.exemplar.autocomplete;
+  }
+  if (Array.isArray(enriched?.validations) && enriched.validations.length > 0) {
+    component.validations = enriched.validations;
+  }
+
+  const acroformSignal = computeAcroformSignal(field);
+  const labelDistance = computeLabelDistance({ ...field, closestLabel: label });
+  const validationMatch = computeValidationMatch(field, componentType);
+  const confidence = computeConfidence({
+    acroformSignal,
+    labelDistance,
+    classificationCertainty,
+    corpusSimilarity,
+    validationMatch,
+  });
+
+  component.provenance.confidence = Number(confidence.toFixed(3));
+  component.provenance.confidenceBand = band(confidence);
+  component.provenance.signals = {
+    acroformSignal: Number(acroformSignal.toFixed(3)),
+    labelDistance: Number(labelDistance.toFixed(3)),
+    classificationCertainty: Number(classificationCertainty.toFixed(3)),
+    corpusSimilarity,
+    validationMatch: Number(validationMatch.toFixed(3)),
+  };
+
+  return component;
+}
+
+function buildPage(pageGroup, takenIds, corpus) {
+  return {
+    id: pageGroup.id,
+    title: pageGroup.title,
+    components: pageGroup.fields.map(field => buildComponent(field, takenIds, corpus)),
+  };
+}
+
+function buildChapter(chapter, takenIds, corpus) {
+  return {
+    id: chapter.id,
+    type: 'standard',
+    title: chapter.title,
+    pages: chapter.pages.map(page => buildPage(page, takenIds, corpus)),
+  };
+}
+
+export function buildAuthoringForm({
+  formId,
+  title,
+  pdfHash,
+  pdfUri,
+  importedBy,
+  fields,
+  corpus = [],
+}) {
+  const pageGroups = segmentIntoPages(fields);
+  const chapters = segmentIntoChapters(pageGroups);
+
+  const takenIds = new Set();
+  const builtChapters = chapters.map(chapter => buildChapter(chapter, takenIds, corpus));
+
+  return {
+    schemaVersion: '1.0.0',
+    formDefinitionVersion: 1,
+    formId: formId || 'imported-form',
+    title: title || formId || 'Imported form',
+    rootUrl: `/imported/${formId || 'form'}`,
+    submitUrl: `/v0/imported/${formId || 'form'}`,
+    componentSystems: {
+      primary: 'uswds',
+      generated: 'vaFormsSystem',
+      preview: 'uswds',
+      additional: ['shadcn'],
+    },
+    prefill: { enabled: false, mappings: [] },
+    computedValues: [],
+    chapters: builtChapters,
+    source: {
+      kind: 'pdf',
+      uri: pdfUri || null,
+      hash: pdfHash || null,
+      importedAt: new Date().toISOString(),
+      importedBy: importedBy || 'importer',
+    },
+  };
+}

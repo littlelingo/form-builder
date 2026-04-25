@@ -1,0 +1,213 @@
+{
+  "version": "2026.04",
+  "rules": [
+    {
+      "id": "va.metadata.formId-required",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "error",
+      "predicate": { "op": "stringNonEmpty", "field": "formId" },
+      "message": "Form must have a non-empty formId.",
+      "fixHint": "Set the formId in form metadata (e.g., 21-526EZ)."
+    },
+    {
+      "id": "va.metadata.title-required",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "error",
+      "predicate": { "op": "stringNonEmpty", "field": "title" },
+      "message": "Form must have a non-empty title.",
+      "fixHint": "Set a human-readable title in form metadata."
+    },
+    {
+      "id": "va.metadata.rootUrl-required",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "warning",
+      "predicate": { "op": "stringNonEmpty", "field": "rootUrl" },
+      "message": "Form should declare a rootUrl for VA.gov routing.",
+      "fixHint": "Add a rootUrl path in metadata (e.g., /education/career-counseling/apply-form-27-8832)."
+    },
+    {
+      "id": "va.metadata.submitUrl-required",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "warning",
+      "predicate": { "op": "stringNonEmpty", "field": "submitUrl" },
+      "message": "Form should declare a submitUrl for the vets-api submission endpoint.",
+      "fixHint": "Add a submitUrl in metadata (e.g., /v0/form-21-526EZ)."
+    },
+    {
+      "id": "va.metadata.plainLanguageHeader-required",
+      "kind": "content",
+      "scope": "form",
+      "severity": "warning",
+      "predicate": { "op": "stringNonEmpty", "field": "plainLanguageHeader" },
+      "message": "Form should include a plain-language header summarizing what the form does.",
+      "fixHint": "Add plainLanguageHeader to form metadata; keep it under 80 characters and use action-first wording."
+    },
+    {
+      "id": "va.metadata.trackingPrefix-required",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "warning",
+      "predicate": { "op": "stringNonEmpty", "field": "trackingPrefix" },
+      "message": "Form should declare a trackingPrefix for analytics consistency.",
+      "fixHint": "Add trackingPrefix in metadata (e.g., '21-526EZ-')."
+    },
+    {
+      "id": "va.structure.minimum-chapters",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "warning",
+      "predicate": {
+        "op": "count",
+        "path": "chapters",
+        "compare": ">=",
+        "value": 2
+      },
+      "message": "Forms typically need at least 2 chapters (one for content + one for review/certification).",
+      "fixHint": "Group related questions into chapters; add a certification or review chapter if missing."
+    },
+    {
+      "id": "va.structure.no-empty-page",
+      "kind": "structural",
+      "scope": "page",
+      "severity": "error",
+      "predicate": {
+        "op": "count",
+        "path": "components",
+        "compare": ">=",
+        "value": 1
+      },
+      "message": "Pages must have at least one component.",
+      "fixHint": "Add at least one input or content component to every page."
+    },
+    {
+      "id": "va.structure.page-has-title",
+      "kind": "content",
+      "scope": "page",
+      "severity": "warning",
+      "predicate": { "op": "stringLength", "field": "title", "min": 2, "max": 120 },
+      "message": "Page titles should be 2 to 120 characters.",
+      "fixHint": "Use action-oriented page titles (e.g., 'Tell us about your service')."
+    },
+    {
+      "id": "va.content.label-required",
+      "kind": "content",
+      "scope": "component",
+      "severity": "error",
+      "predicate": { "op": "stringNonEmpty", "field": "label" },
+      "message": "Every component must have a label.",
+      "fixHint": "Set a clear question label for every input component."
+    },
+    {
+      "id": "va.content.label-length",
+      "kind": "content",
+      "scope": "component",
+      "severity": "warning",
+      "predicate": { "op": "stringLength", "field": "label", "min": 2, "max": 200 },
+      "message": "Component labels should be 2 to 200 characters.",
+      "fixHint": "Keep labels concise; move long context into hint or bodyText."
+    },
+    {
+      "id": "va.content.id-naming",
+      "kind": "content",
+      "scope": "component",
+      "severity": "warning",
+      "predicate": {
+        "op": "stringMatches",
+        "field": "id",
+        "pattern": "^[a-z][a-zA-Z0-9]*$"
+      },
+      "message": "Component IDs should be lowerCamelCase identifiers.",
+      "fixHint": "Use stable lowerCamelCase IDs (e.g., 'veteranLastName'). IDs should not be reused after deletion."
+    },
+    {
+      "id": "va.content.required-fields-have-hint-when-pattern",
+      "kind": "content",
+      "scope": "component",
+      "severity": "info",
+      "appliesTo": ["textInput", "maskedInput"],
+      "predicate": {
+        "op": "or",
+        "predicates": [
+          { "op": "not", "predicate": { "op": "pathExists", "path": "pattern" } },
+          { "op": "stringNonEmpty", "field": "hint" }
+        ]
+      },
+      "message": "Inputs with a regex pattern should include a hint explaining the expected format.",
+      "fixHint": "Add a hint describing the expected format whenever a pattern is set."
+    },
+    {
+      "id": "va.fileUpload.endpoint-required",
+      "kind": "content",
+      "scope": "component",
+      "severity": "error",
+      "appliesTo": ["fileUpload"],
+      "predicate": { "op": "stringNonEmpty", "field": "endpoint" },
+      "message": "File upload components must declare an endpoint.",
+      "fixHint": "Set endpoint to the vets-api attachments URL for this form."
+    },
+    {
+      "id": "va.fileUpload.accept-required",
+      "kind": "content",
+      "scope": "component",
+      "severity": "warning",
+      "appliesTo": ["fileUpload"],
+      "predicate": { "op": "count", "path": "accept", "compare": ">=", "value": 1 },
+      "message": "File upload components should declare allowed file types.",
+      "fixHint": "Set accept to ['.pdf', '.jpg', '.jpeg', '.png'] or similar."
+    },
+    {
+      "id": "va.fileUpload.maxFileSize-required",
+      "kind": "content",
+      "scope": "component",
+      "severity": "warning",
+      "appliesTo": ["fileUpload"],
+      "predicate": { "op": "pathExists", "path": "maxFileSize" },
+      "message": "File upload components should declare a maxFileSize.",
+      "fixHint": "Set maxFileSize in bytes (e.g., 10485760 for 10 MB)."
+    },
+    {
+      "id": "va.listLoop.options-required",
+      "kind": "structural",
+      "scope": "chapter",
+      "severity": "error",
+      "predicate": {
+        "op": "or",
+        "predicates": [
+          { "op": "fieldEquals", "field": "type", "value": "standard" },
+          {
+            "op": "and",
+            "predicates": [
+              { "op": "fieldEquals", "field": "type", "value": "listLoop" },
+              { "op": "stringNonEmpty", "field": "options.nounSingular" },
+              { "op": "stringNonEmpty", "field": "options.nounPlural" }
+            ]
+          }
+        ]
+      },
+      "message": "List-loop chapters must declare nounSingular and nounPlural in options.",
+      "fixHint": "Set chapter.options.nounSingular and chapter.options.nounPlural."
+    },
+    {
+      "id": "va.componentSystems.declared",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "warning",
+      "predicate": { "op": "pathExists", "path": "componentSystems" },
+      "message": "Form should declare componentSystems for explicit primary/generated/preview targets.",
+      "fixHint": "Add componentSystems with primary='uswds' and generated='vaFormsSystem'."
+    },
+    {
+      "id": "va.provenance.source-required",
+      "kind": "structural",
+      "scope": "form",
+      "severity": "info",
+      "predicate": { "op": "pathExists", "path": "source.kind" },
+      "message": "Form should record provenance source (pdf, manual, normalizedForm, scraped).",
+      "fixHint": "Migrator stamps a default source. Imported forms get source.kind='pdf'."
+    }
+  ]
+}

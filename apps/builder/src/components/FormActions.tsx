@@ -2,6 +2,12 @@ import { useRef, useState } from 'react';
 
 import type { BuilderExample } from '../data/exampleAuthoringForm';
 import { validateAuthoringForm } from '../lib/core';
+import { importPdfFromFile } from '../lib/importClient';
+import {
+  appendCorpusEntries,
+  exportCorpus,
+  loadCorpus,
+} from '../../../../src/import/corpus/store.mjs';
 import type { AuthoringForm } from '../types';
 
 interface FormActionsProps {
@@ -24,6 +30,19 @@ function downloadJson(form: AuthoringForm) {
   URL.revokeObjectURL(url);
 }
 
+function downloadCorrections() {
+  const bundle = exportCorpus();
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `va-form-builder-corrections.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 export function FormActions({
   examples,
   form,
@@ -32,7 +51,10 @@ export function FormActions({
   onSetBaseline,
 }: FormActionsProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement | null>(null);
+  const correctionsInputRef = useRef<HTMLInputElement | null>(null);
   const [message, setMessage] = useState<string>('');
+  const [importing, setImporting] = useState<boolean>(false);
 
   async function handleImport(file?: File) {
     if (!file) return;
@@ -50,6 +72,48 @@ export function FormActions({
       setMessage(error instanceof Error ? error.message : String(error));
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  async function handleImportCorrections(file?: File) {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const entries = Array.isArray(parsed?.entries) ? parsed.entries : Array.isArray(parsed) ? parsed : null;
+      if (!entries) {
+        setMessage('Corrections import: expected { entries: [...] } or array.');
+        return;
+      }
+      appendCorpusEntries(entries);
+      setMessage(`Imported ${entries.length} correction exemplars. Total corpus: ${loadCorpus().length}.`);
+    } catch (error) {
+      setMessage(`Corrections import failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      if (correctionsInputRef.current) correctionsInputRef.current.value = '';
+    }
+  }
+
+  async function handleImportPdf(file?: File) {
+    if (!file) return;
+    setImporting(true);
+    setMessage(`Importing ${file.name}…`);
+    try {
+      const result = await importPdfFromFile(file);
+      const componentCount = result.form.chapters.reduce(
+        (count, chapter) =>
+          count +
+          chapter.pages.reduce((pageCount, page) => pageCount + page.components.length, 0),
+        0,
+      );
+      onImport(result.form);
+      setMessage(
+        `Imported ${file.name} → ${componentCount} components, ${result.importReport.acroFormFieldCount} AcroForm fields. Confidence varies; review badges.`,
+      );
+    } catch (error) {
+      setMessage(`PDF import failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setImporting(false);
+      if (pdfInputRef.current) pdfInputRef.current.value = '';
     }
   }
 
@@ -87,6 +151,14 @@ export function FormActions({
           Import JSON
         </button>
         <button
+          className="usa-button"
+          type="button"
+          disabled={importing}
+          onClick={() => pdfInputRef.current?.click()}
+        >
+          {importing ? 'Importing PDF…' : 'Import PDF'}
+        </button>
+        <button
           className="usa-button usa-button--secondary"
           type="button"
           onClick={() => downloadJson(form)}
@@ -111,6 +183,23 @@ export function FormActions({
         >
           Reload example
         </button>
+        <button
+          className="usa-button usa-button--outline"
+          type="button"
+          onClick={() => correctionsInputRef.current?.click()}
+        >
+          Import corrections
+        </button>
+        <button
+          className="usa-button usa-button--outline"
+          type="button"
+          onClick={() => {
+            downloadCorrections();
+            setMessage(`Exported ${loadCorpus().length} correction exemplars.`);
+          }}
+        >
+          Export corrections
+        </button>
       </div>
 
       <input
@@ -119,6 +208,20 @@ export function FormActions({
         ref={fileInputRef}
         type="file"
         onChange={event => handleImport(event.target.files?.[0])}
+      />
+      <input
+        accept="application/pdf,.pdf"
+        className="builder-hidden-input"
+        ref={pdfInputRef}
+        type="file"
+        onChange={event => handleImportPdf(event.target.files?.[0])}
+      />
+      <input
+        accept="application/json,.json"
+        className="builder-hidden-input"
+        ref={correctionsInputRef}
+        type="file"
+        onChange={event => handleImportCorrections(event.target.files?.[0])}
       />
 
       {message && <p className="builder-action-message">{message}</p>}

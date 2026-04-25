@@ -5,6 +5,9 @@ import { BuildToolbox } from './components/BuildToolbox';
 import { BuilderToolbar } from './components/BuilderToolbar';
 import { FlowEditorPanel } from './components/FlowEditorPanel';
 import { FormActions } from './components/FormActions';
+import { ImportReviewPanel } from './components/ImportReviewPanel';
+import { ImportWizard } from './components/ImportWizard';
+import { StandardsAuditPanel } from './components/StandardsAuditPanel';
 import { InspectorPanel } from './components/InspectorPanel';
 import { MetadataEditor } from './components/MetadataEditor';
 import { OutputPanel } from './components/OutputPanel';
@@ -47,6 +50,7 @@ import {
   updatePage,
 } from './lib/formModel';
 import { emptyRuntimeState } from './lib/runnerRuntime';
+import { acceptComponent, rejectComponent, unreviewedComponentCount, confidenceBand } from './lib/reviewState';
 import {
   normalizeCustomTemplates,
   resolveSavedTemplateImport,
@@ -71,7 +75,7 @@ import type {
 
 type WorkspacePanel = 'preview' | 'runner' | 'output';
 type ToolboxPanel = 'build' | 'outline' | 'files';
-type PropertiesPanel = 'setup' | 'properties' | 'audit';
+type PropertiesPanel = 'setup' | 'properties' | 'audit' | 'standards' | 'review';
 interface FormHistory {
   past: AuthoringForm[];
   future: AuthoringForm[];
@@ -81,6 +85,28 @@ const CUSTOM_TEMPLATE_STORAGE_KEY = 'va-form-builder.customTemplates.v1';
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function formHasLowBand(form: AuthoringForm): boolean {
+  for (const chapter of form.chapters) {
+    for (const page of chapter.pages) {
+      const stack = [...page.components];
+      while (stack.length) {
+        const component = stack.shift();
+        if (!component) continue;
+        if (
+          component.provenance &&
+          component.provenance.reviewed === false &&
+          component.provenance.origin === 'pdf-field' &&
+          confidenceBand(component.provenance.confidence) === 'low'
+        ) {
+          return true;
+        }
+        if (Array.isArray(component.children)) stack.push(...component.children);
+      }
+    }
+  }
+  return false;
 }
 
 function countTemplateFields(components: AuthoringComponent[] = []): number {
@@ -155,6 +181,7 @@ export default function App() {
   const [canvasMode, setCanvasMode] = useState<'edit' | 'preview'>('edit');
   const [toolboxPanel, setToolboxPanel] = useState<ToolboxPanel>('build');
   const [propertiesPanel, setPropertiesPanel] = useState<PropertiesPanel>('setup');
+  const [wizardOpen, setWizardOpen] = useState<boolean>(false);
   const [paletteDragItem, setPaletteDragItem] = useState<PaletteDragItem | null>(null);
   const [customTemplates, setCustomTemplates] = useState<SavedCustomTemplate[]>(loadCustomTemplates);
 
@@ -163,6 +190,7 @@ export default function App() {
   const selectedPage = findPage(form, selected);
   const availableFields = allComponents(form);
   const helperPresetPreviews = previewTemplateAuthoringHelpers(form);
+  const unreviewedCount = unreviewedComponentCount(form);
 
   function commitForm(nextForm: AuthoringForm) {
     setHistory(current => ({
@@ -467,6 +495,14 @@ export default function App() {
     handleRemoveComponentNode(selected);
   }
 
+  function handleAcceptComponent(componentId: string) {
+    commitForm(acceptComponent(form, componentId));
+  }
+
+  function handleRejectComponent(componentId: string) {
+    commitForm(rejectComponent(form, componentId));
+  }
+
   function handleRemoveComponentNode(node: SelectedNode) {
     if (!node.componentId) return;
     const next = removeComponent(form, node);
@@ -604,6 +640,19 @@ export default function App() {
 
   function handleImport(nextForm: AuthoringForm) {
     replaceForm(nextForm);
+    const lowBand = formHasLowBand(nextForm);
+    if (lowBand) {
+      setWizardOpen(true);
+      setPropertiesPanel('review');
+    }
+  }
+
+  function handleAcceptAllComponents(componentIds: string[]) {
+    let next = form;
+    for (const id of componentIds) {
+      next = acceptComponent(next, id);
+    }
+    commitForm(next);
   }
 
   function handleSelectNode(node: SelectedNode) {
@@ -807,6 +856,26 @@ export default function App() {
             >
               Audit
             </button>
+            <button
+              aria-selected={propertiesPanel === 'standards'}
+              className={propertiesPanel === 'standards' ? 'is-active' : ''}
+              role="tab"
+              type="button"
+              onClick={() => setPropertiesPanel('standards')}
+            >
+              Standards
+            </button>
+            {unreviewedCount > 0 && (
+              <button
+                aria-selected={propertiesPanel === 'review'}
+                className={propertiesPanel === 'review' ? 'is-active' : ''}
+                role="tab"
+                type="button"
+                onClick={() => setPropertiesPanel('review')}
+              >
+                Review <span className="builder-tab-counter">{unreviewedCount}</span>
+              </button>
+            )}
           </div>
 
           {propertiesPanel === 'setup' && (
@@ -824,6 +893,8 @@ export default function App() {
                 component={selectedComponent}
                 onChange={handleComponentChange}
                 onRemove={handleRemoveComponent}
+                onAcceptComponent={handleAcceptComponent}
+                onRejectComponent={handleRejectComponent}
               />
             ) : (
               <FlowEditorPanel
@@ -845,8 +916,33 @@ export default function App() {
           )}
 
           {propertiesPanel === 'audit' && <AuditPanel baseline={baselineForm} form={form} />}
+
+          {propertiesPanel === 'standards' && (
+            <StandardsAuditPanel form={form} onJump={handleSelectNode} />
+          )}
+
+          {propertiesPanel === 'review' && (
+            <ImportReviewPanel
+              form={form}
+              onJump={handleSelectNode}
+              onAccept={handleAcceptComponent}
+              onAcceptAll={handleAcceptAllComponents}
+            />
+          )}
         </aside>
       </div>
+
+      {wizardOpen && (
+        <ImportWizard
+          form={form}
+          onAccept={handleAcceptComponent}
+          onJumpToComponent={node => {
+            handleSelectNode(node);
+            setWizardOpen(false);
+          }}
+          onClose={() => setWizardOpen(false)}
+        />
+      )}
     </main>
   );
 }

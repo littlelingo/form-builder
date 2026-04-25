@@ -44,6 +44,8 @@
         }
       }
     },
+    "source": { "$ref": "#/$defs/source" },
+    "lineage": { "$ref": "#/$defs/lineage" },
     "computedValues": {
       "type": "array",
       "items": { "$ref": "#/$defs/computedValue" }
@@ -185,7 +187,8 @@
               "description": { "type": "string" }
             }
           }
-        }
+        },
+        "provenance": { "$ref": "#/$defs/provenance" }
       }
     },
     "componentSystemId": {
@@ -258,6 +261,50 @@
           ]
         },
         "value": {}
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": ["pdf", "normalizedForm", "manual", "scraped"]
+        },
+        "uri": { "type": "string" },
+        "hash": { "type": ["string", "null"] },
+        "importedAt": { "type": "string" },
+        "importedBy": { "type": "string" }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "properties": {
+        "previousVersion": { "type": ["integer", "null"] },
+        "createdFromVersion": { "type": ["integer", "null"] },
+        "schemaHash": { "type": "string" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "enum": ["pdf-field", "template", "hand-authored"]
+        },
+        "pdfFieldName": { "type": "string" },
+        "pdfPage": { "type": "integer" },
+        "bbox": {
+          "type": "object",
+          "properties": {
+            "page": { "type": "integer" },
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "w": { "type": "number" },
+            "h": { "type": "number" }
+          }
+        },
+        "confidence": { "type": "number" },
+        "reviewed": { "type": "boolean" },
+        "lastCorrectedBy": { "type": ["string", "null"] },
+        "exemplarId": { "type": ["string", "null"] }
       }
     }
   }

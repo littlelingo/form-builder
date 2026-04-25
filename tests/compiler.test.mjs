@@ -407,7 +407,7 @@ test('validates declarative prefill mappings', () => {
   assert.match(validation.errors.join('\n'), /prefill\.mappings\[1\]\.source is required/);
 });
 
-test('declares support for USWDS primary components and optional shadcn mappings', () => {
+test('declares support for USWDS preview components and optional shadcn mappings', () => {
   assert.equal(componentSystems.uswds.components.fileUpload.component, 'File input');
   assert.equal(componentSystems.shadcn.components.textInput.component, 'Input');
 

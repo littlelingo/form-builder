@@ -94,6 +94,47 @@ export interface AuthoringEventHandler {
   actions: AuthoringEventAction[];
 }
 
+export type AuthoringSourceKind =
+  | 'pdf'
+  | 'normalizedForm'
+  | 'manual'
+  | 'scraped';
+
+export interface AuthoringSource {
+  kind: AuthoringSourceKind;
+  uri?: string;
+  hash?: string | null;
+  importedAt?: string;
+  importedBy?: string;
+}
+
+export interface AuthoringLineage {
+  previousVersion: number | null;
+  createdFromVersion: number | null;
+  schemaHash: string;
+}
+
+export type AuthoringProvenanceOrigin = 'pdf-field' | 'template' | 'hand-authored';
+
+export interface AuthoringProvenanceBbox {
+  page: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface AuthoringProvenance {
+  origin: AuthoringProvenanceOrigin;
+  pdfFieldName?: string;
+  pdfPage?: number;
+  bbox?: AuthoringProvenanceBbox;
+  confidence: number;
+  reviewed: boolean;
+  lastCorrectedBy?: string | null;
+  exemplarId?: string | null;
+}
+
 export interface AuthoringComponent {
   id: string;
   type: string;
@@ -119,6 +160,7 @@ export interface AuthoringComponent {
   layoutNewRow?: boolean;
   children?: AuthoringComponent[];
   events?: AuthoringEventHandler[];
+  provenance?: AuthoringProvenance;
   [key: string]: unknown;
 }
 
@@ -172,6 +214,8 @@ export interface AuthoringForm {
   computedValues?: ComputedValueDefinition[];
   eventHandlers?: AuthoringEventHandler[];
   chapters: AuthoringChapter[];
+  source?: AuthoringSource;
+  lineage?: AuthoringLineage;
 }
 
 export interface SelectedNode {

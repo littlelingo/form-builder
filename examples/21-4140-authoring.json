@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "formDefinitionVersion": 1,
   "formId": "21-4140",
   "title": "Employment Questionnaire",
@@ -13,13 +13,21 @@
     "primary": "uswds",
     "generated": "vaFormsSystem",
     "preview": "uswds",
-    "additional": ["shadcn"]
+    "additional": [
+      "shadcn"
+    ]
   },
   "prefill": {
     "enabled": true,
     "mappings": [
-      { "source": "profile.email", "target": "email" },
-      { "source": "profile.phone", "target": "phone" }
+      {
+        "source": "profile.email",
+        "target": "email"
+      },
+      {
+        "source": "profile.phone",
+        "target": "phone"
+      }
     ]
   },
   "computedValues": [
@@ -27,7 +35,10 @@
       "id": "contactSummary",
       "target": "metadata.contactSummary",
       "operation": "concat",
-      "sources": ["email", "phone"],
+      "sources": [
+        "email",
+        "phone"
+      ],
       "separator": " | "
     }
   ],
@@ -47,14 +58,24 @@
               "type": "email",
               "label": "Email address",
               "required": true,
-              "autocomplete": "email"
+              "autocomplete": "email",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "phone",
               "type": "phone",
               "label": "Phone number",
               "required": true,
-              "autocomplete": "tel"
+              "autocomplete": "tel",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -74,7 +95,12 @@
               "id": "hasEvidence",
               "type": "yesNo",
               "label": "Do you want to upload supporting evidence?",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "supportingFiles",
@@ -92,11 +118,21 @@
                 "value": true
               },
               "multiple": true,
-              "accept": [".pdf", ".jpg", ".jpeg", ".png"],
+              "accept": [
+                ".pdf",
+                ".jpg",
+                ".jpeg",
+                ".png"
+              ],
               "maxFileSize": 10485760,
               "maxFileCount": 5,
               "endpoint": "/v0/form-21-4140/attachments",
-              "disallowEncryptedPdfs": true
+              "disallowEncryptedPdfs": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -126,7 +162,12 @@
               "label": "Employer or business name",
               "required": true,
               "summaryCard": true,
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "employmentType",
@@ -134,11 +175,28 @@
               "label": "Type of work",
               "required": true,
               "responseOptions": [
-                { "value": "fullTime", "label": "Full-time employment" },
-                { "value": "partTime", "label": "Part-time employment" },
-                { "value": "selfEmployment", "label": "Self-employment" },
-                { "value": "other", "label": "Other" }
-              ]
+                {
+                  "value": "fullTime",
+                  "label": "Full-time employment"
+                },
+                {
+                  "value": "partTime",
+                  "label": "Part-time employment"
+                },
+                {
+                  "value": "selfEmployment",
+                  "label": "Self-employment"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "monthlyIncome",
@@ -156,7 +214,12 @@
                     "value": 0
                   }
                 }
-              ]
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         },
@@ -168,13 +231,23 @@
               "id": "startDate",
               "type": "date",
               "label": "Start date",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "endDate",
               "type": "date",
               "label": "End date",
-              "hint": "Leave blank if this job is current."
+              "hint": "Leave blank if this job is current.",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "reasonEnded",
@@ -184,11 +257,26 @@
                 "field": "endDate",
                 "operator": "exists"
               },
-              "maxLength": 500
+              "maxLength": 500,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "source": {
+    "kind": "manual",
+    "importedAt": "2026-04-25T00:00:00.000Z",
+    "importedBy": "retro-stamp"
+  },
+  "lineage": {
+    "previousVersion": null,
+    "createdFromVersion": null,
+    "schemaHash": "sha256:3c1724212783ab2846a008a16e57c3a2626fb43954dd5e80cee939abdfb7c55b"
+  }
 }

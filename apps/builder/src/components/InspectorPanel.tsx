@@ -1,6 +1,7 @@
 import { getComponentSystemSupport } from '../lib/core';
 import type { AuthoringComponent } from '../types';
 import { ConditionEditor } from './ConditionEditor';
+import { ConfidenceBadge } from './ConfidenceBadge';
 import { EventHandlersEditor } from './EventHandlersEditor';
 import { FieldValidationsEditor } from './FieldValidationsEditor';
 import { InspectorSection } from './InspectorSection';
@@ -10,6 +11,8 @@ interface InspectorPanelProps {
   availableFields: AuthoringComponent[];
   onChange: (component: AuthoringComponent) => void;
   onRemove: () => void;
+  onAcceptComponent?: (componentId: string) => void;
+  onRejectComponent?: (componentId: string) => void;
 }
 
 function textValue(value: unknown) {
@@ -341,6 +344,8 @@ export function InspectorPanel({
   availableFields,
   onChange,
   onRemove,
+  onAcceptComponent,
+  onRejectComponent,
 }: InspectorPanelProps) {
   if (!component) {
     return (
@@ -365,6 +370,14 @@ export function InspectorPanel({
         <div>
           <p className="builder-eyebrow">Properties</p>
           <h2 id="inspector-heading">{component.label}</h2>
+          {component.provenance && (
+            <ConfidenceBadge
+              provenance={component.provenance}
+              componentId={component.id}
+              onAccept={onAcceptComponent}
+              onReject={onRejectComponent}
+            />
+          )}
         </div>
         <button className="usa-button usa-button--secondary" type="button" onClick={onRemove}>
           Remove
@@ -851,7 +864,7 @@ export function InspectorPanel({
         <div className="builder-support__grid">
           <span>USWDS</span>
           <strong>{support.uswds?.component || 'Not mapped'}</strong>
-          <span>VA generated</span>
+          <span>Generated config</span>
           <strong>{support.vaFormsSystem?.component || 'Not mapped'}</strong>
           <span>shadcn</span>
           <strong>{support.shadcn?.component || 'Not mapped'}</strong>

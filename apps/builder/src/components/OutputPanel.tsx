@@ -40,7 +40,7 @@ export function OutputPanel({ form }: OutputPanelProps) {
         <div className="builder-card__header builder-card__header--split">
           <div>
             <p className="builder-eyebrow">Generated artifact</p>
-            <h2>VA formConfig</h2>
+            <h2>Generated formConfig</h2>
           </div>
           <span className={validation.valid ? 'builder-status is-valid' : 'builder-status is-invalid'}>
             {validation.valid ? 'Valid' : `${validation.errors.length} issues`}

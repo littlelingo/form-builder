@@ -1,0 +1,97 @@
+{
+  "examples": [
+    {
+      "input": {
+        "formMetadata": { "title": "Career Counseling Application", "formId": "27-8832" },
+        "fields": [
+          {
+            "fieldId": "f0",
+            "acroFormName": "VeteranFirstName",
+            "acroFormType": "text",
+            "heuristicLabel": "First name",
+            "neighborText": "First, middle, and last name",
+            "heuristicType": "textInput",
+            "heuristicConfidence": 0.4,
+            "maxLength": 40
+          },
+          {
+            "fieldId": "f1",
+            "acroFormName": "VeteranSSN",
+            "acroFormType": "text",
+            "heuristicLabel": "Social Security Number",
+            "neighborText": "9 digits, no dashes",
+            "heuristicType": "textInput",
+            "heuristicConfidence": 0.4,
+            "maxLength": 9
+          },
+          {
+            "fieldId": "f2",
+            "acroFormName": "VeteranEmail",
+            "acroFormType": "text",
+            "heuristicLabel": "Email address",
+            "neighborText": "",
+            "heuristicType": "textInput",
+            "heuristicConfidence": 0.4
+          },
+          {
+            "fieldId": "f3",
+            "acroFormName": "BranchOfService",
+            "acroFormType": "radio",
+            "heuristicLabel": "Branch of service",
+            "neighborText": "Army Navy Marine Corps Air Force Coast Guard",
+            "heuristicType": "radioButton",
+            "heuristicConfidence": 0.55
+          },
+          {
+            "fieldId": "f4",
+            "acroFormName": "Remarks",
+            "acroFormType": "text",
+            "heuristicLabel": "Remarks",
+            "neighborText": "Use this space to provide information that does not fit elsewhere",
+            "heuristicType": "textArea",
+            "heuristicConfidence": 0.6,
+            "maxLength": 3000
+          }
+        ]
+      },
+      "output": {
+        "fields": [
+          {
+            "fieldId": "f0",
+            "label": "Veteran's first name",
+            "type": "textInput",
+            "classificationCertainty": 0.95,
+            "autocomplete": "given-name"
+          },
+          {
+            "fieldId": "f1",
+            "label": "Veteran's Social Security number",
+            "type": "maskedInput",
+            "classificationCertainty": 0.95,
+            "hint": "Production hardening gap: use a masked SSN control before deployment."
+          },
+          {
+            "fieldId": "f2",
+            "label": "Veteran's email address",
+            "type": "email",
+            "classificationCertainty": 0.97,
+            "autocomplete": "email"
+          },
+          {
+            "fieldId": "f3",
+            "label": "Branch of service",
+            "type": "radioButton",
+            "classificationCertainty": 0.92
+          },
+          {
+            "fieldId": "f4",
+            "label": "Remarks",
+            "type": "textArea",
+            "classificationCertainty": 0.92,
+            "hint": "Use this space to provide information that does not fit elsewhere on the form."
+          }
+        ]
+      }
+    }
+  ]
+}

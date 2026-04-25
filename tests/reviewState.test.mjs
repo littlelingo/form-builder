@@ -1,0 +1,69 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import {
+  acceptComponent,
+  rejectComponent,
+  unreviewedComponentCount,
+  confidenceBand,
+} from '../apps/builder/src/lib/reviewState.ts';
+
+const baseForm = {
+  schemaVersion: '1.1.0',
+  formId: 'test',
+  title: 'Test',
+  chapters: [
+    {
+      id: 'c1',
+      title: 'C1',
+      pages: [
+        {
+          id: 'p1',
+          title: 'P1',
+          components: [
+            {
+              id: 'a',
+              type: 'textInput',
+              label: 'A',
+              provenance: { origin: 'pdf-field', confidence: 0.4, reviewed: false },
+            },
+            {
+              id: 'b',
+              type: 'textInput',
+              label: 'B',
+              provenance: { origin: 'pdf-field', confidence: 0.9, reviewed: false },
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+test('confidenceBand classifies correctly', () => {
+  assert.equal(confidenceBand(0.9), 'high');
+  assert.equal(confidenceBand(0.7), 'medium');
+  assert.equal(confidenceBand(0.5), 'low');
+  assert.equal(confidenceBand(undefined), 'low');
+});
+
+test('acceptComponent marks component reviewed without affecting siblings', () => {
+  const next = acceptComponent(baseForm, 'a', 'tester');
+  const [a, b] = next.chapters[0].pages[0].components;
+  assert.equal(a.provenance.reviewed, true);
+  assert.equal(a.provenance.lastCorrectedBy, 'tester');
+  assert.equal(b.provenance.reviewed, false);
+});
+
+test('rejectComponent flips reviewed back to false', () => {
+  const accepted = acceptComponent(baseForm, 'a');
+  const rejected = rejectComponent(accepted, 'a');
+  const [a] = rejected.chapters[0].pages[0].components;
+  assert.equal(a.provenance.reviewed, false);
+});
+
+test('unreviewedComponentCount counts components with reviewed=false', () => {
+  assert.equal(unreviewedComponentCount(baseForm), 2);
+  const accepted = acceptComponent(baseForm, 'a');
+  assert.equal(unreviewedComponentCount(accepted), 1);
+});

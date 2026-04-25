@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "formDefinitionVersion": 1,
   "formId": "27-8832",
   "title": "Personalized Career Planning and Guidance/Chapter 36",
@@ -13,7 +13,9 @@
     "primary": "uswds",
     "generated": "vaFormsSystem",
     "preview": "uswds",
-    "additional": ["shadcn"]
+    "additional": [
+      "shadcn"
+    ]
   },
   "prefill": {
     "enabled": false,
@@ -53,7 +55,12 @@
                   "value": "counselingServices",
                   "label": "Counseling services"
                 }
-              ]
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -83,7 +90,12 @@
                   "value": "dependentClaimant",
                   "label": "Dependent claimant"
                 }
-              ]
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -106,7 +118,12 @@
               "hint": "First, middle, and last name",
               "required": true,
               "autocomplete": "name",
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranSsn",
@@ -116,13 +133,23 @@
               "required": true,
               "inputType": "text",
               "pattern": "^[0-9]{9}$",
-              "maxLength": 9
+              "maxLength": 9,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranDateOfBirth",
               "type": "date",
               "label": "Veteran or service member's date of birth",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranVaFileNumber",
@@ -130,7 +157,12 @@
               "label": "VA file number",
               "hint": "If VA assigned an 8 digit file number, enter it here. Production hardening gap: use masking or stricter formatting before deployment.",
               "pattern": "^[0-9]{8}$",
-              "maxLength": 8
+              "maxLength": 8,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -151,21 +183,36 @@
               "type": "address",
               "label": "Veteran or service member's mailing address",
               "required": true,
-              "militaryAddress": true
+              "militaryAddress": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranPhone",
               "type": "phone",
               "label": "Veteran or service member's phone number",
               "required": true,
-              "autocomplete": "tel"
+              "autocomplete": "tel",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranEmail",
               "type": "email",
               "label": "Veteran or service member's email address",
               "required": true,
-              "autocomplete": "email"
+              "autocomplete": "email",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranElectronicCorrespondence",
@@ -176,7 +223,12 @@
                   "value": "agrees",
                   "label": "I agree to receive electronic correspondence from VA about this claim."
                 }
-              ]
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -195,7 +247,12 @@
               "id": "veteranAttendingSchool",
               "type": "yesNo",
               "label": "Are you currently attending a school or training facility?",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "veteranSchoolName",
@@ -211,7 +268,12 @@
                 "operator": "equals",
                 "value": true
               },
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -231,14 +293,24 @@
               "id": "activeDutyEnteredDate",
               "type": "date",
               "label": "Date entered active duty",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "activeDutySeparatedDate",
               "type": "date",
               "label": "Date separated from active duty or projected separation date",
               "hint": "Production hardening gap: projected separation dates may need future-date support in generated VA output.",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         },
@@ -252,15 +324,44 @@
               "label": "Branch of service",
               "required": true,
               "responseOptions": [
-                { "value": "army", "label": "Army" },
-                { "value": "navy", "label": "Navy" },
-                { "value": "marineCorps", "label": "Marine Corps" },
-                { "value": "airForce", "label": "Air Force" },
-                { "value": "coastGuard", "label": "Coast Guard" },
-                { "value": "spaceForce", "label": "Space Force" },
-                { "value": "noaa", "label": "NOAA" },
-                { "value": "usphs", "label": "USPHS" }
-              ]
+                {
+                  "value": "army",
+                  "label": "Army"
+                },
+                {
+                  "value": "navy",
+                  "label": "Navy"
+                },
+                {
+                  "value": "marineCorps",
+                  "label": "Marine Corps"
+                },
+                {
+                  "value": "airForce",
+                  "label": "Air Force"
+                },
+                {
+                  "value": "coastGuard",
+                  "label": "Coast Guard"
+                },
+                {
+                  "value": "spaceForce",
+                  "label": "Space Force"
+                },
+                {
+                  "value": "noaa",
+                  "label": "NOAA"
+                },
+                {
+                  "value": "usphs",
+                  "label": "USPHS"
+                }
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "serviceComponent",
@@ -268,10 +369,24 @@
               "label": "Component",
               "required": true,
               "responseOptions": [
-                { "value": "active", "label": "Active" },
-                { "value": "reserves", "label": "Reserves" },
-                { "value": "nationalGuard", "label": "National Guard" }
-              ]
+                {
+                  "value": "active",
+                  "label": "Active"
+                },
+                {
+                  "value": "reserves",
+                  "label": "Reserves"
+                },
+                {
+                  "value": "nationalGuard",
+                  "label": "National Guard"
+                }
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "characterOfDischarge",
@@ -279,9 +394,20 @@
               "label": "Character of discharge",
               "required": true,
               "responseOptions": [
-                { "value": "honorable", "label": "Honorable" },
-                { "value": "otherThanHonorable", "label": "Other than honorable" }
-              ]
+                {
+                  "value": "honorable",
+                  "label": "Honorable"
+                },
+                {
+                  "value": "otherThanHonorable",
+                  "label": "Other than honorable"
+                }
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -309,7 +435,12 @@
               "hint": "First, middle initial, and last name",
               "required": true,
               "autocomplete": "name",
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantSsn",
@@ -319,13 +450,23 @@
               "required": true,
               "inputType": "text",
               "pattern": "^[0-9]{9}$",
-              "maxLength": 9
+              "maxLength": 9,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantDateOfBirth",
               "type": "date",
               "label": "Claimant's date of birth",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantVaFileNumber",
@@ -333,7 +474,12 @@
               "label": "Claimant VA file number",
               "hint": "If applicable",
               "pattern": "^[0-9]{8}$",
-              "maxLength": 8
+              "maxLength": 8,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantRelationship",
@@ -342,9 +488,20 @@
               "hint": "Child includes biological children, adopted children, stepchildren, or married children with transferred entitlement and education benefits remaining.",
               "required": true,
               "responseOptions": [
-                { "value": "spouse", "label": "Spouse" },
-                { "value": "child", "label": "Child" }
-              ]
+                {
+                  "value": "spouse",
+                  "label": "Spouse"
+                },
+                {
+                  "value": "child",
+                  "label": "Child"
+                }
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -369,21 +526,36 @@
               "type": "address",
               "label": "Claimant mailing address",
               "required": true,
-              "militaryAddress": true
+              "militaryAddress": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantPhone",
               "type": "phone",
               "label": "Claimant phone number",
               "required": true,
-              "autocomplete": "tel"
+              "autocomplete": "tel",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantEmail",
               "type": "email",
               "label": "Claimant email address",
               "required": true,
-              "autocomplete": "email"
+              "autocomplete": "email",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantElectronicCorrespondence",
@@ -394,13 +566,23 @@
                   "value": "agrees",
                   "label": "I agree to receive electronic correspondence from VA about this claim."
                 }
-              ]
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantAttendingSchool",
               "type": "yesNo",
               "label": "Are you currently attending a school or training facility?",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "claimantSchoolName",
@@ -416,7 +598,12 @@
                 "operator": "equals",
                 "value": true
               },
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -436,7 +623,12 @@
               "id": "remarks",
               "type": "textArea",
               "label": "Remarks",
-              "maxLength": 3000
+              "maxLength": 3000,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
@@ -462,26 +654,46 @@
                   "value": "certified",
                   "label": "I certify that I have completed this statement and that its information is true and correct to the best of my knowledge and belief."
                 }
-              ]
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "applicantSignatureName",
               "type": "textInput",
               "label": "Veteran, service member, or claimant typed signature",
               "required": true,
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "applicantSignatureDate",
               "type": "date",
               "label": "Date signed",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "hasAlternateSigner",
               "type": "yesNo",
               "label": "Will a parent, guardian, or custodian sign for the applicant?",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         },
@@ -501,34 +713,75 @@
               "label": "Alternate signer relationship",
               "required": true,
               "responseOptions": [
-                { "value": "parent", "label": "Parent" },
-                { "value": "guardian", "label": "Guardian" },
-                { "value": "custodian", "label": "Custodian" }
-              ]
+                {
+                  "value": "parent",
+                  "label": "Parent"
+                },
+                {
+                  "value": "guardian",
+                  "label": "Guardian"
+                },
+                {
+                  "value": "custodian",
+                  "label": "Custodian"
+                }
+              ],
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "alternateSignerName",
               "type": "textInput",
               "label": "Parent, guardian, or custodian typed signature",
               "required": true,
-              "maxLength": 80
+              "maxLength": 80,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "alternateSignerDate",
               "type": "date",
               "label": "Date signed",
-              "required": true
+              "required": true,
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             },
             {
               "id": "alternateSignerPhone",
               "type": "phone",
               "label": "Parent, guardian, or custodian phone number",
               "required": true,
-              "autocomplete": "tel"
+              "autocomplete": "tel",
+              "provenance": {
+                "origin": "hand-authored",
+                "confidence": 1,
+                "reviewed": true
+              }
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "source": {
+    "kind": "pdf",
+    "uri": "fixtures-real/VBA-27-8832-ARE.pdf",
+    "hash": null,
+    "importedAt": "2026-04-25T00:00:00.000Z",
+    "importedBy": "retro-stamp"
+  },
+  "lineage": {
+    "previousVersion": null,
+    "createdFromVersion": null,
+    "schemaHash": "sha256:da1be6492fcfe3351a52f4ba0f7f838d427024ba1fff2605a0c26859fb1bb82c"
+  }
 }

@@ -9,7 +9,7 @@ This plan describes the current export surface, the gap to a deployable VA.gov f
 ## Current Export Surface — Snapshot
 
 - **CLI** (`src/cli/compile.mjs`) — runs `compileAuthoringForm` then `generateVaFormConfigModule({ includeManifestImport: false })`, writes one ES module string to stdout. No file written, no folder structure.
-- **Generator** (`src/generator/vaFormConfigGenerator.mjs`) — emits a single self-contained ES module: imports (React, VA web-component patterns, `arrayBuilderPages` if used), inline runtime helpers (`evaluateAuthoringRule`, `applyAuthoringComputedValues`, prefill mapper, event runtime), chapter/page tree, `formConfig` default export.
+- **Generator** (`src/generator/vaFormConfigGenerator.mjs`) — emits a single self-contained ES module: imports (React, forms-system helper imports, `arrayBuilderPages` if used), inline runtime helpers (`evaluateAuthoringRule`, `applyAuthoringComputedValues`, prefill mapper, event runtime), chapter/page tree, `formConfig` default export.
 - **Builder UI** (`apps/builder/src/components/OutputPanel.tsx`, `FormActions.tsx`) — shows authoring JSON and generated code as text. Only download is `{formId}-authoring.json` (the source). No "download generated app" affordance, no PR action, no clipboard helper for generated code.
 - **Audit** (`src/audit/diff.mjs`) — produces compatibility classification vs. baseline schema but is not yet wired into any publish/release gate.
 

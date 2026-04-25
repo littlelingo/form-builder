@@ -14,6 +14,8 @@
     "builder:dev": "npm --workspace @va/form-builder-ui run dev",
     "builder:build": "npm --workspace @va/form-builder-ui run build",
     "builder:smoke": "node tests/builder-smoke.mjs",
+    "import": "node src/cli/import.mjs",
+    "corpus:seed": "node src/import/corpus/seed.mjs",
     "llm:up": "docker compose -f docker-compose.ollama.yml up -d",
     "llm:down": "docker compose -f docker-compose.ollama.yml down",
     "llm:logs": "docker compose -f docker-compose.ollama.yml logs -f ollama",
@@ -24,5 +26,9 @@
   },
   "devDependencies": {
     "playwright": "^1.59.1"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.10.38"
   }
 }

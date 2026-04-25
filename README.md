@@ -1,14 +1,14 @@
 # VA Form Builder
 
-Standalone foundation for a low-code VA.gov form builder.
+Standalone foundation for a low-code form builder.
 
-This package intentionally lives outside `vets-website-main`. It does not modify VA source. It provides:
+This package intentionally lives outside `vets-website-main`. It does not modify VA source, and the builder UI does not use VA.gov Design System components. It provides:
 
 - A versioned authoring schema contract.
-- A deterministic compiler from authoring JSON to generated VA `formConfig` module code.
+- A deterministic compiler from authoring JSON to generated `formConfig` module code.
 - A declarative rule engine for preview and generated code.
 - Declarative dynamic validations and computed values.
-- A component-system catalog with USWDS as the primary target and shadcn/ui as an optional preview/builder target.
+- A component-system catalog with USWDS CSS as the primary preview target and shadcn-style styling as an optional comparison target.
 - Compatibility/audit diff utilities for schema versioning.
 - Representative authoring examples, including 21-4140 with list-loop, prefill, and file upload, and 27-8832 with Chapter 36 claimant conditions and certification flow.
 
@@ -81,14 +81,14 @@ Implemented builder features:
 - Chapter and page creation/removal.
 - Chapter and page editing.
 - Chapter, page, and field ordering controls.
-- USWDS-first component palette.
+- USWDS CSS component palette.
 - Field label, ID, hint, required, option, and file-upload endpoint editing.
 - Visual condition editing for chapter, page, field visibility, and dynamic required behavior, including nested all/any branching.
 - List-loop chapter settings for nouns, array path, max items, required behavior, item label, and intro text.
 - USWDS and shadcn-style preview target switch.
 - Live sample-answer preview data that drives conditional visibility and dynamic required behavior.
 - Computed-value preview output alongside raw sample answers.
-- Live authoring JSON and generated VA `formConfig` output.
+- Live authoring JSON and generated `formConfig` output.
 - Audit panel showing validation and compatibility changes from the loaded baseline.
 
 ## Current Scope
@@ -110,7 +110,7 @@ Implemented component mappings:
 Implemented flow support:
 
 - Standard chapters/pages.
-- List-loop chapters generated through VA `arrayBuilderPages`.
+- List-loop chapters generated through `arrayBuilderPages`.
 - Declarative page and field conditions.
 - Dynamic required rules.
 - Declarative validation rules.
@@ -123,11 +123,11 @@ Implemented flow support:
 The authoring schema uses semantic component types, not implementation-specific JSX. Targets are mapped in `src/component-systems/componentSystems.mjs`.
 
 - `uswds`: Primary preview and builder target using USWDS form controls such as text input, textarea, radio buttons, select, checkbox, and file input.
-- `vaFormsSystem`: Generated VA.gov code target using VA forms-system web-component patterns such as `textUI`, `selectUI`, `fileInputUI`, and `arrayBuilderPages`.
-- `shadcn`: Optional preview/builder target using shadcn/ui registry components such as `Field`, `Input`, `Textarea`, `Checkbox`, `RadioGroup`, and `Select`.
+- `vaFormsSystem`: Existing generated `formConfig` target using forms-system helper imports such as `textUI`, `selectUI`, `fileInputUI`, and `arrayBuilderPages`. This remains as an output target for now and is separate from the builder UI component stack.
+- `shadcn`: Optional preview/builder comparison target using shadcn-style component mappings such as `Field`, `Input`, `Textarea`, `Checkbox`, `RadioGroup`, and `Select`.
 
 ## Design Principle
 
-The saved source of truth is authoring JSON. Generated VA code is an output artifact.
+The saved source of truth is authoring JSON. Generated code is an output artifact.
 
-Do not store raw VA `formConfig` as the authoring source because it requires executable JavaScript and React components.
+Do not store raw `formConfig` as the authoring source because it requires executable JavaScript and React components.

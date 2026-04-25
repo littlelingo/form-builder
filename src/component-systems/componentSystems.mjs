@@ -205,7 +205,7 @@ export const componentSystems = {
 
   vaFormsSystem: {
     id: 'vaFormsSystem',
-    name: 'VA forms-system web-component patterns',
+    name: 'Forms-system helper mappings',
     role: 'generated-va-code',
     docs: 'vets-website-main/src/platform/forms-system/src/js/web-component-patterns',
     components: {
@@ -280,7 +280,7 @@ export const componentSystems = {
         component: 'Input',
         registryItems: ['input', 'field'],
         importPath: '@/components/ui/input',
-        note: 'Use type="date" for MVP; upgrade to Calendar/Popover date picker only when VA accessibility review approves it.',
+        note: 'Use type="date" for MVP; upgrade to Calendar/Popover date picker only after accessibility testing approves it.',
       },
       dateRange: {
         component: 'Calendar',
@@ -331,7 +331,7 @@ export const componentSystems = {
         component: 'Input',
         registryItems: ['input', 'field'],
         importPath: '@/components/ui/input',
-        note: 'Render as <Input type="file"> with VA-compatible validation and upload behavior.',
+        note: 'Render as <Input type="file"> with form-compatible validation and upload behavior.',
       },
       address: {
         component: 'FieldGroup',

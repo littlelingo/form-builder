@@ -65,7 +65,7 @@ PDF storage convention:
 | Concern | Where it runs | Notes |
 |---|---|---|
 | AcroForm extraction (`pdf-lib`) | Both | `pdf-lib` is isomorphic ESM, no worker. Same code path for CLI + browser. |
-| PDF page text + bbox (`pdfjs-dist`) | Both | Pin `pdfjs-dist@^4` legacy build for Node. Browser uses worker; Node skips worker via `disableWorker: true`. |
+| PDF page text + bbox (`pdfjs-dist`) | Both, import-time only | Used for label extraction + bbox geometry during import. Pin `pdfjs-dist@^4` legacy build for Node. Browser uses worker during import; Node skips worker via `disableWorker: true`. **Not used to render the PDF inside the builder UI.** |
 | Confidence scoring, classify, corpus lookup | Both | Pure JS, isomorphic. |
 | LLM enricher (any provider) | Node only (CLI) + dev proxy (browser) | Provider-abstracted (local Ollama default, OpenAI-compatible alt, Anthropic Claude opt-in). Browser path goes through `apps/proxy/` started by `npm run builder:dev:proxy`. Proxy forwards to whichever provider is configured. Without proxy or provider, importer still works deterministic-only. |
 | Sidecar PDF write | Node only | Browser exports zip via `JSZip` (already proposed in `form-route-to-va-gov.md`); CLI writes files. |
@@ -105,8 +105,8 @@ Tests run in `mock` mode in CI. Local-LLM tests gated on `ollama` reachable. Clo
 ### PDF library roles
 
 - `pdf-lib`: AcroForm widget enumeration (field name, type, options, default value, required flag, max length, page index, raw PDF rect).
-- `pdfjs-dist`: page text extraction with positions, bbox geometry conversion, browser-side rendering for `PdfSourcePreview.tsx`.
-- Coords: PDF user space (bottom-left origin) converted at extraction time to normalized `{ page, x, y, w, h }` in [0,1] relative to page width/height. Stored that way in provenance. Renderer multiplies back up.
+- `pdfjs-dist`: page text extraction with positions + bbox geometry conversion, import-time only.
+- Coords: PDF user space (bottom-left origin) converted at extraction time to normalized `{ page, x, y, w, h }` in [0,1] relative to page width/height. Stored in provenance for reference + future tooling. **No PDF rendering inside the builder UI** — bbox is metadata only.
 
 ## Schema Additions (non-breaking, bump 1.0.0 → 1.1.0)
 
@@ -293,7 +293,7 @@ PDF buffer
 
 ## Review UX
 
-- **Wizard at import open** (`ImportWizard.tsx`) — modal overlay. Walks (a) form-level decisions (formId, title, OMB block, chapter grouping), then (b) every `low`-band component. Each step: PDF region preview (`PdfSourcePreview.tsx`) + importer guess + accept / reject / edit-then-accept. Skip wizard if zero low-band items + form-level metadata high-confidence.
+- **Wizard at import open** (`ImportWizard.tsx`) — modal overlay. Walks (a) form-level decisions (formId, title, OMB block, chapter grouping), then (b) every `low`-band component. Each step shows: importer guess + provenance metadata (extracted label text near the field, adjacent prose / instruction text, AcroForm raw field name, page number) + accept / reject / edit-then-accept. **No PDF rendering** — text-only context. Skip wizard if zero low-band items + form-level metadata high-confidence.
 - **Inline badge** (`ConfidenceBadge.tsx`) — small chip in component header on canvas. Color band (green ≥0.85 / amber ≥0.6 / red <0.6). Click reveals provenance + accept/reject. Accept clears chip; reject opens inspector with suggested alternatives.
 - **Review panel** (`ImportReviewPanel.tsx`) — tab in inspector area listing every unreviewed component, ascending by confidence, with jump-to + bulk-accept. Counter on tab badge.
 - Every accept/reject/edit appends to `corrections.jsonl`.
@@ -403,15 +403,14 @@ Verification: importer produces a valid authoring JSON for the synthetic fixture
 
 Deliverables:
 
-- New: `apps/builder/src/components/ConfidenceBadge.tsx` — chip in component header with provenance reveal + accept/reject buttons.
+- New: `apps/builder/src/components/ConfidenceBadge.tsx` — chip in component header with provenance reveal (text-only metadata) + accept/reject buttons.
 - Update: `apps/builder/src/components/StructurePanel.tsx` and `InspectorPanel.tsx` to render badge when `provenance` present.
 - New: `apps/builder/src/lib/reviewState.ts` — `acceptComponent(id)`, `rejectComponent(id)` mutators that update `provenance.reviewed` + append corpus row.
 - New: `apps/builder/src/lib/importClient.ts` — wraps `src/import/pipeline.mjs` for browser + handles file upload.
-- New: `apps/builder/src/components/PdfSourcePreview.tsx` — pdfjs-dist canvas with bbox highlight overlay for selected component.
 - Update: `apps/builder/src/components/FormActions.tsx` — add **Import PDF** action (file picker → `importClient` → loads result into form model).
 - Update: `tests/builder-smoke.mjs` — import a synthetic PDF, accept a component, assert badge clears.
 
-Verification: in builder, choose Import PDF, pick fixture, see imported form with badges. Click badge → see provenance + PDF preview. Accept clears badge.
+Verification: in builder, choose Import PDF, pick fixture, see imported form with badges. Click badge → see provenance metadata (extracted label, adjacent prose, AcroForm field name, page number). Accept clears badge.
 
 ### Milestone 5 — LLM Enricher (Provider-Abstracted) + Cache + Mock + Few-Shot Floor
 
@@ -458,7 +457,7 @@ Verification: import same PDF twice, edit a label on first run, re-import → se
 
 Deliverables:
 
-- New: `apps/builder/src/components/ImportWizard.tsx` — modal walking form-level decisions then low-band components. Jumps PDF preview + inspector. Records accept/reject.
+- New: `apps/builder/src/components/ImportWizard.tsx` — modal walking form-level decisions then low-band components. Each step shows provenance metadata (extracted label near the field, adjacent prose / instruction text, AcroForm raw field name, page number) + suggested alternatives + accept/reject/edit. Jumps inspector to the corresponding component. No PDF rendering.
 - New: `apps/builder/src/components/ImportReviewPanel.tsx` — inspector tab listing unreviewed components ascending by confidence.
 - Update: `apps/builder/src/App.tsx` — open wizard automatically on successful import if any low-band items.
 - Update: `tests/builder-smoke.mjs` — wizard click-through.
@@ -518,7 +517,6 @@ CLI + dev proxy:
 Builder UI:
 
 - `apps/builder/src/components/ConfidenceBadge.tsx` — NEW
-- `apps/builder/src/components/PdfSourcePreview.tsx` — NEW
 - `apps/builder/src/components/ImportWizard.tsx` — NEW
 - `apps/builder/src/components/ImportReviewPanel.tsx` — NEW
 - `apps/builder/src/components/StandardsAuditPanel.tsx` — NEW
@@ -550,7 +548,7 @@ Package metadata:
 - `diffAuthoringForms` (`src/audit/diff.mjs`) — version-vs-version diff alongside standards audit in inspector.
 - `runnerFlow.js`, `runnerValidation.js` — imported form runs in builder runner immediately.
 - `FormActions.tsx` saved-template export/import pattern — same UX for corrections corpus share.
-- `OutputPanel.tsx` per-file preview pattern (from export plan) — re-used for imported authoring JSON + sidecar PDF preview.
+- `OutputPanel.tsx` per-file preview pattern (from export plan) — re-used for imported authoring JSON.
 
 ## End-to-End Verification
 
