@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after saved template import conflict handling
+Last updated: 2026-04-25 EDT after runner smoke factoring
 
 ## Current Workspace
 
@@ -14,12 +14,13 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the saved template import conflict handling checkpoint. The latest
-passing slice makes imported saved-template labels unique when they overlap
-with existing templates and reports duplicate-name renames in the import
-message. The next recommended implementation slice is runner smoke factoring,
-because `tests/builder-smoke.mjs` is now long enough that named helper flows
-would make future failures easier to locate.
+Resume from the runner smoke factoring checkpoint. The latest passing slice
+split the long browser smoke into named helper flows for blank authoring,
+helper presets, saved templates, reusable templates, promoted controls, and
+the 27-8832 veteran/dependent runner paths. The next recommended implementation
+slice is helper preset precision, because authors can review helper mappings
+today, but the preview still describes template targets by label rather than
+the exact generated IDs for the current form state.
 
 Recent completed slices:
 
@@ -202,6 +203,19 @@ Recent completed slices:
       the library and verifies the conflict message plus the renamed imported
       template.
 
+18. **Runner smoke factoring**
+    - `tests/builder-smoke.mjs` now uses named helper flows instead of one long
+      browser script.
+    - The smoke helpers cover blank authoring, basic runner submit, helper
+      preset review, saved template library behavior, reusable templates,
+      promoted controls, declined helper presets, and both 27-8832 runner
+      paths.
+    - Shared 27-8832 runner helpers now fill repeated Veteran/service member,
+      contact, service, and certification pages for the veteran and dependent
+      paths.
+    - Browser error tracking now lives in a dedicated helper while preserving
+      the existing favicon 404 exception.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -236,12 +250,12 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the saved template import conflict handling slice:
+Latest verification after the runner smoke factoring slice:
 
 ```bash
 npm run builder:smoke
-npm test
 npm run builder:build
+npm test
 ```
 
 All three commands passed in `/Users/clint/Workspace/va/form-builder`. The
@@ -304,6 +318,8 @@ Confirmed:
   Identity templates plus the helper-presets-off message.
 - Automated smoke now verifies duplicate saved-template import renaming and the
   import message for renamed duplicates.
+- Automated smoke is now organized into named helper flows for easier failure
+  triage as runner and template coverage grows.
 
 Known browser-console issue:
 
@@ -313,15 +329,11 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Runner smoke factoring**
-   - Split the long browser smoke into named helper flows if more runner paths
-     are added, so failures stay easy to locate.
-
-2. **Helper preset precision**
+1. **Helper preset precision**
    - If authors need generated IDs before insertion, preview the exact IDs for
      the current form state rather than field-label mappings.
 
-3. **Saved template overwrite/merge choices**
+2. **Saved template overwrite/merge choices**
    - If imported libraries become larger, consider an explicit import review
      step for skip, rename, or replace decisions.
 
