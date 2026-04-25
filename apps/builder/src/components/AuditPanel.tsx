@@ -4,6 +4,7 @@ import type { AuthoringForm } from '../types';
 interface AuditPanelProps {
   baseline: AuthoringForm;
   form: AuthoringForm;
+  onSetBaseline?: () => void;
 }
 
 const severityLabels: Record<string, string> = {
@@ -22,15 +23,27 @@ function displayValidationError(error: string) {
   return error;
 }
 
-export function AuditPanel({ baseline, form }: AuditPanelProps) {
+export function AuditPanel({ baseline, form, onSetBaseline }: AuditPanelProps) {
   const validation = validateAuthoringForm(form);
   const diff = diffAuthoringForms(baseline, form);
 
   return (
     <section className="builder-card builder-card--compact" aria-labelledby="audit-heading">
-      <div className="builder-card__header">
-        <p className="builder-eyebrow">Governance</p>
-        <h2 id="audit-heading">Audit and compatibility</h2>
+      <div className="builder-card__header builder-card__header--split">
+        <div>
+          <p className="builder-eyebrow">Governance</p>
+          <h2 id="audit-heading">Audit and compatibility</h2>
+        </div>
+        {onSetBaseline && (
+          <button
+            className="usa-button usa-button--secondary usa-button--small"
+            type="button"
+            title="Snapshot the current form as the baseline for compatibility diffs"
+            onClick={onSetBaseline}
+          >
+            Set as baseline
+          </button>
+        )}
       </div>
 
       <div className="builder-audit-summary">

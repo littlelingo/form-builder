@@ -1,11 +1,29 @@
+import { useRef, useState } from 'react';
+
 import type { AuthoringComponent, AuthoringForm, SelectedNode } from '../types';
 import { confidenceBand } from '../lib/reviewState';
+import {
+  appendCorpusEntries,
+  exportCorpus,
+  loadCorpus,
+} from '../../../../src/import/corpus/store.mjs';
 
 interface ImportReviewPanelProps {
   form: AuthoringForm;
   onJump: (node: SelectedNode) => void;
   onAccept: (componentId: string) => void;
   onAcceptAll: (componentIds: string[]) => void;
+}
+
+function downloadCorrectionsBundle() {
+  const bundle = exportCorpus();
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'va-form-builder-corrections.json';
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 interface ReviewRow {
@@ -52,6 +70,30 @@ function bandLabel(band: 'high' | 'medium' | 'low'): string {
 
 export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: ImportReviewPanelProps) {
   const rows = gatherUnreviewed(form);
+  const correctionsInputRef = useRef<HTMLInputElement | null>(null);
+  const [correctionsMessage, setCorrectionsMessage] = useState<string>('');
+
+  async function handleImportCorrections(file?: File) {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const entries = Array.isArray(parsed?.entries)
+        ? parsed.entries
+        : Array.isArray(parsed)
+          ? parsed
+          : null;
+      if (!entries) {
+        setCorrectionsMessage('Expected { entries: [...] } or array.');
+        return;
+      }
+      appendCorpusEntries(entries);
+      setCorrectionsMessage(`Imported ${entries.length} exemplars. Total corpus: ${loadCorpus().length}.`);
+    } catch (error) {
+      setCorrectionsMessage(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      if (correctionsInputRef.current) correctionsInputRef.current.value = '';
+    }
+  }
 
   return (
     <section className="builder-card builder-card--compact" aria-labelledby="review-heading">
@@ -128,6 +170,41 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
           })}
         </ol>
       )}
+
+      <footer className="builder-review-footer">
+        <p className="builder-review-footer__title">Corrections corpus</p>
+        <div className="builder-review-footer__actions">
+          <button
+            className="usa-button usa-button--outline usa-button--small"
+            type="button"
+            onClick={() => correctionsInputRef.current?.click()}
+          >
+            Import corrections
+          </button>
+          <button
+            className="usa-button usa-button--outline usa-button--small"
+            type="button"
+            onClick={() => {
+              downloadCorrectionsBundle();
+              setCorrectionsMessage(`Exported ${loadCorpus().length} exemplars.`);
+            }}
+          >
+            Export corrections
+          </button>
+        </div>
+        {correctionsMessage && (
+          <p className="builder-review-footer__message" role="status">
+            {correctionsMessage}
+          </p>
+        )}
+        <input
+          accept="application/json,.json"
+          className="builder-hidden-input"
+          ref={correctionsInputRef}
+          type="file"
+          onChange={event => handleImportCorrections(event.target.files?.[0])}
+        />
+      </footer>
     </section>
   );
 }

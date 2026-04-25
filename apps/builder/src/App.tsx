@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 import { AuditPanel } from './components/AuditPanel';
 import { BuildToolbox } from './components/BuildToolbox';
-import { BuilderToolbar } from './components/BuilderToolbar';
 import { FlowEditorPanel } from './components/FlowEditorPanel';
 import { FormActions } from './components/FormActions';
 import { ImportReviewPanel } from './components/ImportReviewPanel';
@@ -51,6 +50,8 @@ import {
 } from './lib/formModel';
 import { emptyRuntimeState } from './lib/runnerRuntime';
 import { acceptComponent, rejectComponent, unreviewedComponentCount, confidenceBand } from './lib/reviewState';
+import { signatureFromForm } from './lib/dirty';
+import { HeaderStrip } from './components/HeaderStrip';
 import {
   normalizeCustomTemplates,
   resolveSavedTemplateImport,
@@ -82,6 +83,59 @@ interface FormHistory {
 }
 
 const CUSTOM_TEMPLATE_STORAGE_KEY = 'va-form-builder.customTemplates.v1';
+const LAST_FORM_STORAGE_KEY = 'va-form-builder.lastForm.v1';
+const LAST_SAVED_SIGNATURE_KEY = 'va-form-builder.lastSaved.v1';
+
+function loadPersistedForm(): AuthoringForm | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(LAST_FORM_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as AuthoringForm;
+  } catch {
+    return null;
+  }
+}
+
+function loadPersistedSignature(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(LAST_SAVED_SIGNATURE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function persistForm(form: AuthoringForm, signature: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(LAST_FORM_STORAGE_KEY, JSON.stringify(form));
+    window.localStorage.setItem(LAST_SAVED_SIGNATURE_KEY, signature);
+  } catch {
+    // best-effort
+  }
+}
+
+function clearPersistedForm() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(LAST_FORM_STORAGE_KEY);
+    window.localStorage.removeItem(LAST_SAVED_SIGNATURE_KEY);
+  } catch {
+    // noop
+  }
+}
+
+function downloadFormJson(form: AuthoringForm) {
+  if (typeof window === 'undefined') return;
+  const blob = new Blob([JSON.stringify(form, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${form.formId || 'va-form'}-authoring.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -168,7 +222,10 @@ function initialRunnerState(): RunnerState {
 }
 
 export default function App() {
-  const [form, setForm] = useState<AuthoringForm>(() => cloneForm(blankAuthoringForm));
+  const initialForm = loadPersistedForm() || cloneForm(blankAuthoringForm);
+  const initialSignature = loadPersistedSignature() ?? signatureFromForm(initialForm);
+  const [form, setForm] = useState<AuthoringForm>(initialForm);
+  const [lastSavedSignature, setLastSavedSignature] = useState<string>(initialSignature);
   const [history, setHistory] = useState<FormHistory>({ past: [], future: [] });
   const [baselineForm, setBaselineForm] = useState<AuthoringForm>(() =>
     cloneForm(blankAuthoringForm),
@@ -636,7 +693,26 @@ export default function App() {
     setPropertiesPanel('setup');
     setPreviewData({});
     setRunnerState(initialRunnerState());
+    setLastSavedSignature(signatureFromForm(loadedForm));
+    clearPersistedForm();
   }
+
+  function handleNewForm() {
+    replaceForm(cloneForm(blankAuthoringForm));
+  }
+
+  function handleSaveForm() {
+    const signature = signatureFromForm(form);
+    persistForm(form, signature);
+    setLastSavedSignature(signature);
+    downloadFormJson(form);
+  }
+
+  function handleExportJson() {
+    downloadFormJson(form);
+  }
+
+  const dirty = signatureFromForm(form) !== lastSavedSignature;
 
   function handleImport(nextForm: AuthoringForm) {
     replaceForm(nextForm);
@@ -693,6 +769,26 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      <HeaderStrip
+        form={form}
+        dirty={dirty}
+        onNew={handleNewForm}
+        onOpen={handleImport}
+        onSave={handleSaveForm}
+        onImportPdf={handleImport}
+        onExportJson={handleExportJson}
+        canvasMode={canvasMode}
+        activePanel={workspacePanel}
+        canUndo={history.past.length > 0}
+        canRedo={history.future.length > 0}
+        previewSystem={previewSystem}
+        onCanvasModeChange={setCanvasMode}
+        onPanelChange={setWorkspacePanel}
+        onPreviewSystemChange={setPreviewSystem}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+      />
 
       <div className="builder-layout">
         <aside className="builder-sidebar" aria-label="Authoring controls">
@@ -774,26 +870,12 @@ export default function App() {
             <FormActions
               examples={builderExamples}
               form={form}
-              onImport={handleImport}
               onLoadExample={replaceForm}
-              onSetBaseline={() => setBaselineForm(cloneForm(form))}
             />
           )}
         </aside>
 
         <section className="builder-workspace" aria-label="Form workspace">
-          <BuilderToolbar
-            activePanel={workspacePanel}
-            canvasMode={canvasMode}
-            canRedo={history.future.length > 0}
-            canUndo={history.past.length > 0}
-            previewSystem={previewSystem}
-            onCanvasModeChange={setCanvasMode}
-            onPanelChange={setWorkspacePanel}
-            onPreviewSystemChange={setPreviewSystem}
-            onRedo={handleRedo}
-            onUndo={handleUndo}
-          />
           {workspacePanel === 'preview' ? (
             <PreviewPanel
               canvasMode={canvasMode}
@@ -915,7 +997,13 @@ export default function App() {
             )
           )}
 
-          {propertiesPanel === 'audit' && <AuditPanel baseline={baselineForm} form={form} />}
+          {propertiesPanel === 'audit' && (
+            <AuditPanel
+              baseline={baselineForm}
+              form={form}
+              onSetBaseline={() => setBaselineForm(cloneForm(form))}
+            />
+          )}
 
           {propertiesPanel === 'standards' && (
             <StandardsAuditPanel form={form} onJump={handleSelectNode} />
