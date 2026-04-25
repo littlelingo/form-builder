@@ -25,6 +25,40 @@ npm run builder:build
 
 The compiler and audit utilities have no runtime third-party dependencies. The builder UI is a React/Vite workspace app and uses USWDS CSS for the primary preview.
 
+## Local LLM (Ollama in Docker)
+
+Container-based local LLM for the PDF importer (see `pdf-import-and-standards.md`). Default provider per plan; portable across hosts.
+
+```bash
+npm run llm:up           # start Ollama container (detached)
+npm run llm:pull         # pull llama3.1:8b (override: MODEL=qwen2.5:14b npm run llm:pull)
+npm run llm:pull:qwen    # pull qwen2.5:14b (better quality, ~9GB)
+npm run llm:smoke        # JSON-mode endpoint test against llama3.1:8b
+npm run llm:status       # container state + pulled models
+npm run llm:logs         # tail container logs
+npm run llm:down         # stop + remove container; named volume `ollama_models` preserved
+```
+
+### Destroying pulled models
+
+`npm run llm:down` keeps the `ollama_models` named volume so re-`up` is instant. To wipe pulled models and reclaim disk (forces re-pull on next start):
+
+```bash
+docker compose -f docker-compose.ollama.yml down -v
+```
+
+Not scripted on purpose. Re-downloading `qwen2.5:14b` is ~9GB. Only run when intentionally resetting state.
+
+### Importer env vars
+
+```bash
+export IMPORT_LLM_PROVIDER=ollama
+export IMPORT_LLM_MODEL=llama3.1:8b
+export IMPORT_LLM_BASE_URL=http://localhost:11434
+```
+
+Mac perf note: Docker Ollama is CPU-only on macOS (no Metal passthrough). For faster local inference on Apple Silicon, install Ollama natively (`brew install ollama`) and skip the container — same env vars apply.
+
 ## Builder App
 
 The first UI shell lives in `apps/builder`.

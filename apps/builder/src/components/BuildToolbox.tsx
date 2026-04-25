@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { paletteCategories, paletteComponents, sectionTemplates } from '../lib/formModel';
 import type {
@@ -118,6 +118,7 @@ export function BuildToolbox({
   saveCustomTemplateLabel = 'Save current screen',
 }: BuildToolboxProps) {
   const customTemplateInputRef = useRef<HTMLInputElement | null>(null);
+  const importReviewHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const [activeTab, setActiveTab] = useState<BuildTab>('fields');
   const [customTemplateName, setCustomTemplateName] = useState('');
   const [includeTemplateHelpers, setIncludeTemplateHelpers] = useState(true);
@@ -138,6 +139,12 @@ export function BuildToolbox({
       components: paletteComponents.filter(component => component.category === category.id),
     }))
     .filter(category => category.components.length > 0);
+
+  useEffect(() => {
+    if (pendingTemplateImport) {
+      importReviewHeadingRef.current?.focus({ preventScroll: true });
+    }
+  }, [pendingTemplateImport]);
 
   function handleFieldDragStart(event: React.DragEvent<HTMLDivElement>, type: string) {
     if (disabled) {
@@ -564,12 +571,19 @@ export function BuildToolbox({
 
           {pendingTemplateImport && (
             <div
+              aria-describedby="saved-template-import-review-description"
               aria-labelledby="saved-template-import-review-heading"
               className="builder-template-import-review"
               role="group"
             >
-              <h4 id="saved-template-import-review-heading">Review import conflicts</h4>
-              <p>
+              <h4
+                id="saved-template-import-review-heading"
+                ref={importReviewHeadingRef}
+                tabIndex={-1}
+              >
+                Review import conflicts
+              </h4>
+              <p id="saved-template-import-review-description">
                 {pendingTemplateImport.conflicts.length} duplicate saved-template{' '}
                 {pendingTemplateImport.conflicts.length === 1 ? 'name matches' : 'names match'} your library.
               </p>
@@ -630,7 +644,9 @@ export function BuildToolbox({
           />
 
           {templateTransferMessage && (
-            <p className="builder-action-message">{templateTransferMessage}</p>
+            <p aria-live="polite" className="builder-action-message" role="status">
+              {templateTransferMessage}
+            </p>
           )}
 
           <div>

@@ -297,6 +297,11 @@ async function smokeSavedTemplateLibrary(page) {
     page.getByRole('heading', { name: 'Review import conflicts' }),
     'Expected saved template import conflicts to require review.',
   );
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.id),
+    'saved-template-import-review-heading',
+    'Expected saved template import review heading to receive focus.',
+  );
   await expectVisible(
     page,
     page.getByText('Incoming: Section'),

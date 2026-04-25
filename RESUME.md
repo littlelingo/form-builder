@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after saved template import review polish
+Last updated: 2026-04-25 EDT after import review focus/accessibility polish
 
 ## Current Workspace
 
@@ -14,13 +14,13 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the saved template import review polish checkpoint. The latest
-passing slice enriches the saved-template import conflict review panel with
-metadata for both the incoming and existing conflicting templates, including
-kind, field count, and created/imported dates when available. The next
-recommended implementation slice is import-review focus/accessibility polish,
-because the conflict panel appears after file selection but does not yet move
-focus to the review heading or announce the choice step beyond status text.
+Resume from the import review focus/accessibility polish checkpoint. The latest
+passing slice moves focus to the saved-template import conflict review heading
+after a conflicting file is selected, associates the review choices with the
+review description, and makes import transfer messages a polite live status.
+The next recommended implementation slice is import-review focus restoration,
+so keyboard and screen reader users land on a predictable control after
+canceling or applying a conflict action.
 
 Recent completed slices:
 
@@ -264,6 +264,15 @@ Recent completed slices:
     - Browser smoke now verifies the import review displays incoming and
       existing metadata before choosing rename, skip, or replace.
 
+24. **Import review focus/accessibility polish**
+    - Saved-template import conflict review now moves focus to the review
+      heading when duplicate labels require an author choice.
+    - The conflict action group now references the review description with
+      `aria-describedby`.
+    - Import transfer messages now use a polite `role="status"` live region.
+    - Browser smoke now verifies the conflict review heading receives focus
+      after a conflicting saved-template file is selected.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -302,17 +311,20 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the saved template import review polish slice:
+Latest verification after the import review focus/accessibility polish slice:
 
 ```bash
-npm run builder:smoke
 npm run builder:build
+npm run builder:smoke
 npm test
+npm run compile:example
+npm run compile:example:27-8832
+git diff --check
 ```
 
-All three commands passed in `/Users/clint/Workspace/va/form-builder`. The
-browser smoke command may need local-server permissions in sandboxed
-environments and requires the Playwright Chromium browser to be installed with
+All commands passed in `/Users/clint/Workspace/va/form-builder`. The browser
+smoke command may need local-server permissions in sandboxed environments and
+requires the Playwright Chromium browser to be installed with
 `npx playwright install chromium`.
 
 ## Browser Smoke Notes
@@ -382,6 +394,8 @@ Confirmed:
   computed preview IDs/targets, and duplicate-preview suppression.
 - Automated smoke now verifies saved-template import conflict review displays
   incoming and existing template metadata.
+- Automated smoke now verifies saved-template import conflict review receives
+  focus when duplicate labels require an author choice.
 
 Known browser-console issue:
 
@@ -391,10 +405,10 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Import review focus/accessibility polish**
-   - Move focus to the import-conflict review heading after a conflicting file
-     is selected and make the review/status messaging easier for screen reader
-     users to follow.
+1. **Import review focus restoration**
+   - Restore focus to a predictable control after canceling or applying an
+     import-conflict action, and keep the final result announced from the
+     import status region.
 
 2. **Helper preset expansion**
    - If more templates gain helper presets, add them to
