@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after import review focus/accessibility polish
+Last updated: 2026-04-25 EDT after PDF import + standards V1 + UX restructure
 
 ## Current Workspace
 
@@ -8,296 +8,44 @@ The standalone VA Form Builder lives at:
 
 `/Users/clint/Workspace/va/form-builder`
 
-Use this workspace first when resuming. The accepted direction is a standalone
-low-code VA.gov form authoring tool that keeps authoring JSON as the source of
-truth and generates VA `formConfig` as an output artifact.
+Use this workspace first when resuming. There is also a stale duplicate at
+`/Users/clint/Workspace/va/va-form-builder` — ignore it. The canonical direction
+is a standalone low-code VA.gov form authoring tool that keeps authoring JSON
+as the source of truth and generates VA `formConfig` as an output artifact.
 
-## Current State
+## Snapshot
 
-Resume from the import review focus/accessibility polish checkpoint. The latest
-passing slice moves focus to the saved-template import conflict review heading
-after a conflicting file is selected, associates the review choices with the
-review description, and makes import transfer messages a polite live status.
-The next recommended implementation slice is import-review focus restoration,
-so keyboard and screen reader users land on a predictable control after
-canceling or applying a conflict action.
+- 98 tests total: 96 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
+- `npm run builder:build` green.
+- `npm run compile:example` and `npm run compile:example:27-8832` produce valid output.
+- Pilot smoke confirmed: real `VBA-27-8832-ARE.pdf` imports end-to-end via local Ollama (`llama3.1:8b`, ~18 min on CPU). Output schema valid, type mix improves over deterministic-only.
+- Two design plans live in repo root:
+  - `pdf-import-and-standards.md` — V1 fully implemented (M1–M8).
+  - `form-route-to-va-gov.md` — drafted, not yet executed.
 
-Recent completed slices:
+## V1 Milestones — Done
 
-1. **Validation and computed-values authoring**
-   - Field inspector now has stronger validation controls.
-   - Required, `requiredIf`, min/max length, pattern, numeric min/max, and
-     custom common constraint messages are editable.
-   - Condition editing supports nested rules plus `in` and `notIn`.
-   - Runner validation uses authored custom messages.
+| M | Subsystem | Files |
+|---|-----------|-------|
+| M1 | Schema 1.0.0 → 1.1.0 + migrations + retro-stamp | `src/schema/migrations/`, `tests/migrations.test.mjs` |
+| M2 | Standards predicate DSL + audit + builtIn.json | `src/standards/`, `tests/standards.test.mjs` |
+| M3 | Deterministic AcroForm importer + CLI | `src/import/extract/`, `src/import/heuristic/`, `src/import/build.mjs`, `src/import/pipeline.mjs`, `src/cli/import.mjs`, `tests/import.test.mjs`, `tests/import-pilot.test.mjs` |
+| M4 | ConfidenceBadge + Import PDF + reviewState | `apps/builder/src/components/ConfidenceBadge.tsx`, `apps/builder/src/lib/{importClient.ts,reviewState.ts}` |
+| M5 | LLM enricher (provider-abstracted, Ollama default) | `src/import/llm/`, `docs/import-llm-providers.md`, `tests/llm.test.mjs` |
+| M6 | Corrections corpus + nearest-neighbor + seed | `src/import/corpus/`, `tests/corpus.test.mjs` |
+| M7 | Import wizard + review panel | `apps/builder/src/components/{ImportWizard,ImportReviewPanel}.tsx`, `tests/wizardSteps.test.mjs` |
+| M8 | Standards audit panel | `apps/builder/src/components/StandardsAuditPanel.tsx` |
 
-2. **Review and submit runner**
-   - `Run` mode now includes a VA-style final review page.
-   - Review shows standard section summaries and list-loop item summaries.
-   - Mock submit reports ready/submitting/success/validation-blocked states.
-   - Submit payload trims hidden answered fields.
-   - Computed values and transformed data are shown in submit preview output.
+## UX restructure — Done
 
-3. **Generated-output support for promoted controls**
-   - `characterCount` generates `textareaUI` / `textareaSchema` with
-     `maxLength`.
-   - `maskedInput` generates `textUI` / `textSchema` with pattern support.
-   - `memorableDate` generates `currentOrPastDateUI` /
-     `currentOrPastDateSchema`.
-   - `dateRange` now generates a nested object with `startDate` and `endDate`,
-     each using `currentOrPastDateUI` / `currentOrPastDateSchema`.
-   - Preview and runner store `dateRange` values as
-     `{ startDate, endDate }`.
-   - Runner validation checks required date-range parts, invalid dates, and
-     end-before-start.
-
-4. **Starter template depth**
-   - Pattern palette now includes:
-     - Contact information
-     - Identity
-     - Claimant/Veteran split
-     - Evidence upload
-     - Certification/signature
-     - Employment list-loop
-     - Dependent list-loop
-   - Employment and dependent templates create actual list-loop chapters.
-
-5. **Promoted content-block hardening**
-   - `prose`, `alert`, `summaryBox`, and `table` are saved schema component
-     types and generate VA output.
-   - Generated content blocks use `view:<id>` keys with `titleSchema`, so they
-     display in VA pages without becoming submitted answer fields.
-   - Content blocks now generate `ui:options.hideIf` for authored `showIf` and
-     `hideIf` rules.
-   - Runner review, validation, and mock-submit payload paths now exclude
-     content-only components even if sample data contains stale values for
-     those IDs.
-   - `dateRange` inspector controls now expose start/end labels and hints.
-
-6. **Table accessibility and date-range hardening**
-   - Tables now support `headerRow`; new tables default to using the first row
-     as column headers.
-   - Builder preview and generated VA output render table header cells as
-     `<th scope="col">` and remaining rows as body cells.
-   - Table inspector exposes a "Use first row as table header" toggle.
-   - `dateRange` generated VA output now includes end-after-start validation.
-   - `dateRange` authoring supports `allowFutureDates`; when enabled, generated
-     child date fields use plain VA date widgets instead of
-     `currentOrPastDateUI`.
-   - Runner validation enforces current-or-past date ranges by default and skips
-     that future-date check when `allowFutureDates` is true.
-
-7. **Starter template polish**
-   - Contact, identity, claimant/Veteran, evidence, certification, yes/no
-     details, employment list-loop, and dependent list-loop templates have
-     tighter VA-style copy and safer default hints.
-   - Evidence upload now defaults to PDF/JPG/PNG, 5 files, and 10 MB per file.
-   - Yes/no details now requires the detail text only when the yes/no answer is
-     true.
-   - Employment list-loop now uses separate required start date and optional
-     end date fields instead of a required date range, adds average monthly
-     income with a non-negative constraint, and preserves current-job guidance.
-   - Dependent template now adds date-of-birth and SSN helper text.
-
-8. **Saved custom templates**
-   - Patterns panel now has an inline template-name field and save action.
-   - Authors can save the current screen or selected `sectionGroup` as a local
-     reusable template.
-   - Saved templates persist in browser `localStorage` and appear in a Saved
-     templates group with add and delete controls.
-   - Re-inserted saved templates remap component IDs and rule references so
-     copied fields do not collide with existing IDs.
-
-9. **Automated browser smoke tests**
-   - `npm run builder:smoke` now starts the builder Vite app on a strict local
-     port and drives Chromium through core authoring flows.
-   - The smoke script covers adding a field, runner review/submit, valid Code
-     tab output, saving a custom section template, reinserting it, checking
-     generated component IDs remain unique, and deleting the saved template.
-   - Browser console errors fail the smoke run, with the existing favicon 404
-     ignored.
-
-10. **Template-specific prefill and computed helpers**
-    - Contact and identity starter templates now add normal authoring
-      `prefill.mappings` and `computedValues` when inserted.
-    - Contact templates map profile mailing address, email, and phone data to
-      the generated contact field IDs and add `metadata.contactSummary`.
-    - Identity templates map profile full name, date of birth, SSN, and VA file
-      number data to generated identity field IDs and add
-      `metadata.identitySummary`.
-    - Helper insertion reuses the existing metadata/computed authoring model, so
-      authors can edit or remove the generated helpers in the Setup panel.
-
-11. **Saved template hardening**
-    - Saved custom templates can now be exported as
-      `va-form-builder-saved-templates.json`.
-    - Authors can import saved-template JSON back into local saved templates;
-      imported templates are normalized and receive fresh local IDs before being
-      persisted.
-    - Saved templates are now draggable from the Patterns panel, using the same
-      canvas drop zones as fields and built-in section templates.
-    - Browser smoke covers saved-template drag insertion, export, delete,
-      import, and delete-after-import.
-
-12. **Broadened browser smoke coverage**
-    - `npm run builder:smoke` now uses a desktop viewport for the operational
-      builder layout.
-    - The smoke script checks Employment list insertion creates a real
-      `listLoop` chapter with employer nouns and the monthly income field.
-    - The smoke script checks new Table components expose the header-row toggle
-      and render preview `<th scope="col">` cells.
-    - The smoke script checks Date range exposes and persists the "Allow future
-      dates" inspector toggle.
-    - The smoke script loads the 27-8832 example, completes the Veteran/service
-      member path through review, confirms claimant-only sections are skipped,
-      and completes mock submit.
-
-13. **Template helper preset controls**
-    - Patterns now includes an accessible "Include helper presets" checkbox.
-    - The setting defaults on, preserving existing Contact/Identity template
-      behavior that adds prefill mappings and computed summary definitions.
-    - Turning the setting off inserts the same template fields without adding
-      generated prefill/computed helper definitions.
-    - Click and drag insertion both carry the helper-preset choice into the
-      template insertion helpers.
-    - Browser smoke now verifies the default helper behavior and the declined
-      helper path.
-
-14. **Saved template library polish**
-    - Saved templates now show metadata for template kind, field count, created
-      date, and imported date when available.
-    - Saved template records now persist `fieldCount` and `importedAt`
-      metadata in local saved-template JSON.
-    - Authors can rename saved templates inline without changing the saved
-      component/page payload.
-    - Imported templates preserve the exported label and created date while
-      receiving a fresh local ID and imported timestamp.
-    - Browser smoke now verifies saved-template metadata, rename, export,
-      import, and imported metadata display.
-
-15. **Dependent runner smoke depth**
-    - Browser smoke now verifies the Dependent list template creates a real
-      `listLoop` chapter with dependent nouns and dependent identity fields.
-    - Browser smoke reloads the 27-8832 example and completes the dependent
-      claimant path through claimant identity, claimant contact, claimant
-      school, alternate signer, review, and mock submit.
-    - The 27-8832 dependent review smoke asserts claimant-only review sections
-      are present before submit.
-
-16. **Template helper review details**
-    - Patterns now includes an expandable "Review helper presets" detail inside
-      the helper-preset control.
-    - The detail lists Contact and Identity helper mappings, including prefill
-      profile sources, target field labels, and computed metadata summaries.
-    - When helper presets are off, the detail tells authors templates will add
-      fields only.
-    - Browser smoke now verifies the helper review content and the off-state
-      helper detail.
-
-17. **Saved template import conflict handling**
-    - Imported saved templates keep their labels when no conflict exists.
-    - Duplicate imported labels are renamed deterministically with
-      `(imported)`, then `(imported 2)`, and so on.
-    - Import status text reports how many duplicate names were renamed.
-    - Browser smoke now imports a saved template while the original is still in
-      the library and verifies the conflict message plus the renamed imported
-      template.
-
-18. **Runner smoke factoring**
-    - `tests/builder-smoke.mjs` now uses named helper flows instead of one long
-      browser script.
-    - The smoke helpers cover blank authoring, basic runner submit, helper
-      preset review, saved template library behavior, reusable templates,
-      promoted controls, declined helper presets, and both 27-8832 runner
-      paths.
-    - Shared 27-8832 runner helpers now fill repeated Veteran/service member,
-      contact, service, and certification pages for the veteran and dependent
-      paths.
-    - Browser error tracking now lives in a dedicated helper while preserving
-      the existing favicon 404 exception.
-
-19. **Helper preset precision**
-    - `formModel.ts` now exposes `previewTemplateAuthoringHelpers(form)` for
-      Contact and Identity helper presets.
-    - `BuildToolbox` uses the current-form preview instead of static helper
-      review text.
-    - Helper preset review now shows exact generated prefill targets such as
-      `emailAddress` or `emailAddress2`, plus computed IDs and targets such as
-      `contactSummary2` and `metadata.contactSummary2`.
-    - Browser smoke verifies both the initial helper preview and the
-      collision-safe Contact preview after a Contact template already exists.
-
-20. **Saved template import review choices**
-    - Saved-template imports with duplicate labels now open a review panel
-      instead of immediately renaming conflicts.
-    - Authors can choose to rename duplicates, skip duplicates, or replace
-      existing saved templates.
-    - Import status text now reports renamed, skipped, and replaced counts.
-    - Browser smoke verifies all three duplicate-import choices against an
-      exported saved-template library.
-
-21. **Saved template import resolver tests**
-    - Saved-template normalization and import conflict resolution now live in
-      `apps/builder/src/lib/savedTemplateImport.js`.
-    - `App.tsx` delegates import merging to the shared resolver and keeps
-      localStorage writes in the app boundary.
-    - Focused node tests cover rename, skip, replace, duplicate labels inside
-      the same import file, and the 25-template library cap.
-    - Browser smoke still covers the visible import-review flow.
-
-22. **Helper preset reusable tests**
-    - Contact and Identity helper-template screen creation now lives in
-      `apps/builder/src/lib/templateHelperPreview.js`.
-    - `formModel.ts` delegates Contact and Identity template screens plus
-      `previewTemplateAuthoringHelpers` to that shared helper.
-    - Focused node tests cover initial helper targets, collision-safe helper
-      IDs, computed IDs/targets, and omitted preview entries when generated
-      mappings/computed values already exist.
-    - The Identity helper now explicitly uses `vaFileNumber` as the generated
-      VA file number field ID instead of relying on generic acronym casing.
-
-23. **Saved template import review polish**
-    - Saved-template import conflict review now shows both incoming and
-      existing template metadata for each duplicate label.
-    - Conflict metadata uses the same template kind, field count, created date,
-      and imported date formatter as the saved-template library rows.
-    - Browser smoke now verifies the import review displays incoming and
-      existing metadata before choosing rename, skip, or replace.
-
-24. **Import review focus/accessibility polish**
-    - Saved-template import conflict review now moves focus to the review
-      heading when duplicate labels require an author choice.
-    - The conflict action group now references the review description with
-      `aria-describedby`.
-    - Import transfer messages now use a polite `role="status"` live region.
-    - Browser smoke now verifies the conflict review heading receives focus
-      after a conflicting saved-template file is selected.
-
-## Primary Files Changed Recently
-
-- `src/schema/authoring-schema.json`
-- `src/compiler/componentRegistry.mjs`
-- `src/component-systems/componentSystems.mjs`
-- `tests/compiler.test.mjs`
-- `tests/runner.test.mjs`
-- `apps/builder/src/App.tsx`
-- `apps/builder/src/lib/formModel.ts`
-- `apps/builder/src/lib/runnerFlow.js`
-- `apps/builder/src/lib/runnerValidation.js`
-- `apps/builder/src/lib/savedTemplateImport.js`
-- `apps/builder/src/lib/templateHelperPreview.js`
-- `apps/builder/src/components/BuildToolbox.tsx`
-- `apps/builder/src/components/ConditionEditor.tsx`
-- `apps/builder/src/components/InspectorPanel.tsx`
-- `apps/builder/src/components/PreviewPanel.tsx`
-- `apps/builder/src/components/RunnerPanel.tsx`
-- `apps/builder/src/styles.css`
-- `apps/builder/src/types.ts`
-- `package.json`
-- `package-lock.json`
-- `tests/builder-smoke.mjs`
-- `tests/saved-template-import.test.mjs`
-- `tests/template-helper-preview.test.mjs`
+- New top-row HeaderStrip: `+ New`, `📂 Open JSON`, `💾 Save *` (dirty-aware), `📄 Import PDF`, then canvas controls (Undo/Redo, Edit/Preview, Canvas/Run/Code, Preview-system dropdown), then `More ▾` overflow.
+- localStorage persistence: `va-form-builder.lastForm.v1` + `va-form-builder.lastSaved.v1` (signature for dirty detection). Reload restores last-saved form.
+- Files panel slimmed to Examples + saved templates only. Inline reload icon on currently-loaded example.
+- Demoted actions:
+  - `Set as baseline` → `AuditPanel` header
+  - `Import / Export corrections` → `ImportReviewPanel` footer
+- Tab strips lighter (toolbox + inspector + segmented controls): font 0.7rem weight 600, subtle ink-tint active state instead of solid fill.
+- BuilderToolbar component still in repo but no longer rendered (HeaderStrip absorbed it). Safe to delete.
 
 ## Verified Commands
 
@@ -309,138 +57,73 @@ npm run builder:build
 npm run compile:example
 npm run compile:example:27-8832
 npm run builder:smoke
+
+# Importer
+node src/cli/import.mjs <pdf> --out ./build/<form-id>
+node src/cli/import.mjs <pdf> --out ./build/<form-id> --form-id=21-526EZ
+
+# Corpus seed (regenerate from examples/*.json)
+npm run corpus:seed
+
+# Local LLM (Ollama via Docker)
+npm run llm:up
+npm run llm:status
+npm run llm:pull          # llama3.1:8b
+npm run llm:pull:qwen     # qwen2.5:14b
+IMPORT_LLM_PROVIDER=ollama IMPORT_LLM_MODEL=llama3.1:8b node src/cli/import.mjs <pdf> --out <dir>
+
+# Gated tests
+IMPORT_RUN_OLLAMA_TESTS=1 npm test
+ANTHROPIC_API_KEY=sk-ant-... IMPORT_RUN_CLOUD_TESTS=1 npm test
 ```
 
-Latest verification after the import review focus/accessibility polish slice:
+## Active Plans
 
-```bash
-npm run builder:build
-npm run builder:smoke
-npm test
-npm run compile:example
-npm run compile:example:27-8832
-git diff --check
-```
+### `pdf-import-and-standards.md` (V1 complete)
 
-All commands passed in `/Users/clint/Workspace/va/form-builder`. The browser
-smoke command may need local-server permissions in sandboxed environments and
-requires the Playwright Chromium browser to be installed with
-`npx playwright install chromium`.
+PDF AcroForm → authoring JSON pipeline shipped. V1.5/V2 backlog still open:
 
-## Browser Smoke Notes
+- Radio-widget dedup in `src/import/extract/pair.mjs` (BranchOfService currently emits one component per option).
+- Prompt update to strip PDF parenthetical artifacts ("(SSN)", "(MM-DD-YYYY)").
+- Real `vetsWebsiteScrape.json` scraper for the standards layer.
+- `apps/proxy/` for browser-side LLM enrichment (currently Node CLI only).
+- Embedding-based corpus similarity (replace token-set Jaccard).
+- OCR fallback for scanned PDFs.
+- Pilot CPU run optimization (GPU recommended; ~18 min on CPU per 95-field form).
+- Accessibility rules in `src/standards/sources/builtIn.json` (focus order, aria, color contrast).
+- Golden snapshot tests on generated `formConfig` output.
 
-Manual browser smoke was done with Vite on `http://localhost:5174` because
-`5173` was already in use.
+### `form-route-to-va-gov.md` (next to execute)
 
-Confirmed:
+Path A export pipeline. Generate full `vets-website` app folder (`manifest.json`, `app-entry.jsx`, `routes.jsx`, `reducers/index.js`, `config/form.js`, `tests/`, `sass/`, `_authoring/<form-id>.authoring.json`) from a compiled form. CLI `--out` + `--zip` flags. Builder `Export VA.gov app` button. Audit gate before export. PR hand-off deferred.
 
-- Pattern palette shows the new reusable sections and advanced list-loop
-  templates.
-- `Date range` is available as a normal field, not preview-only.
-- Runner renders Date range with Start date and End date inputs.
-- Filling `2024-01-01` and `2024-12-31` stores:
-  `{ "newDateRange": { "startDate": "2024-01-01", "endDate": "2024-12-31" } }`
-- Code tab reports valid generated VA output for date range using
-  `currentOrPastDateUI` / `currentOrPastDateSchema`.
+Estimate: ~half-day execution. Plan is execution-ready; no further design needed.
 
-Latest browser smoke was done with Vite on `http://localhost:5173`.
+## Recommended Next Sequence
 
-Confirmed:
-
-- App loads with only the existing favicon 404 in the browser console.
-- Adding a Table creates a semantic table with column headers in the preview.
-- Table inspector shows the checked "Use first row as table header" control.
-- Adding a Date range exposes the new "Allow future dates" toggle after
-  opening the Date and time inspector section.
-- Pattern palette opens and still lists reusable and advanced templates.
-- Adding the Employment list template creates 1 section and 7 fields.
-- Employment list now shows separate Date employment started, Date employment
-  ended, Average monthly income, Employer address, and Reason employment ended
-  fields with the revised hints.
-- Saving a selected Contact information section creates a Saved templates entry.
-- Clicking the saved template inserts a second copy with fresh field IDs.
-- Deleting the saved template removes it from the Saved templates group.
-- Automated smoke now covers add-field, runner review/submit, Code tab
-  generation, saved-template save/add/delete, and unique generated component
-  IDs.
-- Automated smoke now also verifies contact and identity templates add expected
-  prefill mappings and computed summary definitions to authoring JSON.
-- Automated smoke now verifies saved-template drag insertion, export, import,
-  and post-import delete behavior.
-- Automated smoke now verifies Employment list authoring structure, Table
-  header-row preview semantics, Date range future-date settings, and the
-  27-8832 Veteran runner path through mock submit.
-- Automated smoke now verifies the Patterns-panel helper preset control is on
-  by default and that turning it off prevents additional Contact template
-  prefill/computed helpers from being inserted.
-- Automated smoke now verifies saved-template rename, metadata display, and
-  imported metadata after export/import.
-- Automated smoke now verifies the Dependent list template and the 27-8832
-  dependent claimant runner path through claimant-only review sections and mock
-  submit.
-- Automated smoke now verifies helper-preset review details for Contact and
-  Identity templates plus the helper-presets-off message.
-- Automated smoke now verifies duplicate saved-template import renaming and the
-  import message for renamed duplicates.
-- Automated smoke is now organized into named helper flows for easier failure
-  triage as runner and template coverage grows.
-- Automated smoke now verifies helper preset review displays generated target
-  IDs and collision-safe suffixes for Contact and Identity helpers.
-- Automated smoke now verifies saved-template import conflict review choices:
-  rename duplicates, skip duplicates, and replace existing.
-- Unit tests now verify saved-template import resolver behavior for rename,
-  skip, replace, same-file duplicate labels, and the 25-template cap.
-- Unit tests now verify helper preset preview targets, collision-safe suffixes,
-  computed preview IDs/targets, and duplicate-preview suppression.
-- Automated smoke now verifies saved-template import conflict review displays
-  incoming and existing template metadata.
-- Automated smoke now verifies saved-template import conflict review receives
-  focus when duplicate labels require an author choice.
-
-Known browser-console issue:
-
-- Existing favicon 404 only. No new functional browser errors were found.
-
-## Best Next Steps
-
-Recommended next sequence:
-
-1. **Import review focus restoration**
-   - Restore focus to a predictable control after canceling or applying an
-     import-conflict action, and keep the final result announced from the
-     import status region.
-
-2. **Helper preset expansion**
-   - If more templates gain helper presets, add them to
-     `templateHelperPreview.js` and extend the focused node tests before adding
-     browser-smoke assertions.
+1. **Execute `form-route-to-va-gov.md`** — closes the deployable-output gap. Last V1 piece.
+2. **Radio-widget dedup + prompt cleanup in importer** — smallest pilot quality win for next form imports.
+3. **Backend / persistence (research-plan Artifact 4)** — drafts, versions, audit logs, baselines beyond localStorage. Larger scope.
 
 ## Suggested First Files To Read Next Session
 
-Start here:
-
-- `README.md`
-- `src/schema/authoring-schema.json`
-- `src/compiler/componentRegistry.mjs`
-- `src/component-systems/componentSystems.mjs`
-- `apps/builder/src/lib/formModel.ts`
-- `apps/builder/src/components/InspectorPanel.tsx`
-- `apps/builder/src/components/PreviewPanel.tsx`
-- `apps/builder/src/components/RunnerPanel.tsx`
-- `apps/builder/src/lib/runnerValidation.js`
-- `tests/compiler.test.mjs`
-- `tests/runner.test.mjs`
+- `pdf-import-and-standards.md`
+- `form-route-to-va-gov.md`
+- `src/import/pipeline.mjs`
+- `src/import/build.mjs`
+- `src/standards/index.mjs`
+- `apps/builder/src/components/HeaderStrip.tsx`
+- `apps/builder/src/App.tsx`
+- `tests/import.test.mjs`, `tests/import-pilot.test.mjs`
+- `docs/import-llm-providers.md`
 
 ## Guardrails
 
-- Authoring JSON is the source of truth.
-- Generated VA `formConfig` code is output only.
-- Keep schema, TypeScript types, component system support, compiler behavior,
-  builder UI, runner behavior, and tests aligned.
-- Do not silently promote preview-only controls without generated VA output and
-  tests.
-- Prefer existing helpers in `src/compiler/*` and `apps/builder/src/lib/*`.
-- USWDS remains the primary preview/run target.
-- Treat shadcn as a secondary canvas comparison target for now.
-- Before handing off, run `npm test`, `npm run builder:build`,
-  `npm run compile:example`, and `npm run compile:example:27-8832`.
+- Authoring JSON is the source of truth. Generated VA `formConfig` is output only.
+- Schema migrations are isomorphic + async (Web Crypto subtle.digest). No `node:crypto` in browser bundle.
+- LLM enricher is fully optional. Default = local Ollama. Cloud Claude requires explicit `ANTHROPIC_API_KEY` opt-in.
+- LLM proxy app for browser-side enrichment is deferred — CLI/server is the supported path until V1.5.
+- Provenance + lineage + source live in authoring JSON. Migrator stamps defaults.
+- Standards layer is data-driven (`src/standards/sources/builtIn.json`). Multi-source plumbing is in place; only `builtIn` is loaded in V1.
+- Browser/Node split: `node:fs`-using modules go through `with { type: 'json' }` static imports or guarded behind `apps/proxy/`. Anthropic SDK is dynamically imported with `/* @vite-ignore */` so it stays Node-only.
+- Before handing off, run `npm test`, `npm run builder:build`, `npm run compile:example`, `npm run compile:example:27-8832`.
