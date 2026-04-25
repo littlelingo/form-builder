@@ -88,6 +88,13 @@ export const REPRESENTATIVE_TARGETS = [
     targetLevel: 'builder-native',
     focus: 'Large survivor pension XFA form should reduce duplicate labels and repeated groups into authorable structures.',
   },
+  {
+    filename: 'va-form-3288.pdf',
+    targetSet: 'next-risk',
+    category: 'records-release-acroform',
+    targetLevel: 'curated',
+    focus: 'AcroForm consent-to-release form should be fully curated into records-release sections, not a generic dump.',
+  },
 ];
 
 function parseArgs(args) {

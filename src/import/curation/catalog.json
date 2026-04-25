@@ -995,6 +995,174 @@
           }
         }
       ]
+    },
+    {
+      "id": "va-form-3288-records-release-2020-acroform",
+      "title": "VA Form 3288 records release workflow",
+      "description": "Curates the AcroForm extraction fields from VA Form 3288 (Request for and Consent to Release of Information from Claimant's Records) into a builder-native records release workflow.",
+      "formFingerprint": "VA-FORM-3288-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?form[-_\\s]?3288|consent to release of information|claimant'?s records|release of information from claimant)\\b"
+        ],
+        "fieldNamePatterns": [
+          "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField1\\[0\\]$",
+          "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField5\\[0\\]$",
+          "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField10\\[0\\]$",
+          "VA3288\\[0\\]\\.#subform\\[0\\]\\.TextField1\\[1\\]$",
+          "VA3288\\[0\\]\\.#subform\\[0\\]\\.Field2\\[0\\]$",
+          "VA3288\\[0\\]\\.#subform\\[0\\]\\.Field2\\[1\\]$"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "vaOfficeAddress",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField1\\[0\\]$" },
+          "chapterId": "recordsRequest",
+          "chapterTitle": "Records request",
+          "pageId": "vaOffice",
+          "pageTitle": "VA office",
+          "component": {
+            "type": "textArea",
+            "label": "VA office address",
+            "hint": "Enter the name and address of the VA office that will receive this request.",
+            "maxLength": 500
+          }
+        },
+        {
+          "id": "veteranName",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField2\\[0\\]$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Veteran name",
+            "hint": "Enter the Veteran's last name, first name, and middle initial."
+          }
+        },
+        {
+          "id": "claimantName",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField3\\[0\\]$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "label": "Claimant name (if different from Veteran)",
+            "hint": "Leave blank if the claimant is the Veteran."
+          }
+        },
+        {
+          "id": "socialSecurityNumber",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.Field2\\[1\\]$" },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "identity",
+          "pageTitle": "Identity",
+          "component": {
+            "type": "maskedInput",
+            "label": "Social Security number",
+            "hint": "Enter the 9-digit Social Security number with no dashes.",
+            "maxLength": 11
+          }
+        },
+        {
+          "id": "recipientNameAndAddress",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField5\\[0\\]$" },
+          "chapterId": "recordsRelease",
+          "chapterTitle": "Records to release",
+          "pageId": "recipient",
+          "pageTitle": "Recipient",
+          "component": {
+            "type": "textArea",
+            "label": "Recipient name and address",
+            "hint": "Enter the name and address of the organization or individual that will receive the released information.",
+            "maxLength": 1000
+          }
+        },
+        {
+          "id": "claimantSignerName",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField2\\[1\\]$" },
+          "chapterId": "recordsRelease",
+          "chapterTitle": "Records to release",
+          "pageId": "recipient",
+          "pageTitle": "Recipient",
+          "component": {
+            "label": "Name of person consenting to release",
+            "hint": "Enter the full name of the person authorizing this release."
+          }
+        },
+        {
+          "id": "informationToRelease",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.TextField1\\[0\\]$" },
+          "chapterId": "recordsRelease",
+          "chapterTitle": "Records to release",
+          "pageId": "information",
+          "pageTitle": "Information and purpose",
+          "component": {
+            "type": "textArea",
+            "label": "Information to be released",
+            "hint": "Describe the records, dates, or specific information VA may release.",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "purposeOfRelease",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.TextField1\\[1\\]$" },
+          "chapterId": "recordsRelease",
+          "chapterTitle": "Records to release",
+          "pageId": "information",
+          "pageTitle": "Information and purpose",
+          "component": {
+            "type": "textArea",
+            "label": "Purpose of release",
+            "hint": "Describe the purpose for which the information will be used.",
+            "maxLength": 2000
+          }
+        },
+        {
+          "id": "dateOfSignature",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.Field2\\[0\\]$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": {
+            "type": "date",
+            "label": "Date of signature"
+          }
+        },
+        {
+          "id": "signatureOfIndividual",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[0\\]\\.FFField10\\[0\\]$" },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "signature",
+          "pageTitle": "Signature",
+          "component": {
+            "label": "Signature of individual or authorized representative",
+            "hint": "Type the full legal name of the person signing this consent."
+          }
+        },
+        {
+          "id": "respondentBurdenNotice",
+          "selector": { "namePattern": "VA3288\\[0\\]\\.#subform\\[1\\]\\.FFField12\\[0\\]$" },
+          "chapterId": "formInformation",
+          "chapterTitle": "Form information",
+          "pageId": "notices",
+          "pageTitle": "Notices",
+          "component": {
+            "type": "textArea",
+            "label": "Respondent burden notice",
+            "hint": "Standard VA respondent burden statement printed on the form.",
+            "maxLength": 1000
+          }
+        }
+      ]
     }
   ]
 }
