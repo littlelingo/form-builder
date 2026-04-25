@@ -17,6 +17,12 @@ import type {
 
 type BuildTab = 'fields' | 'patterns';
 
+interface PendingTemplateImportConflict {
+  existingTemplate: SavedCustomTemplate;
+  importedTemplate: SavedCustomTemplate;
+  label: string;
+}
+
 interface ToolTileProps {
   disabled?: boolean;
   draggable?: boolean;
@@ -116,7 +122,7 @@ export function BuildToolbox({
   const [customTemplateName, setCustomTemplateName] = useState('');
   const [includeTemplateHelpers, setIncludeTemplateHelpers] = useState(true);
   const [pendingTemplateImport, setPendingTemplateImport] = useState<{
-    conflictLabels: string[];
+    conflicts: PendingTemplateImportConflict[];
     templates: SavedCustomTemplate[];
   } | null>(null);
   const [renamingTemplateId, setRenamingTemplateId] = useState('');
@@ -211,13 +217,24 @@ export function BuildToolbox({
     setPendingTemplateImport(null);
   }
 
-  function importedTemplateConflictLabels(templates: SavedCustomTemplate[]) {
-    const existingLabels = new Set(customTemplates.map(template => template.label.toLowerCase()));
-    return Array.from(new Set(
-      templates
-        .map(template => template.label?.trim())
-        .filter((label): label is string => Boolean(label && existingLabels.has(label.toLowerCase()))),
-    ));
+  function importedTemplateConflicts(templates: SavedCustomTemplate[]) {
+    const existingTemplates = new Map(
+      customTemplates.map(template => [template.label.toLowerCase(), template]),
+    );
+    const seenLabels = new Set<string>();
+    return templates.flatMap(template => {
+      const label = template.label?.trim();
+      if (!label) return [];
+      const labelKey = label.toLowerCase();
+      const existingTemplate = existingTemplates.get(labelKey);
+      if (!existingTemplate || seenLabels.has(labelKey)) return [];
+      seenLabels.add(labelKey);
+      return [{
+        existingTemplate,
+        importedTemplate: template,
+        label,
+      }];
+    });
   }
 
   async function handleCustomTemplateImport(file?: File) {
@@ -232,11 +249,11 @@ export function BuildToolbox({
             ? (parsed as { templates?: unknown }).templates
             : [];
       const templates = (Array.isArray(parsedTemplates) ? parsedTemplates : []) as SavedCustomTemplate[];
-      const conflictLabels = importedTemplateConflictLabels(templates || []);
-      if (conflictLabels.length > 0) {
-        setPendingTemplateImport({ conflictLabels, templates });
+      const conflicts = importedTemplateConflicts(templates || []);
+      if (conflicts.length > 0) {
+        setPendingTemplateImport({ conflicts, templates });
         setTemplateTransferMessage(
-          `${conflictLabels.length} duplicate saved-template ${conflictLabels.length === 1 ? 'name needs' : 'names need'} review before import.`,
+          `${conflicts.length} duplicate saved-template ${conflicts.length === 1 ? 'name needs' : 'names need'} review before import.`,
         );
         return;
       }
@@ -553,12 +570,16 @@ export function BuildToolbox({
             >
               <h4 id="saved-template-import-review-heading">Review import conflicts</h4>
               <p>
-                {pendingTemplateImport.conflictLabels.length} duplicate saved-template{' '}
-                {pendingTemplateImport.conflictLabels.length === 1 ? 'name matches' : 'names match'} your library.
+                {pendingTemplateImport.conflicts.length} duplicate saved-template{' '}
+                {pendingTemplateImport.conflicts.length === 1 ? 'name matches' : 'names match'} your library.
               </p>
-              <ul>
-                {pendingTemplateImport.conflictLabels.slice(0, 4).map(label => (
-                  <li key={label}>{label}</li>
+              <ul className="builder-template-import-review__list">
+                {pendingTemplateImport.conflicts.slice(0, 4).map(conflict => (
+                  <li key={conflict.label}>
+                    <strong>{conflict.label}</strong>
+                    <span>Incoming: {templateMetadata(conflict.importedTemplate)}</span>
+                    <span>Existing: {templateMetadata(conflict.existingTemplate)}</span>
+                  </li>
                 ))}
               </ul>
               <div className="builder-template-transfer-actions">

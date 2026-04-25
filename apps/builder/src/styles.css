@@ -679,6 +679,21 @@ textarea {
   padding-left: 1rem;
 }
 
+.builder-template-import-review__list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.builder-template-import-review__list li {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.builder-template-import-review__list strong {
+  color: var(--builder-ink);
+  font-size: 0.78rem;
+}
+
 .builder-custom-template-list {
   display: grid;
   gap: 0.35rem;

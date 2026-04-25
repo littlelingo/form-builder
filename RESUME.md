@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after helper preset reusable tests
+Last updated: 2026-04-25 EDT after saved template import review polish
 
 ## Current Workspace
 
@@ -14,14 +14,13 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the helper preset reusable tests checkpoint. The latest passing
-slice moves Contact and Identity helper-template screen creation plus helper
-preview calculation into a shared JS helper used by both `formModel.ts` and
-node tests. Focused tests now cover initial target IDs, collision-safe suffixes,
-computed IDs/targets, and suppression of already-existing helper preview
-entries. The next recommended implementation slice is saved-template import
-review polish, because the conflict panel can now choose rename/skip/replace
-but still shows only duplicate labels.
+Resume from the saved template import review polish checkpoint. The latest
+passing slice enriches the saved-template import conflict review panel with
+metadata for both the incoming and existing conflicting templates, including
+kind, field count, and created/imported dates when available. The next
+recommended implementation slice is import-review focus/accessibility polish,
+because the conflict panel appears after file selection but does not yet move
+focus to the review heading or announce the choice step beyond status text.
 
 Recent completed slices:
 
@@ -257,6 +256,14 @@ Recent completed slices:
     - The Identity helper now explicitly uses `vaFileNumber` as the generated
       VA file number field ID instead of relying on generic acronym casing.
 
+23. **Saved template import review polish**
+    - Saved-template import conflict review now shows both incoming and
+      existing template metadata for each duplicate label.
+    - Conflict metadata uses the same template kind, field count, created date,
+      and imported date formatter as the saved-template library rows.
+    - Browser smoke now verifies the import review displays incoming and
+      existing metadata before choosing rename, skip, or replace.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -295,7 +302,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the helper preset reusable tests slice:
+Latest verification after the saved template import review polish slice:
 
 ```bash
 npm run builder:smoke
@@ -373,6 +380,8 @@ Confirmed:
   skip, replace, same-file duplicate labels, and the 25-template cap.
 - Unit tests now verify helper preset preview targets, collision-safe suffixes,
   computed preview IDs/targets, and duplicate-preview suppression.
+- Automated smoke now verifies saved-template import conflict review displays
+  incoming and existing template metadata.
 
 Known browser-console issue:
 
@@ -382,9 +391,10 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Saved template import review polish**
-   - If import libraries get larger, show more conflict metadata in the review
-     panel, such as imported kind, field count, and created/imported dates.
+1. **Import review focus/accessibility polish**
+   - Move focus to the import-conflict review heading after a conflicting file
+     is selected and make the review/status messaging easier for screen reader
+     users to follow.
 
 2. **Helper preset expansion**
    - If more templates gain helper presets, add them to

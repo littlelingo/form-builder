@@ -13,7 +13,14 @@
     "compile:example:27-8832": "node src/cli/compile.mjs examples/27-8832-authoring.json",
     "builder:dev": "npm --workspace @va/form-builder-ui run dev",
     "builder:build": "npm --workspace @va/form-builder-ui run build",
-    "builder:smoke": "node tests/builder-smoke.mjs"
+    "builder:smoke": "node tests/builder-smoke.mjs",
+    "llm:up": "docker compose -f docker-compose.ollama.yml up -d",
+    "llm:down": "docker compose -f docker-compose.ollama.yml down",
+    "llm:logs": "docker compose -f docker-compose.ollama.yml logs -f ollama",
+    "llm:status": "docker compose -f docker-compose.ollama.yml ps && docker exec form-builder-ollama ollama list",
+    "llm:pull": "docker exec -it form-builder-ollama ollama pull ${MODEL:-llama3.1:8b}",
+    "llm:pull:qwen": "docker exec -it form-builder-ollama ollama pull qwen2.5:14b",
+    "llm:smoke": "curl -s http://localhost:11434/api/chat -d '{\"model\":\"llama3.1:8b\",\"messages\":[{\"role\":\"user\",\"content\":\"return JSON {\\\"ok\\\":true}\"}],\"format\":\"json\",\"stream\":false,\"options\":{\"temperature\":0}}'"
   },
   "devDependencies": {
     "playwright": "^1.59.1"

@@ -299,6 +299,16 @@ async function smokeSavedTemplateLibrary(page) {
   );
   await expectVisible(
     page,
+    page.getByText('Incoming: Section'),
+    'Expected saved template import review to show incoming template metadata.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('Existing: Section'),
+    'Expected saved template import review to show existing template metadata.',
+  );
+  await expectVisible(
+    page,
     page.getByRole('button', { name: 'Rename duplicates' }),
     'Expected saved template import review to offer duplicate renaming.',
   );
