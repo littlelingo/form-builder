@@ -38,17 +38,35 @@ test('21-0958 static Notice of Disagreement imports useful numbered draft fields
   const labels = components.map(component => component.label);
 
   assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(importReport.curation.recipe.recipeId, 'va-21-0958-nod-2020-static');
+  assert.equal(importReport.curation.recipe.matchedFieldCount, 14);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
   assert.ok(importReport.componentCount >= 10);
-  assert.ok(labels.includes("Veteran's Name"));
-  assert.ok(labels.includes("Veteran's Social Security Number"));
-  assert.ok(labels.includes('My Preferred Mailing Address'));
-  assert.ok(labels.includes('Board Review Option') || labels.includes('Item 11'));
+  assert.deepEqual(
+    form.chapters.map(chapter => chapter.title),
+    ['Claimant information', 'Appeal details', 'Certification'],
+  );
+  assert.ok(labels.includes("Veteran's full name"));
+  assert.ok(labels.includes("Veteran's Social Security number"));
+  assert.ok(labels.includes('Preferred mailing address'));
+  assert.ok(labels.includes('Board review option'));
+  assert.ok(labels.includes('Issues I want to appeal'));
   assert.ok(labels.includes('Signature'));
-  assert.ok(labels.includes('Date Signed'));
+  assert.ok(labels.includes('Date signed'));
   assert.equal(
-    components.find(component => component.label === "Veteran's Social Security Number")?.type,
+    components.find(component => component.label === "Veteran's Social Security number")?.type,
     'maskedInput',
+  );
+
+  const boardReview = components.find(component => component.id === 'boardReviewOption');
+  assert.deepEqual(
+    boardReview?.responseOptions?.map(option => option.label),
+    [
+      'Direct review by a Veterans Law Judge',
+      'Evidence submission reviewed by a Veterans Law Judge',
+      'Hearing with a Veterans Law Judge',
+    ],
   );
 });

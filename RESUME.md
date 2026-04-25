@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after generic PDF consolidation + 21-0958 regression
+Last updated: 2026-04-25 EDT after 21-0958 seeded curation recipe
 
 ## Current Workspace
 
@@ -69,6 +69,8 @@ Recent implementation already completed:
 - Added generic static numbered-label inference in `src/import/extract/staticText.mjs` for PDFs with no usable AcroForm fields. The 21-0958 PDF now imports as 14 valid builder components, including SSN/date/address/phone/email classification and a Board review option radio group.
 - Improved radio option grouping without form-specific JavaScript: branch/component/character/relationship/yes-no option sets are inferred from nearby text and option labels. 27-8832 now imports deterministically as 42 valid components instead of the previous noisier 90+ raw-widget-style output.
 - Added regression tests in `tests/consolidate.test.mjs` and `tests/import-nod.test.mjs`.
+- Added checked-in 21-0958 curation recipe data in `src/import/curation/catalog.json`. The 21-0958 static-text import now matches all 14 fields into builder-native sections/pages: Claimant information, Appeal details, and Certification. Labels, hints, issue text area, and Board review radio options are cleaned by recipe data rather than form-specific JavaScript.
+- Tightened `tests/import-nod.test.mjs` to assert the 21-0958 recipe id, all-field match count, curated chapter structure, cleaned labels, masked SSN type, and Board review option labels.
 
 Verified after these changes:
 
@@ -91,6 +93,23 @@ Browser smoke used `npm run builder:dev` at `http://localhost:5175/` to import
 valid import status, Canvas populated, Outline populated, Review 14 panel and
 wizard opened. Console had the existing missing `favicon.ico` error plus PDF.js
 font warnings; neither blocked import.
+
+Latest browser smoke used `npm run builder:dev` at `http://localhost:5173/` to
+import `tests/fixtures/pilot/VA-21-0958-NOD-2020.pdf` after the curation recipe
+landed. Result: 3 sections, 14 fields, valid import status, Canvas populated,
+Outline grouped into Veteran information, Claimant contact information, Board
+review selection, Issues on appeal, and Appeal signature, plus Review 14 panel
+and wizard with cleaned labels/hints. Console still had only the existing
+missing `favicon.ico` error and PDF.js font warnings.
+
+Latest verification:
+
+```bash
+npm test -- tests/import-nod.test.mjs tests/curation.test.mjs   # script ran full node suite: 118 pass, 2 gated skips
+npm run builder:build
+npm run compile:example
+npm run compile:example:27-8832
+```
 
 Previous verification:
 
@@ -184,10 +203,9 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 
 ## Recommended Next Sequence
 
-1. **Exercise 21-0958 in the builder UI** — the deterministic import is now valid and substantially cleaner; use the Review panel to see what still needs human curation and whether recipe promotion should capture the result.
-2. **Persist curated recipe/catalog data intentionally** — the UI can promote/export/import recipes at runtime; decide which reviewed outputs should become checked-in seed catalog data versus local working artifacts.
-3. **Continue importer quality backlog** — clean residual checkbox/email-consent artifacts, duplicate labels, and low-value fields using generic extraction/consolidation rules first, recipe/corpus data second.
-4. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.
+1. **Review the curated 21-0958 draft in the builder** — the seed recipe now provides clean structure; use the Review panel to accept/edit fields and decide whether any required flags, conditions, or validation details should become checked-in recipe data.
+2. **Continue importer quality backlog** — clean residual checkbox/email-consent artifacts, duplicate labels, and low-value fields using generic extraction/consolidation rules first, recipe/corpus data second.
+3. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.
 
 ## Suggested First Files To Read Next Session
 

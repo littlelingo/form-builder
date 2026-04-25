@@ -223,6 +223,212 @@
           }
         }
       ]
+    },
+    {
+      "id": "va-21-0958-nod-2020-static",
+      "title": "VA Form 21-0958 Notice of Disagreement workflow",
+      "description": "Curates the static-text extraction fields from VA Form 21-0958 into a builder-native Board appeal notice of disagreement workflow.",
+      "formFingerprint": "VA-21-0958-NOD-2020",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:21[-_\\s]?0958|notice of disagreement|board review option)\\b"
+        ],
+        "fieldNamePatterns": [
+          "static:veteranSName$",
+          "static:veteranSSocialSecurityNumber$",
+          "static:myPreferredMailingAddress$",
+          "static:boardReviewOption$",
+          "static:dateSigned$"
+        ],
+        "minFieldMatches": 4
+      },
+      "fields": [
+        {
+          "id": "veteranFullName",
+          "selector": { "namePattern": "static:veteranSName$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranInformation",
+          "pageTitle": "Veteran information",
+          "component": {
+            "label": "Veteran's full name",
+            "hint": "Enter the Veteran's first, middle, and last name."
+          }
+        },
+        {
+          "id": "veteranSocialSecurityNumber",
+          "selector": { "namePattern": "static:veteranSSocialSecurityNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranInformation",
+          "pageTitle": "Veteran information",
+          "component": {
+            "label": "Veteran's Social Security number",
+            "hint": "Enter the Social Security number without dashes."
+          }
+        },
+        {
+          "id": "veteranVaFileNumber",
+          "selector": { "namePattern": "static:veteranSVAFileNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranInformation",
+          "pageTitle": "Veteran information",
+          "component": {
+            "label": "Veteran's VA file number",
+            "hint": "Enter the VA file number if it is different from the Social Security number."
+          }
+        },
+        {
+          "id": "veteranDateOfBirth",
+          "selector": { "namePattern": "static:veteranSDateOfBirth$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranInformation",
+          "pageTitle": "Veteran information",
+          "component": {
+            "label": "Veteran's date of birth"
+          }
+        },
+        {
+          "id": "claimantFullName",
+          "selector": { "namePattern": "static:ifIAmNotTheVeteranMyNameIs$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantContact",
+          "pageTitle": "Claimant contact information",
+          "component": {
+            "label": "Claimant's full name",
+            "hint": "Complete this only if the person filing the appeal is not the Veteran."
+          }
+        },
+        {
+          "id": "claimantDateOfBirth",
+          "selector": { "namePattern": "static:myDateOfBirth$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantContact",
+          "pageTitle": "Claimant contact information",
+          "component": {
+            "label": "Claimant's date of birth",
+            "hint": "Complete this only if the person filing the appeal is not the Veteran."
+          }
+        },
+        {
+          "id": "claimantMailingAddress",
+          "selector": { "namePattern": "static:myPreferredMailingAddress$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantContact",
+          "pageTitle": "Claimant contact information",
+          "component": {
+            "label": "Preferred mailing address",
+            "hint": "Enter the mailing address VA should use for this appeal."
+          }
+        },
+        {
+          "id": "claimantPhone",
+          "selector": { "namePattern": "static:myPreferredTelephone$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantContact",
+          "pageTitle": "Claimant contact information",
+          "component": {
+            "label": "Preferred phone number",
+            "hint": "Enter the phone number VA should use for this appeal."
+          }
+        },
+        {
+          "id": "claimantEmail",
+          "selector": { "namePattern": "static:myPreferredEMailAddress$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantContact",
+          "pageTitle": "Claimant contact information",
+          "component": {
+            "label": "Preferred email address",
+            "hint": "Enter the email address VA should use for this appeal."
+          }
+        },
+        {
+          "id": "representativeName",
+          "selector": { "namePattern": "static:myRepresentativeSName$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "claimantContact",
+          "pageTitle": "Claimant contact information",
+          "component": {
+            "label": "Representative's name",
+            "hint": "Enter the appointed representative's name, if applicable."
+          }
+        },
+        {
+          "id": "boardReviewOption",
+          "selector": { "namePattern": "static:boardReviewOption$" },
+          "chapterId": "appealDetails",
+          "chapterTitle": "Appeal details",
+          "pageId": "boardReviewSelection",
+          "pageTitle": "Board review selection",
+          "component": {
+            "label": "Board review option",
+            "hint": "Select how the Board should review this appeal.",
+            "responseOptions": [
+              {
+                "value": "directReview",
+                "label": "Direct review by a Veterans Law Judge"
+              },
+              {
+                "value": "evidenceSubmission",
+                "label": "Evidence submission reviewed by a Veterans Law Judge"
+              },
+              {
+                "value": "hearing",
+                "label": "Hearing with a Veterans Law Judge"
+              }
+            ]
+          }
+        },
+        {
+          "id": "issuesOnAppeal",
+          "selector": {
+            "namePattern": "static:pleaseListEachIssueDecidedByVAThatYouWouldLikeToAppeal"
+          },
+          "chapterId": "appealDetails",
+          "chapterTitle": "Appeal details",
+          "pageId": "issuesOnAppeal",
+          "pageTitle": "Issues on appeal",
+          "component": {
+            "label": "Issues I want to appeal",
+            "hint": "List each issue decided by VA that you want the Board to review.",
+            "maxLength": 5000
+          }
+        },
+        {
+          "id": "appealSignature",
+          "selector": { "namePattern": "static:signature$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "appealSignature",
+          "pageTitle": "Appeal signature",
+          "component": {
+            "label": "Signature",
+            "hint": "The appellant or appointed representative signs here."
+          }
+        },
+        {
+          "id": "dateSigned",
+          "selector": { "namePattern": "static:dateSigned$" },
+          "chapterId": "certification",
+          "chapterTitle": "Certification",
+          "pageId": "appealSignature",
+          "pageTitle": "Appeal signature",
+          "component": {
+            "label": "Date signed"
+          }
+        }
+      ]
     }
   ]
 }
