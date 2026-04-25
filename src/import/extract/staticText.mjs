@@ -114,6 +114,7 @@ function humanizeStaticLabel(label) {
 
 function cleanStaticLabel(label) {
   const text = normalizeLabel(label);
+  const fieldText = text.replace(/^\d{1,2}[A-Z]?\.\s*/, '');
   if (/^branch at time of inequity or impropriety\b/i.test(text)) {
     return 'Branch at time of inequity or impropriety';
   }
@@ -143,6 +144,63 @@ function cleanStaticLabel(label) {
   }
   if (/^the discharge is improper because\b/i.test(text)) {
     return 'Discharge impropriety statement';
+  }
+  if (/^authorization for representative's access to records protected by section 7332\b/i.test(text)) {
+    return "Representative's access to protected records";
+  }
+  if (/^limitation of consent\b/i.test(text)) {
+    return 'Limitation of consent';
+  }
+  if (/^authorization for representative to act on claimant's behalf to change claimant's address\b/i.test(text)) {
+    return "Authorization to change claimant's address";
+  }
+  if (/^if the individual indicated in item 15a is providing representation under 14\.630\b/i.test(text)) {
+    return 'Limited one-time representation';
+  }
+  if (/^limitations on representation\b/i.test(text)) {
+    return 'Limitations on representation';
+  }
+  if (/^list the current disabilit(?:y(?:\(ies\))?|ies) or symptoms that you claim are related to your military service\b/i.test(fieldText)) {
+    return 'Current disability or symptoms';
+  }
+  if (/^list va medical center(?:\(s\))?(?:\s+\([^)]+\))?\s+and department of defense(?:\s+\([^)]+\))?\s+military treatment facilities/i.test(fieldText)) {
+    return 'VA or military treatment facilities';
+  }
+  if (/^do not pay me va compensation\b/i.test(fieldText) && /\bretired pay\b/i.test(fieldText)) {
+    return 'Do not pay me VA compensation in lieu of retired pay';
+  }
+  if (/^do not pay me va compensation\b/i.test(fieldText) && /\btraining pay\b/i.test(fieldText)) {
+    return 'Do not pay me VA compensation in lieu of training pay';
+  }
+  if (/^do not pay me va compensation\b/i.test(fieldText)) {
+    return 'Do not pay me VA compensation';
+  }
+  if (/^have you ever received separation pay, disability severance pay, or any other lump sum payment\b/i.test(fieldText)) {
+    return 'Received separation or severance pay?';
+  }
+  if (/^i certify that i do not have an account with a financial institution or certified payment agent\b/i.test(fieldText)) {
+    return 'No financial institution account';
+  }
+  if (/^amount earned during 12 months preceding last date of\b/i.test(fieldText)) {
+    return 'Amount earned during last 12 months of employment';
+  }
+  if (/^if veteran is not working, state the reason for termination of employment\b/i.test(fieldText)) {
+    return 'Reason for termination of employment';
+  }
+  if (/^gross amount of$/i.test(fieldText)) {
+    return 'Gross amount of last payment';
+  }
+  if (/^was lump sum payment\b/i.test(fieldText)) {
+    return 'Was a lump sum payment made?';
+  }
+  if (/^does the veteran have any disabilities that prevent them from performing their military duties\b/i.test(fieldText)) {
+    return 'Disability prevents military duties?';
+  }
+  if (/^is veteran receiving or entitled to receive, as a result of (?:his\/her|their) employment with you, sick, retirement or other benefits\b/i.test(fieldText)) {
+    return 'Receiving employment-related benefits?';
+  }
+  if (/^signature of employer or supervisor\b/i.test(fieldText)) {
+    return 'Employer or supervisor signature';
   }
   if (/^purpose\s*:/i.test(text)) {
     return 'Purpose of request';
@@ -190,7 +248,7 @@ function inferStaticType(label) {
   if (/\b(date|dob)\b/.test(text) || /\b(date of birth|birth date)\b/.test(text)) return 'date';
   if (/\b(ssn|social security)\b/.test(text)) return 'text';
   if (/\b(address|street|p\.o\.|zip|mailing)\b/.test(text)) return 'text';
-  if (/\b(issue|remarks|explain|why|additional|purpose)\b/.test(text)) return 'text';
+  if (/\b(issue|remarks|explain|why|additional|purpose|reason|termination)\b/.test(text)) return 'text';
   return 'text';
 }
 
@@ -211,7 +269,7 @@ function staticComponentOverrides(label, type) {
   if (/\b(address|street|p\.o\.|zip|mailing)\b/.test(text)) {
     return { type: 'address' };
   }
-  if (/\b(issue|remarks|explain|why|additional|purpose)\b/.test(text)) {
+  if (/\b(issue|remarks|explain|why|additional|purpose|reason|termination)\b/.test(text)) {
     return { type: 'textArea', maxLength: 2000 };
   }
   return {};
