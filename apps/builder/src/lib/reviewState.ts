@@ -1,5 +1,39 @@
 import type { AuthoringComponent, AuthoringForm, AuthoringProvenance } from '../types';
 
+function countComponents(
+  components: AuthoringComponent[] = [],
+  predicate: (component: AuthoringComponent) => boolean,
+): number {
+  let count = 0;
+  for (const component of components) {
+    if (predicate(component)) count += 1;
+    if (Array.isArray(component.children)) {
+      count += countComponents(component.children, predicate);
+    }
+  }
+  return count;
+}
+
+function countFormComponents(
+  form: AuthoringForm,
+  predicate: (component: AuthoringComponent) => boolean,
+): number {
+  let count = 0;
+  for (const chapter of form.chapters) {
+    for (const page of chapter.pages) {
+      count += countComponents(page.components, predicate);
+    }
+  }
+  return count;
+}
+
+function isImportedComponent(component: AuthoringComponent): boolean {
+  return (
+    component.provenance?.origin === 'pdf-field' ||
+    component.provenance?.origin === 'pdf-static-region'
+  );
+}
+
 function mapComponent(
   component: AuthoringComponent,
   componentId: string,
@@ -65,24 +99,11 @@ export function rejectComponent(
 }
 
 export function unreviewedComponentCount(form: AuthoringForm): number {
-  let count = 0;
-  for (const chapter of form.chapters) {
-    for (const page of chapter.pages) {
-      for (const component of page.components) {
-        if (component.provenance && component.provenance.reviewed === false) {
-          count += 1;
-        }
-        if (Array.isArray(component.children)) {
-          for (const child of component.children) {
-            if (child.provenance && child.provenance.reviewed === false) {
-              count += 1;
-            }
-          }
-        }
-      }
-    }
-  }
-  return count;
+  return countFormComponents(form, component => component.provenance?.reviewed === false);
+}
+
+export function importedComponentCount(form: AuthoringForm): number {
+  return countFormComponents(form, isImportedComponent);
 }
 
 export function confidenceBand(confidence: number | undefined): 'high' | 'medium' | 'low' {

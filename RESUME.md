@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after PDF import status UI, static PDF fallback, and curated-import direction
+Last updated: 2026-04-25 EDT after generic PDF consolidation + 21-0958 regression
 
 ## Current Workspace
 
@@ -15,11 +15,11 @@ as the source of truth and generates VA `formConfig` as an output artifact.
 
 ## Snapshot
 
-- 100 tests total: 98 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
+- 120 tests total: 118 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
 - `npm run builder:build` green.
 - `npm run compile:example` and `npm run compile:example:27-8832` produce valid output.
 - Pilot smoke confirmed: real `VBA-27-8832-ARE.pdf` imports end-to-end via local Ollama (`llama3.1:8b`, ~18 min on CPU). Output schema valid, type mix improves over deterministic-only.
-- Browser smoke confirmed: `/Users/clint/Downloads/va9_2020.pdf` imports into builder state with 17 inferred static-text components, Outline populated, Canvas loaded, and import review wizard open.
+- Browser smoke confirmed: `tests/fixtures/pilot/VA9-2020.pdf` imports into builder state with 4 sections, 17 fields, semantic screens, populated Canvas, Review 17 wizard, Accept all, and Promote recipe.
 - Two design plans live in repo root:
   - `pdf-import-and-standards.md` — V1 fully implemented (M1–M8).
   - `form-route-to-va-gov.md` — drafted, not yet executed.
@@ -50,7 +50,25 @@ Recent implementation already completed:
 - Added static text fallback in `src/import/extract/staticText.mjs`.
 - Added `pdf-static-region` provenance support in schema and builder types.
 - Updated successful import behavior to switch to Canvas/Edit/Outline and open review for low-confidence imported components.
-- VA9 direct import now validates and produces 17 low-confidence draft components from static text. This is a safety-net draft, not yet the complete curated end state.
+- Added a native curation stage in `src/import/curation/` that is generic and data-driven. It can group imported fields into semantic builder chapters/pages from caller-provided recipes or corpus exemplar metadata, and records curation provenance in component provenance.
+- Added `curation` progress/report data to `src/import/pipeline.mjs`; `src/import/build.mjs` now respects field curation annotations and keeps uncurated fields in a `Needs review` fallback chapter.
+- Added importer tests for recipe-driven and corpus-driven curation. No form-family workflow is hard-coded in JavaScript; `src/import/curation/catalog.json` is an empty data catalog placeholder.
+- Formalized the recipe catalog contract with `src/import/curation/recipe-catalog.schema.json` and runtime validation/store APIs in `src/import/curation/recipes.mjs`.
+- Recipe storage now mirrors the corpus pattern: seeded `catalog.json` plus runtime `appendRecipe` / `appendRecipes`, `exportRecipeCatalog`, duplicate-ID checks, validation of regex selectors, and explicit rejection of reserved component identity/provenance overrides.
+- Added `tests/curation.test.mjs` for catalog validation, runtime import/export, duplicate handling, and default use by `curateFields`.
+- Added VA9 recipe data in `src/import/curation/catalog.json` for the appeal workflow. This is data, not a JavaScript form-family branch.
+- Added `tests/import-va9.test.mjs`, gated by `tests/fixtures/pilot/VA9-2020.pdf`, `VA9_PDF_PATH`, or `/Users/clint/Downloads/va9_2020.pdf`, that imports the real static VA9 PDF and asserts the curated appeal chapters/pages and key conditional fields.
+- VA9 direct import now validates and applies recipe curation to the 17 inferred static-text components. This is the first curated regression target; quality improvements still belong in recipe/corpus data and generic extraction logic.
+- Copied VA9 to repo-local ignored fixture `tests/fixtures/pilot/VA9-2020.pdf`; `tests/import-va9.test.mjs` now prefers this local fixture before falling back to `VA9_PDF_PATH` or Downloads. Real pilot PDFs remain ignored by `.gitignore`.
+- Playwright UI smoke on `http://localhost:5173/` imported the repo-local VA9 fixture and showed sections/screens: Veteran identification, Relationship and contact information, Issues on appeal, Why VA decided incorrectly, Board hearing selection, Appeal signature, Representative signature. The only browser console error was the existing missing `favicon.ico`; PDF.js font warnings logged but did not block import.
+- Added review-to-recipe promotion utilities in `src/import/curation/fromAuthoring.mjs`. Reviewed imported components can now be promoted into a validated recipe or single-recipe catalog without hard-coded form-family logic.
+- Added curation recipe import/promote/export controls to the builder Review panel. The panel stays reachable after all imported components are accepted so recipe promotion can happen after review.
+- Success-state import progress now renders inline instead of as a fixed overlay, so it no longer blocks Review panel actions after import completes.
+- Copied the user's 21-0958 Notice of Disagreement PDF to the ignored repo-local pilot fixture path `tests/fixtures/pilot/VA-21-0958-NOD-2020.pdf`.
+- Added generic AcroForm consolidation in `src/import/heuristic/consolidate.mjs` and wired it into `src/import/pipeline.mjs`. It merges split date, SSN, phone, address, name, and radio-widget fragments before enrichment/build.
+- Added generic static numbered-label inference in `src/import/extract/staticText.mjs` for PDFs with no usable AcroForm fields. The 21-0958 PDF now imports as 14 valid builder components, including SSN/date/address/phone/email classification and a Board review option radio group.
+- Improved radio option grouping without form-specific JavaScript: branch/component/character/relationship/yes-no option sets are inferred from nearby text and option labels. 27-8832 now imports deterministically as 42 valid components instead of the previous noisier 90+ raw-widget-style output.
+- Added regression tests in `tests/consolidate.test.mjs` and `tests/import-nod.test.mjs`.
 
 Verified after these changes:
 
@@ -60,7 +78,30 @@ npm run builder:build
 node --input-type=module -e "import { readFile } from 'node:fs/promises'; import { importPdf } from './src/import/pipeline.mjs'; const bytes = await readFile('/Users/clint/Downloads/va9_2020.pdf'); const result = await importPdf(bytes, { filename: 'va9_2020.pdf', enrich: false }); console.log(result.importReport);"
 ```
 
-Browser smoke used `npm run builder:dev` and Playwright to import `/Users/clint/Downloads/va9_2020.pdf`; result: 17 fields in summary, Outline selected, Canvas populated, Review 17 panel, wizard Step 1 of 17.
+Most recent verification:
+
+```bash
+npm test -- tests/consolidate.test.mjs tests/import-nod.test.mjs tests/import.test.mjs   # script ran full node suite: 118 pass, 2 gated skips
+npm run builder:build
+node --input-type=module -e 'import { readFile } from "node:fs/promises"; import { importPdf } from "./src/import/pipeline.mjs"; for (const file of ["tests/fixtures/pilot/VA-21-0958-NOD-2020.pdf","tests/fixtures/pilot/VBA-27-8832-ARE.pdf"]) { const bytes=await readFile(file); const { form, importReport }=await importPdf(bytes,{ filename:file.split("/").pop(), enrich:false }); const comps=form.chapters.flatMap(ch=>ch.pages.flatMap(pg=>pg.components)); console.log(file, JSON.stringify({ componentCount: importReport.componentCount, valid: importReport.validation.valid, labels: comps.slice(0, 18).map(c=>`${c.label} [${c.type}]`) })); }'
+```
+
+Browser smoke used `npm run builder:dev` at `http://localhost:5175/` to import
+`tests/fixtures/pilot/VA-21-0958-NOD-2020.pdf`; result: 1 section, 14 fields,
+valid import status, Canvas populated, Outline populated, Review 14 panel and
+wizard opened. Console had the existing missing `favicon.ico` error plus PDF.js
+font warnings; neither blocked import.
+
+Previous verification:
+
+```bash
+npm test -- tests/reviewState.test.mjs tests/curation.test.mjs   # script ran full node suite: 115 pass, 2 gated skips
+npm run builder:build
+npm run compile:example
+npm run compile:example:27-8832
+```
+
+Browser smoke used `npm run builder:dev` and Playwright at `http://localhost:5174/` (5173 was occupied) to import `tests/fixtures/pilot/VA9-2020.pdf`; result: 4 sections, 17 fields, semantic outline, Canvas populated, Review 17 panel, wizard Step 1 of 17. After closing the wizard, `Accept all` left the Review tab available with zero outstanding items, and `Promote recipe` reported 17 reviewed fields promoted. A second import confirmed the inline success panel no longer intercepts `Accept all`.
 
 ## V1 Milestones — Done
 
@@ -122,11 +163,11 @@ ANTHROPIC_API_KEY=sk-ant-... IMPORT_RUN_CLOUD_TESTS=1 npm test
 
 PDF AcroForm → authoring JSON pipeline shipped. V1.5/V2 backlog still open:
 
-- Native curation stage for every PDF import: raw extraction should flow through semantic grouping/normalization before the form is loaded into builder state.
-- VA9 regression target: use `/Users/clint/Downloads/va9_2020.pdf` to drive the curated-import stage. Current static fallback finds 17 draft components; complete solution should produce a curated appeal workflow.
-- Recipe layer: known form families (VA9, 27-8832, future forms) should improve generic imports without requiring every converted form to live in `examples/`.
-- Radio-widget dedup in `src/import/extract/pair.mjs` (BranchOfService currently emits one component per option).
-- Prompt update to strip PDF parenthetical artifacts ("(SSN)", "(MM-DD-YYYY)").
+- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. VA9 has seed recipe data; additional reviewed forms still need recipe/corpus data.
+- VA9 regression target: `/Users/clint/Downloads/va9_2020.pdf` now drives a curated structural regression test. Next quality pass should exercise it in the builder UI and then tighten recipe/generic extraction data from what the review panel reveals.
+- Recipe layer: known form families (VA9, 27-8832, future forms) should improve generic imports without requiring every converted form to live in `examples/`. Keep recipes/corpus data-driven and reviewable.
+- Continue hardening generic import quality: some 27-8832 duplicate/low-value residual fields remain, especially checkbox/email-consent artifacts and claimant identification leftovers.
+- Prompt update to strip PDF parenthetical artifacts ("(SSN)", "(MM-DD-YYYY)") for optional enrichment paths.
 - Real `vetsWebsiteScrape.json` scraper for the standards layer.
 - `apps/proxy/` for browser-side LLM enrichment (currently Node CLI only).
 - Embedding-based corpus similarity (replace token-set Jaccard).
@@ -143,11 +184,10 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 
 ## Recommended Next Sequence
 
-1. **Implement native PDF curation stage** — add a post-extraction semantic layer that always attempts to return a builder-native curated draft in memory before loading state.
-2. **Use VA9 as first curation regression target** — define the target appeal workflow shape from `/Users/clint/Downloads/va9_2020.pdf`, then add structural import-quality assertions that compare the actual imported form to that target.
-3. **Add recipe/corpus integration for curated forms** — examples are fixtures/seeds, not the product storage path. Reviewed imports should be exportable from state, and selected curated forms can become recipes/goldens.
-4. **Then return to importer quality backlog** — radio-widget dedup, prompt cleanup, address/date/SSN fragment merging, and better generic grouping.
-5. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.
+1. **Exercise 21-0958 in the builder UI** — the deterministic import is now valid and substantially cleaner; use the Review panel to see what still needs human curation and whether recipe promotion should capture the result.
+2. **Persist curated recipe/catalog data intentionally** — the UI can promote/export/import recipes at runtime; decide which reviewed outputs should become checked-in seed catalog data versus local working artifacts.
+3. **Continue importer quality backlog** — clean residual checkbox/email-consent artifacts, duplicate labels, and low-value fields using generic extraction/consolidation rules first, recipe/corpus data second.
+4. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.
 
 ## Suggested First Files To Read Next Session
 

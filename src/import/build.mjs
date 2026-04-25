@@ -38,6 +38,16 @@ function makeUniqueId(base, taken) {
   return unique;
 }
 
+function titleFromId(id, fallback = 'Imported form') {
+  if (!id) return fallback;
+  return String(id)
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^./, char => char.toUpperCase()) || fallback;
+}
+
 function deriveLabel(field) {
   if (field.closestLabel && field.closestLabel.trim().length > 0) {
     return field.closestLabel.trim();
@@ -58,6 +68,12 @@ function buildResponseOptions(field) {
     value: toCamelCase(opt) || opt,
     label: opt,
   }));
+}
+
+function applyComponentOverrides(component, overrides = {}) {
+  if (!overrides || typeof overrides !== 'object') return component;
+  const { id, provenance, ...safeOverrides } = overrides;
+  return { ...component, ...safeOverrides };
 }
 
 function buildComponent(field, takenIds, corpus = []) {
@@ -93,7 +109,11 @@ function buildComponent(field, takenIds, corpus = []) {
     }
   }
 
-  const baseId = toCamelCase(enriched?.label || field.name) || toCamelCase(field.closestLabel) || 'field';
+  const baseId =
+    field.semanticId ||
+    toCamelCase(enriched?.label || field.name) ||
+    toCamelCase(field.closestLabel) ||
+    'field';
   const id = makeUniqueId(baseId, takenIds);
   const label = enriched?.label || exemplarLabel || deriveLabel(field);
 
@@ -140,9 +160,11 @@ function buildComponent(field, takenIds, corpus = []) {
     component.validations = enriched.validations;
   }
 
+  const overridden = applyComponentOverrides(component, field.componentOverrides);
+
   const acroformSignal = computeAcroformSignal(field);
   const labelDistance = computeLabelDistance({ ...field, closestLabel: label });
-  const validationMatch = computeValidationMatch(field, componentType);
+  const validationMatch = computeValidationMatch(field, overridden.type || componentType);
   const confidence = computeConfidence({
     acroformSignal,
     labelDistance,
@@ -151,17 +173,20 @@ function buildComponent(field, takenIds, corpus = []) {
     validationMatch,
   });
 
-  component.provenance.confidence = Number(confidence.toFixed(3));
-  component.provenance.confidenceBand = band(confidence);
-  component.provenance.signals = {
+  overridden.provenance.confidence = Number(confidence.toFixed(3));
+  overridden.provenance.confidenceBand = band(confidence);
+  overridden.provenance.signals = {
     acroformSignal: Number(acroformSignal.toFixed(3)),
     labelDistance: Number(labelDistance.toFixed(3)),
     classificationCertainty: Number(classificationCertainty.toFixed(3)),
     corpusSimilarity,
     validationMatch: Number(validationMatch.toFixed(3)),
   };
+  if (field.curation) {
+    overridden.provenance.curation = field.curation;
+  }
 
-  return component;
+  return overridden;
 }
 
 function buildPage(pageGroup, takenIds, corpus) {
@@ -181,6 +206,77 @@ function buildChapter(chapter, takenIds, corpus) {
   };
 }
 
+function sortFieldsByPdfPosition(fields) {
+  return [...fields].sort((a, b) => {
+    const aPage = a.bbox?.page ?? Number.MAX_SAFE_INTEGER;
+    const bPage = b.bbox?.page ?? Number.MAX_SAFE_INTEGER;
+    if (aPage !== bPage) return aPage - bPage;
+    const ay = a.bbox?.y ?? Number.MAX_SAFE_INTEGER;
+    const by = b.bbox?.y ?? Number.MAX_SAFE_INTEGER;
+    if (ay !== by) return ay - by;
+    return (a.bbox?.x ?? 0) - (b.bbox?.x ?? 0);
+  });
+}
+
+function segmentCuratedFields(fields) {
+  const curatedFields = fields.filter(field => field.curation?.chapterId && field.curation?.pageId);
+  if (curatedFields.length === 0) return null;
+
+  const chapters = [];
+  const chapterMap = new Map();
+
+  function getChapter(curation) {
+    const chapterId = curation.chapterId;
+    if (!chapterMap.has(chapterId)) {
+      const chapter = {
+        id: chapterId,
+        title: curation.chapterTitle || titleFromId(chapterId),
+        pages: [],
+        pageMap: new Map(),
+      };
+      chapterMap.set(chapterId, chapter);
+      chapters.push(chapter);
+    }
+    return chapterMap.get(chapterId);
+  }
+
+  function getPage(chapter, curation) {
+    const pageId = curation.pageId;
+    if (!chapter.pageMap.has(pageId)) {
+      const page = {
+        id: pageId,
+        title: curation.pageTitle || titleFromId(pageId, 'Page 1'),
+        fields: [],
+      };
+      chapter.pageMap.set(pageId, page);
+      chapter.pages.push(page);
+    }
+    return chapter.pageMap.get(pageId);
+  }
+
+  for (const field of sortFieldsByPdfPosition(curatedFields)) {
+    const chapter = getChapter(field.curation);
+    const page = getPage(chapter, field.curation);
+    page.fields.push(field);
+  }
+
+  const uncuratedFields = fields.filter(field => !field.curation?.chapterId || !field.curation?.pageId);
+  if (uncuratedFields.length > 0) {
+    const fallbackPages = segmentIntoPages(uncuratedFields);
+    const fallbackChapter = {
+      id: 'needs-review',
+      title: 'Needs review',
+      pages: fallbackPages,
+    };
+    chapters.push(fallbackChapter);
+  }
+
+  return chapters.map(chapter => {
+    const { pageMap, ...cleanChapter } = chapter;
+    return cleanChapter;
+  });
+}
+
 export function buildAuthoringForm({
   formId,
   title,
@@ -190,8 +286,7 @@ export function buildAuthoringForm({
   fields,
   corpus = [],
 }) {
-  const pageGroups = segmentIntoPages(fields);
-  const chapters = segmentIntoChapters(pageGroups);
+  const chapters = segmentCuratedFields(fields) || segmentIntoChapters(segmentIntoPages(fields));
 
   const takenIds = new Set();
   const builtChapters = chapters.map(chapter => buildChapter(chapter, takenIds, corpus));

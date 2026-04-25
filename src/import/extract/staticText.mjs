@@ -85,7 +85,182 @@ function makeStaticField(line, config) {
     neighborText: config.neighborText || 'Inferred from visible PDF text because no usable fillable PDF field was exposed.',
     staticSource: 'text-layout',
     provenanceOrigin: 'pdf-static-region',
+    componentOverrides: config.componentOverrides,
   };
+}
+
+function normalizeLabel(label) {
+  return String(label || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*[:;,.]+$/g, '')
+    .trim();
+}
+
+function humanizeStaticLabel(label) {
+  const cleaned = normalizeLabel(label)
+    .replace(/^\d{1,2}[A-Z]?\.\s*/, '')
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\bI AM HOMELESS\b/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return normalizeLabel(cleaned)
+    .replace(/\bVA\b/g, 'Va')
+    .toLowerCase()
+    .replace(/\b[a-z]/g, char => char.toUpperCase())
+    .replace(/'S\b/g, "'s")
+    .replace(/\bVa\b/g, 'VA')
+    .replace(/\bSsn\b/g, 'SSN');
+}
+
+function toStaticKey(label, fallback) {
+  const words = humanizeStaticLabel(label)
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length === 0) return fallback;
+  const [first, ...rest] = words;
+  return (
+    first.charAt(0).toLowerCase() +
+    first.slice(1) +
+    rest.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')
+  );
+}
+
+function inferStaticType(label) {
+  const text = label.toLowerCase();
+  if (/\b(e-mail|email)\b/.test(text)) return 'email';
+  if (/\b(phone|telephone)\b/.test(text)) return 'phone';
+  if (/\b(date|birth)\b/.test(text)) return 'date';
+  if (/\b(ssn|social security)\b/.test(text)) return 'text';
+  if (/\b(address|street|p\.o\.|zip|mailing)\b/.test(text)) return 'text';
+  if (/\b(issue|remarks|explain|why|additional)\b/.test(text)) return 'text';
+  return 'text';
+}
+
+function staticComponentOverrides(label, type) {
+  const text = label.toLowerCase();
+  if (type === 'email') return { type: 'email' };
+  if (type === 'phone') return { type: 'phone' };
+  if (type === 'date') return { type: 'date' };
+  if (/\b(ssn|social security)\b/.test(text)) {
+    return {
+      type: 'maskedInput',
+      hint: 'Enter the Social Security number without dashes.',
+      maxLength: 11,
+    };
+  }
+  if (/\b(address|street|p\.o\.|zip|mailing)\b/.test(text)) {
+    return { type: 'address' };
+  }
+  if (/\b(issue|remarks|explain|why|additional)\b/.test(text)) {
+    return { type: 'textArea', maxLength: 2000 };
+  }
+  return {};
+}
+
+function isInstructionPage(page, lines) {
+  const text = lines.map(line => line.text).join(' ');
+  return /\b(INFORMATION AND DETAILED INSTRUCTIONS|OVERVIEW OF .* FORM SECTIONS|PRIVACY ACT STATEMENT|RESPONDENT BURDEN)\b/i.test(text) &&
+    !/\bPART I\b|\bSECTION I\b/.test(text.slice(0, 500));
+}
+
+function isWeakStaticQuestion(label) {
+  const text = normalizeLabel(label).toLowerCase();
+  return (
+    text.length < 5 ||
+    /^\([^)]*\)$/.test(text) ||
+    /^(part|section)\s+[ivx]+/.test(text) ||
+    /\b(instructions?|note|penalty|privacy act|respondent burden|omb approved|expiration date|va form)\b/.test(text)
+  );
+}
+
+function parseNumberedLabels(text) {
+  const normalized = normalizeLabel(text);
+  const pattern = /(\d{1,2})([A-Z])?\.\s+(.+?)(?=\s+\d{1,2}[A-Z]?\.\s+|$)/g;
+  const matches = [];
+  let match;
+  while ((match = pattern.exec(normalized))) {
+    const [, number, suffix = '', rawLabel] = match;
+    const label = normalizeLabel(rawLabel);
+    if (isWeakStaticQuestion(label)) continue;
+    matches.push({
+      number,
+      suffix,
+      label,
+      fullLabel: `${number}${suffix}. ${label}`,
+    });
+  }
+  return matches;
+}
+
+function inferGenericStaticFieldsForPage(page) {
+  const lines = groupLines(page);
+  if (isInstructionPage(page, lines)) return [];
+
+  const parsed = lines.flatMap(line =>
+    parseNumberedLabels(line.text).map(parsedLabel => ({
+      line,
+      parsed: parsedLabel,
+    })),
+  );
+  if (parsed.length === 0) return [];
+
+  const byNumber = new Map();
+  for (const item of parsed) {
+    const key = item.parsed.number;
+    if (!byNumber.has(key)) byNumber.set(key, []);
+    byNumber.get(key).push(item);
+  }
+
+  const fields = [];
+  const seenKeys = new Set();
+  for (const [number, items] of byNumber.entries()) {
+    const base = items.find(item => !item.parsed.suffix);
+    const suffixed = items.filter(item => item.parsed.suffix);
+
+    if (suffixed.length >= 2) {
+      let label = base
+        ? humanizeStaticLabel(base.parsed.label)
+        : humanizeStaticLabel(`Item ${number}`);
+      if (/following review options|review option/i.test(base?.parsed.label || '')) {
+        label = 'Board Review Option';
+      }
+      const options = suffixed.map(item => humanizeStaticLabel(item.parsed.label));
+      const key = toStaticKey(label, `item${number}`);
+      fields.push(
+        makeStaticField(base?.line || suffixed[0].line, {
+          name: key,
+          label,
+          type: 'radio',
+          options,
+          neighborText: suffixed.map(item => item.parsed.fullLabel).join(' '),
+        }),
+      );
+      seenKeys.add(key);
+      continue;
+    }
+
+    for (const item of items) {
+      const label = humanizeStaticLabel(item.parsed.label);
+      const key = toStaticKey(label, `item${item.parsed.number}${item.parsed.suffix}`);
+      if (seenKeys.has(key)) continue;
+      const type = inferStaticType(label);
+      fields.push(
+        makeStaticField(item.line, {
+          name: key,
+          label,
+          type,
+          maxLength: type === 'text' ? 120 : undefined,
+          neighborText: item.parsed.fullLabel,
+          componentOverrides: staticComponentOverrides(label, type),
+        }),
+      );
+      seenKeys.add(key);
+    }
+  }
+
+  return fields;
 }
 
 const FIRST_PAGE_PATTERNS = [
@@ -239,14 +414,21 @@ function inferContinuationFields(page) {
 
 export function inferStaticTextFields(textExtraction) {
   const pages = textExtraction.pages || [];
-  const fields = [];
+  const specificFields = [];
   for (const page of pages) {
     if (page.page === 0) {
-      fields.push(...inferFirstPageFields(page));
+      specificFields.push(...inferFirstPageFields(page));
     } else {
-      fields.push(...inferContinuationFields(page));
+      specificFields.push(...inferContinuationFields(page));
     }
   }
+
+  const genericFields = pages.flatMap(page => inferGenericStaticFieldsForPage(page));
+  const fields = specificFields.length >= 5 ||
+    genericFields.length === 0 ||
+    genericFields.length <= specificFields.length
+    ? specificFields
+    : genericFields;
 
   return {
     pageCount: textExtraction.pageCount || pages.length,

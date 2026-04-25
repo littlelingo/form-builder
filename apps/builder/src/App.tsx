@@ -49,7 +49,13 @@ import {
   updatePage,
 } from './lib/formModel';
 import { emptyRuntimeState } from './lib/runnerRuntime';
-import { acceptComponent, rejectComponent, unreviewedComponentCount, confidenceBand } from './lib/reviewState';
+import {
+  acceptComponent,
+  rejectComponent,
+  importedComponentCount,
+  unreviewedComponentCount,
+  confidenceBand,
+} from './lib/reviewState';
 import { signatureFromForm } from './lib/dirty';
 import { HeaderStrip } from './components/HeaderStrip';
 import {
@@ -249,6 +255,10 @@ export default function App() {
   const availableFields = allComponents(form);
   const helperPresetPreviews = previewTemplateAuthoringHelpers(form);
   const unreviewedCount = unreviewedComponentCount(form);
+  const importedCount = importedComponentCount(form);
+  const showReviewPanel = importedCount > 0;
+  const activePropertiesPanel =
+    propertiesPanel === 'review' && !showReviewPanel ? 'setup' : propertiesPanel;
 
   function commitForm(nextForm: AuthoringForm) {
     setHistory(current => ({
@@ -916,8 +926,8 @@ export default function App() {
         <aside className="builder-sidebar" aria-label="Properties">
           <div className="builder-toolbox-tabs" role="tablist" aria-label="Properties panels">
             <button
-              aria-selected={propertiesPanel === 'setup'}
-              className={propertiesPanel === 'setup' ? 'is-active' : ''}
+              aria-selected={activePropertiesPanel === 'setup'}
+              className={activePropertiesPanel === 'setup' ? 'is-active' : ''}
               role="tab"
               type="button"
               onClick={() => setPropertiesPanel('setup')}
@@ -925,8 +935,8 @@ export default function App() {
               Setup
             </button>
             <button
-              aria-selected={propertiesPanel === 'properties'}
-              className={propertiesPanel === 'properties' ? 'is-active' : ''}
+              aria-selected={activePropertiesPanel === 'properties'}
+              className={activePropertiesPanel === 'properties' ? 'is-active' : ''}
               role="tab"
               type="button"
               onClick={() => setPropertiesPanel('properties')}
@@ -934,8 +944,8 @@ export default function App() {
               {selectedComponent ? 'Field' : 'Flow'}
             </button>
             <button
-              aria-selected={propertiesPanel === 'audit'}
-              className={propertiesPanel === 'audit' ? 'is-active' : ''}
+              aria-selected={activePropertiesPanel === 'audit'}
+              className={activePropertiesPanel === 'audit' ? 'is-active' : ''}
               role="tab"
               type="button"
               onClick={() => setPropertiesPanel('audit')}
@@ -943,28 +953,31 @@ export default function App() {
               Audit
             </button>
             <button
-              aria-selected={propertiesPanel === 'standards'}
-              className={propertiesPanel === 'standards' ? 'is-active' : ''}
+              aria-selected={activePropertiesPanel === 'standards'}
+              className={activePropertiesPanel === 'standards' ? 'is-active' : ''}
               role="tab"
               type="button"
               onClick={() => setPropertiesPanel('standards')}
             >
               Standards
             </button>
-            {unreviewedCount > 0 && (
+            {showReviewPanel && (
               <button
-                aria-selected={propertiesPanel === 'review'}
-                className={propertiesPanel === 'review' ? 'is-active' : ''}
+                aria-selected={activePropertiesPanel === 'review'}
+                className={activePropertiesPanel === 'review' ? 'is-active' : ''}
                 role="tab"
                 type="button"
                 onClick={() => setPropertiesPanel('review')}
               >
-                Review <span className="builder-tab-counter">{unreviewedCount}</span>
+                Review
+                {unreviewedCount > 0 && (
+                  <span className="builder-tab-counter">{unreviewedCount}</span>
+                )}
               </button>
             )}
           </div>
 
-          {propertiesPanel === 'setup' && (
+          {activePropertiesPanel === 'setup' && (
             <MetadataEditor
               availableFields={availableFields}
               form={form}
@@ -972,7 +985,7 @@ export default function App() {
             />
           )}
 
-          {propertiesPanel === 'properties' && (
+          {activePropertiesPanel === 'properties' && (
             selectedComponent ? (
               <InspectorPanel
                 availableFields={availableFields}
@@ -1001,7 +1014,7 @@ export default function App() {
             )
           )}
 
-          {propertiesPanel === 'audit' && (
+          {activePropertiesPanel === 'audit' && (
             <AuditPanel
               baseline={baselineForm}
               form={form}
@@ -1009,11 +1022,11 @@ export default function App() {
             />
           )}
 
-          {propertiesPanel === 'standards' && (
+          {activePropertiesPanel === 'standards' && (
             <StandardsAuditPanel form={form} onJump={handleSelectNode} />
           )}
 
-          {propertiesPanel === 'review' && (
+          {activePropertiesPanel === 'review' && (
             <ImportReviewPanel
               form={form}
               onJump={handleSelectNode}

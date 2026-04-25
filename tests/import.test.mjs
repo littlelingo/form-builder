@@ -45,6 +45,7 @@ test('importPdf reports progress through each major import phase', async () => {
     'pair-labels',
     'corpus',
     'enrichment',
+    'curation',
     'build-authoring',
     'validate',
     'complete',
@@ -79,6 +80,88 @@ test('importPdf infers draft components from static PDFs without fillable fields
   assert.equal(components[0].provenance.confidenceBand, 'low');
   assert.ok(components.find(component => component.label === 'Name of veteran'));
   assert.ok(components.find(component => component.label === 'Claim file number'));
+});
+
+test('importPdf can curate sections from caller-provided recipe data', async () => {
+  const pdfBytes = await buildSyntheticAcroFormPdf();
+  const { form, importReport } = await runImport(pdfBytes, {
+    recipes: [
+      {
+        id: 'test-contact-recipe',
+        title: 'Test contact recipe',
+        match: {
+          anyText: ['synthetic'],
+        },
+        fields: [
+          {
+            selector: { namePattern: '^VeteranEmail$' },
+            chapterId: 'contactInformation',
+            chapterTitle: 'Contact information',
+            pageId: 'contactDetails',
+            pageTitle: 'Contact details',
+            component: {
+              hint: 'Use an email address where VA can contact you.',
+            },
+          },
+          {
+            selector: { namePattern: '^VeteranPhone$' },
+            chapterId: 'contactInformation',
+            chapterTitle: 'Contact information',
+            pageId: 'contactDetails',
+            pageTitle: 'Contact details',
+          },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(importReport.curation.recipe.recipeId, 'test-contact-recipe');
+  assert.equal(importReport.curation.recipe.matchedFieldCount, 2);
+
+  const contactChapter = form.chapters.find(chapter => chapter.id === 'contactInformation');
+  assert.ok(contactChapter, 'recipe should create the configured chapter');
+  assert.equal(contactChapter.title, 'Contact information');
+  assert.equal(contactChapter.pages[0].id, 'contactDetails');
+
+  const contactComponents = contactChapter.pages.flatMap(page => page.components);
+  const email = contactComponents.find(component => component.provenance.pdfFieldName === 'VeteranEmail');
+  const phone = contactComponents.find(component => component.provenance.pdfFieldName === 'VeteranPhone');
+  assert.ok(email, 'email should be placed in the recipe page');
+  assert.ok(phone, 'phone should be placed in the recipe page');
+  assert.equal(email.hint, 'Use an email address where VA can contact you.');
+  assert.equal(email.provenance.curation.source, 'recipe');
+});
+
+test('importPdf can curate sections from corpus exemplar structure without a recipe', async () => {
+  const pdfBytes = await buildSyntheticAcroFormPdf();
+  const { form, importReport } = await runImport(pdfBytes, {
+    corpus: [
+      {
+        exemplarId: 'test:email',
+        pdfFieldName: 'VeteranEmail',
+        labelAfter: 'Email address',
+        componentTypeAfter: 'email',
+        chapterId: 'contactInformation',
+        chapterTitle: 'Contact information',
+        pageId: 'contactDetails',
+        pageTitle: 'Contact details',
+      },
+    ],
+  });
+
+  assert.equal(importReport.curation.status, 'curated');
+  assert.equal(importReport.curation.recipe.status, 'no-recipe-match');
+  assert.equal(importReport.curation.corpus.matchedFieldCount, 1);
+
+  const contactChapter = form.chapters.find(chapter => chapter.id === 'contactInformation');
+  assert.ok(contactChapter, 'corpus match should create the exemplar chapter');
+  const email = contactChapter.pages
+    .flatMap(page => page.components)
+    .find(component => component.provenance.pdfFieldName === 'VeteranEmail');
+  assert.ok(email, 'email should be placed from corpus exemplar structure');
+  assert.equal(email.provenance.curation.source, 'corpus');
+  assert.equal(email.provenance.curation.exemplarId, 'test:email');
 });
 
 test('every imported component has provenance with confidence in [0, 1] and pdf-field origin', async () => {

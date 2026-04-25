@@ -1,0 +1,228 @@
+{
+  "$schema": "./recipe-catalog.schema.json",
+  "version": "2026.04",
+  "recipes": [
+    {
+      "id": "va9-appeal-2020-static",
+      "title": "VA Form 9 appeal workflow",
+      "description": "Curates the static-text extraction fields from VA Form 9 into a builder-native appeal workflow.",
+      "formFingerprint": "VA9",
+      "createdAt": "2026-04-25T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:va[-_\\s]?9|appeal to board|statement of the case|issues to appeal)\\b"
+        ],
+        "fieldNamePatterns": [
+          "nameOfVeteran",
+          "claimFileNumber",
+          "iAmThe",
+          "issuesAppealScope",
+          "whyVaDecidedIncorrectly",
+          "optionalBoardHearing",
+          "appealSignature"
+        ],
+        "minFieldMatches": 5
+      },
+      "fields": [
+        {
+          "id": "nameOfVeteran",
+          "selector": { "namePattern": "nameOfVeteran$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranIdentification",
+          "pageTitle": "Veteran identification",
+          "component": {
+            "hint": "Enter the Veteran name exactly as it appears on the appeal paperwork."
+          }
+        },
+        {
+          "id": "claimFileNumber",
+          "selector": { "namePattern": "claimFileNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranIdentification",
+          "pageTitle": "Veteran identification",
+          "component": {
+            "hint": "Enter the VA claim file number if one is listed."
+          }
+        },
+        {
+          "id": "insuranceOrLoanNumber",
+          "selector": { "namePattern": "insuranceOrLoanNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "veteranIdentification",
+          "pageTitle": "Veteran identification",
+          "component": {
+            "hint": "Enter an insurance file number or loan number if one applies."
+          }
+        },
+        {
+          "id": "iAmThe",
+          "selector": { "namePattern": "iAmThe$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "relationshipAndContact",
+          "pageTitle": "Relationship and contact information",
+          "component": {
+            "hint": "Select your relationship to the Veteran."
+          }
+        },
+        {
+          "id": "homeTelephoneNumber",
+          "selector": { "namePattern": "homeTelephoneNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "relationshipAndContact",
+          "pageTitle": "Relationship and contact information",
+          "component": {
+            "hint": "Enter a phone number where VA can reach you at home."
+          }
+        },
+        {
+          "id": "workTelephoneNumber",
+          "selector": { "namePattern": "workTelephoneNumber$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "relationshipAndContact",
+          "pageTitle": "Relationship and contact information",
+          "component": {
+            "hint": "Enter a work phone number if one applies."
+          }
+        },
+        {
+          "id": "myAddress",
+          "selector": { "namePattern": "myAddress$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "relationshipAndContact",
+          "pageTitle": "Relationship and contact information",
+          "component": {
+            "hint": "Enter your mailing address."
+          }
+        },
+        {
+          "id": "claimantName",
+          "selector": { "namePattern": "claimantName$" },
+          "chapterId": "claimantInformation",
+          "chapterTitle": "Claimant information",
+          "pageId": "relationshipAndContact",
+          "pageTitle": "Relationship and contact information",
+          "component": {
+            "hint": "Complete this only if the person making the appeal is not the Veteran.",
+            "showIf": {
+              "field": "iAmThe",
+              "operator": "notEquals",
+              "value": "veteran"
+            }
+          }
+        },
+        {
+          "id": "issuesAppealScope",
+          "selector": { "namePattern": "issuesAppealScope$" },
+          "chapterId": "appealDetails",
+          "chapterTitle": "Appeal details",
+          "pageId": "issuesOnAppeal",
+          "pageTitle": "Issues on appeal",
+          "component": {
+            "hint": "Choose whether the appeal covers selected issues or every issue from the statement of the case."
+          }
+        },
+        {
+          "id": "issuesToAppeal",
+          "selector": { "namePattern": "issuesToAppeal$" },
+          "chapterId": "appealDetails",
+          "chapterTitle": "Appeal details",
+          "pageId": "issuesOnAppeal",
+          "pageTitle": "Issues on appeal",
+          "component": {
+            "hint": "List each issue you want the Board to review.",
+            "showIf": {
+              "field": "issuesAppealScope",
+              "operator": "equals",
+              "value": "iAmOnlyAppealingTheseIssues"
+            }
+          }
+        },
+        {
+          "id": "whyVaDecidedIncorrectly",
+          "selector": { "namePattern": "whyVaDecidedIncorrectly$" },
+          "chapterId": "appealDetails",
+          "chapterTitle": "Appeal details",
+          "pageId": "disagreementExplanation",
+          "pageTitle": "Why VA decided incorrectly",
+          "component": {
+            "hint": "Explain why you believe VA decided the case incorrectly."
+          }
+        },
+        {
+          "id": "continuationWhyVaDecidedIncorrectly",
+          "selector": { "namePattern": "continuationWhyVaDecidedIncorrectly$" },
+          "chapterId": "appealDetails",
+          "chapterTitle": "Appeal details",
+          "pageId": "disagreementExplanation",
+          "pageTitle": "Why VA decided incorrectly",
+          "component": {
+            "hint": "Use this continuation area for additional explanation from item 9."
+          }
+        },
+        {
+          "id": "optionalBoardHearing",
+          "selector": { "namePattern": "optionalBoardHearing$" },
+          "chapterId": "boardHearing",
+          "chapterTitle": "Board hearing",
+          "pageId": "hearingSelection",
+          "pageTitle": "Board hearing selection",
+          "component": {
+            "hint": "Select the Board hearing option requested for this appeal."
+          }
+        },
+        {
+          "id": "appealSignature",
+          "selector": { "namePattern": "appealSignature$" },
+          "chapterId": "signatures",
+          "chapterTitle": "Signatures",
+          "pageId": "appealSignature",
+          "pageTitle": "Appeal signature",
+          "component": {
+            "hint": "The person making the appeal signs here."
+          }
+        },
+        {
+          "id": "appealSignatureDate",
+          "selector": { "namePattern": "appealSignatureDate$" },
+          "chapterId": "signatures",
+          "chapterTitle": "Signatures",
+          "pageId": "appealSignature",
+          "pageTitle": "Appeal signature",
+          "component": {
+            "hint": "Enter the date the appeal was signed."
+          }
+        },
+        {
+          "id": "representativeSignature",
+          "selector": { "namePattern": "representativeSignature$" },
+          "chapterId": "signatures",
+          "chapterTitle": "Signatures",
+          "pageId": "representativeSignature",
+          "pageTitle": "Representative signature",
+          "component": {
+            "hint": "An appointed representative signs here, if applicable."
+          }
+        },
+        {
+          "id": "representativeSignatureDate",
+          "selector": { "namePattern": "representativeSignatureDate$" },
+          "chapterId": "signatures",
+          "chapterTitle": "Signatures",
+          "pageId": "representativeSignature",
+          "pageTitle": "Representative signature",
+          "component": {
+            "hint": "Enter the date the representative signed."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,15 @@ import {
   exportCorpus,
   loadCorpus,
 } from '../../../../src/import/corpus/store.mjs';
+import {
+  appendRecipe,
+  appendRecipes,
+  loadRecipeCatalog,
+} from '../../../../src/import/curation/recipes.mjs';
+import {
+  createRecipeCatalogFromAuthoringForm as buildRecipeCatalogFromAuthoringForm,
+  createRecipeFromAuthoringForm as buildRecipeFromAuthoringForm,
+} from '../../../../src/import/curation/fromAuthoring.mjs';
 
 interface ImportReviewPanelProps {
   form: AuthoringForm;
@@ -24,6 +33,22 @@ function downloadCorrectionsBundle() {
   anchor.download = 'va-form-builder-corrections.json';
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+function downloadJson(filename: string, value: unknown) {
+  const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadRecipeCatalog(form: AuthoringForm) {
+  const bundle = buildRecipeCatalogFromAuthoringForm(form);
+  downloadJson(`${form.formId || 'imported-form'}-curation-recipe.json`, bundle);
+  return bundle;
 }
 
 interface ReviewRow {
@@ -71,7 +96,9 @@ function bandLabel(band: 'high' | 'medium' | 'low'): string {
 export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: ImportReviewPanelProps) {
   const rows = gatherUnreviewed(form);
   const correctionsInputRef = useRef<HTMLInputElement | null>(null);
+  const recipesInputRef = useRef<HTMLInputElement | null>(null);
   const [correctionsMessage, setCorrectionsMessage] = useState<string>('');
+  const [recipeMessage, setRecipeMessage] = useState<string>('');
 
   async function handleImportCorrections(file?: File) {
     if (!file) return;
@@ -92,6 +119,47 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
       setCorrectionsMessage(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       if (correctionsInputRef.current) correctionsInputRef.current.value = '';
+    }
+  }
+
+  async function handleImportRecipes(file?: File) {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const recipes = Array.isArray(parsed?.recipes)
+        ? parsed.recipes
+        : Array.isArray(parsed)
+          ? parsed
+          : null;
+      if (!recipes) {
+        setRecipeMessage('Expected { recipes: [...] } or array.');
+        return;
+      }
+      appendRecipes(recipes);
+      setRecipeMessage(`Imported ${recipes.length} recipes. Total recipes: ${loadRecipeCatalog().recipes.length}.`);
+    } catch (error) {
+      setRecipeMessage(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      if (recipesInputRef.current) recipesInputRef.current.value = '';
+    }
+  }
+
+  function handlePromoteRecipe() {
+    try {
+      const recipe = buildRecipeFromAuthoringForm(form);
+      appendRecipe(recipe);
+      setRecipeMessage(`Promoted ${recipe.fields.length} reviewed fields into recipe ${recipe.id}.`);
+    } catch (error) {
+      setRecipeMessage(`Promotion failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  function handleExportRecipe() {
+    try {
+      const bundle = downloadRecipeCatalog(form);
+      setRecipeMessage(`Exported ${bundle.recipes[0]?.fields?.length || 0} reviewed fields as a recipe.`);
+    } catch (error) {
+      setRecipeMessage(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -172,38 +240,79 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
       )}
 
       <footer className="builder-review-footer">
-        <p className="builder-review-footer__title">Corrections corpus</p>
-        <div className="builder-review-footer__actions">
-          <button
-            className="usa-button usa-button--outline usa-button--small"
-            type="button"
-            onClick={() => correctionsInputRef.current?.click()}
-          >
-            Import corrections
-          </button>
-          <button
-            className="usa-button usa-button--outline usa-button--small"
-            type="button"
-            onClick={() => {
-              downloadCorrectionsBundle();
-              setCorrectionsMessage(`Exported ${loadCorpus().length} exemplars.`);
-            }}
-          >
-            Export corrections
-          </button>
+        <div className="builder-review-footer__group">
+          <p className="builder-review-footer__title">Curation recipes</p>
+          <div className="builder-review-footer__actions">
+            <button
+              className="usa-button usa-button--outline usa-button--small"
+              type="button"
+              onClick={() => recipesInputRef.current?.click()}
+            >
+              Import recipes
+            </button>
+            <button
+              className="usa-button usa-button--outline usa-button--small"
+              type="button"
+              onClick={handlePromoteRecipe}
+            >
+              Promote recipe
+            </button>
+            <button
+              className="usa-button usa-button--outline usa-button--small"
+              type="button"
+              onClick={handleExportRecipe}
+            >
+              Export recipe
+            </button>
+          </div>
+          {recipeMessage && (
+            <p className="builder-review-footer__message" role="status">
+              {recipeMessage}
+            </p>
+          )}
+          <input
+            accept="application/json,.json"
+            className="builder-hidden-input"
+            ref={recipesInputRef}
+            type="file"
+            onChange={event => handleImportRecipes(event.target.files?.[0])}
+          />
         </div>
-        {correctionsMessage && (
-          <p className="builder-review-footer__message" role="status">
-            {correctionsMessage}
-          </p>
-        )}
-        <input
-          accept="application/json,.json"
-          className="builder-hidden-input"
-          ref={correctionsInputRef}
-          type="file"
-          onChange={event => handleImportCorrections(event.target.files?.[0])}
-        />
+
+        <div className="builder-review-footer__group">
+          <p className="builder-review-footer__title">Corrections corpus</p>
+          <div className="builder-review-footer__actions">
+            <button
+              className="usa-button usa-button--outline usa-button--small"
+              type="button"
+              onClick={() => correctionsInputRef.current?.click()}
+            >
+              Import corrections
+            </button>
+            <button
+              className="usa-button usa-button--outline usa-button--small"
+              type="button"
+              onClick={() => {
+                downloadCorrectionsBundle();
+                setCorrectionsMessage(`Exported ${loadCorpus().length} exemplars.`);
+              }}
+            >
+              Export corrections
+            </button>
+          </div>
+          {correctionsMessage && (
+            <p className="builder-review-footer__message" role="status">
+              {correctionsMessage}
+            </p>
+          )}
+          <input
+            accept="application/json,.json"
+            className="builder-hidden-input"
+            ref={correctionsInputRef}
+            type="file"
+            onChange={event => handleImportCorrections(event.target.files?.[0])}
+          />
+        </div>
       </footer>
     </section>
   );

@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   acceptComponent,
   rejectComponent,
+  importedComponentCount,
   unreviewedComponentCount,
   confidenceBand,
 } from '../apps/builder/src/lib/reviewState.ts';
@@ -66,4 +67,48 @@ test('unreviewedComponentCount counts components with reviewed=false', () => {
   assert.equal(unreviewedComponentCount(baseForm), 2);
   const accepted = acceptComponent(baseForm, 'a');
   assert.equal(unreviewedComponentCount(accepted), 1);
+});
+
+test('importedComponentCount keeps reviewed PDF imports addressable', () => {
+  const accepted = acceptComponent(baseForm, 'a');
+  assert.equal(importedComponentCount(accepted), 2);
+});
+
+test('importedComponentCount includes static-region child components', () => {
+  const form = {
+    ...baseForm,
+    chapters: [
+      {
+        ...baseForm.chapters[0],
+        pages: [
+          {
+            ...baseForm.chapters[0].pages[0],
+            components: [
+              {
+                id: 'group',
+                type: 'section',
+                label: 'Group',
+                children: [
+                  {
+                    id: 'static1',
+                    type: 'textInput',
+                    label: 'Static inferred field',
+                    provenance: { origin: 'pdf-static-region', confidence: 0.8, reviewed: true },
+                  },
+                  {
+                    id: 'manual1',
+                    type: 'textInput',
+                    label: 'Manual field',
+                    provenance: { origin: 'hand-authored', confidence: 1, reviewed: true },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  assert.equal(importedComponentCount(form), 1);
 });

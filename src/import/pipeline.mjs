@@ -3,7 +3,9 @@ import { extractAcroForm } from './extract/acroform.mjs';
 import { extractText } from './extract/text.mjs';
 import { pairLabelsToFields } from './extract/pair.mjs';
 import { inferStaticTextFields } from './extract/staticText.mjs';
+import { consolidateFields } from './heuristic/consolidate.mjs';
 import { loadCorpus } from './corpus/store.mjs';
+import { curateFields } from './curation/curate.mjs';
 import { applyEnrichment, enrichFields } from './llm/enricher.mjs';
 import { runMigrations } from '../schema/migrations/registry.mjs';
 import { computeBytesHash } from '../schema/migrations/schemaHash.mjs';
@@ -106,19 +108,25 @@ export async function importPdf(pdfBytes, options = {}) {
     acroForm.fieldCount > 0
       ? pairLabelsToFields(acroForm, text)
       : inferStaticTextFields(text);
+  const consolidatedFields = consolidateFields(paired.fields);
+  const consolidated = {
+    ...paired,
+    fields: consolidatedFields,
+    fieldCount: consolidatedFields.length,
+  };
 
   emitProgress(onProgress, {
     stage: 'pair-labels',
     detail:
       acroForm.fieldCount > 0
-        ? `Paired ${paired.fields.length} fillable PDF field${paired.fields.length === 1 ? '' : 's'} with nearby labels.`
-        : `Inferred ${paired.fields.length} draft builder field${paired.fields.length === 1 ? '' : 's'} from static PDF text.`,
+        ? `Paired ${paired.fields.length} fillable PDF field${paired.fields.length === 1 ? '' : 's'} with nearby labels and consolidated ${consolidated.fields.length} builder candidate${consolidated.fields.length === 1 ? '' : 's'}.`
+        : `Inferred ${consolidated.fields.length} draft builder field${consolidated.fields.length === 1 ? '' : 's'} from static PDF text.`,
     elapsedMs: Date.now() - t0,
     formId,
     pdfHash,
     pageCount: text.pageCount,
     fieldCount: acroForm.fieldCount,
-    pairedFieldCount: paired.fields.length,
+    pairedFieldCount: consolidated.fields.length,
   });
 
   emitProgress(onProgress, {
@@ -129,7 +137,7 @@ export async function importPdf(pdfBytes, options = {}) {
     pdfHash,
     pageCount: text.pageCount,
     fieldCount: acroForm.fieldCount,
-    pairedFieldCount: paired.fields.length,
+    pairedFieldCount: consolidated.fields.length,
   });
   const corpus = options.corpus || loadCorpus();
 
@@ -145,10 +153,10 @@ export async function importPdf(pdfBytes, options = {}) {
     pdfHash,
     pageCount: text.pageCount,
     fieldCount: acroForm.fieldCount,
-    pairedFieldCount: paired.fields.length,
+    pairedFieldCount: consolidated.fields.length,
     corpusEntryCount: corpus.length,
   });
-  const enrichmentResult = await enrichFields(paired.fields, {
+  const enrichmentResult = await enrichFields(consolidated.fields, {
     enabled: options.enrich !== false,
     providerName: options.llmProvider,
     model: options.llmModel,
@@ -158,23 +166,49 @@ export async function importPdf(pdfBytes, options = {}) {
     pdfHash,
   });
   const enrichedFields = enrichmentResult.enriched
-    ? applyEnrichment(paired.fields, enrichmentResult.enriched)
-    : paired.fields;
+    ? applyEnrichment(consolidated.fields, enrichmentResult.enriched)
+    : consolidated.fields;
 
   emitProgress(onProgress, {
-    stage: 'build-authoring',
-    detail:
-      enrichmentResult.reason === 'success' || enrichmentResult.reason === 'cache-hit'
-        ? `Applied ${enrichmentResult.provider} enrichment and building authoring JSON.`
-        : `Building authoring JSON from deterministic extraction. Enrichment: ${enrichmentResult.reason}.`,
+    stage: 'curation',
+    detail: 'Curating extracted fields into builder-native sections and screens.',
     elapsedMs: Date.now() - t0,
     formId,
     pdfHash,
     pageCount: text.pageCount,
     fieldCount: acroForm.fieldCount,
-    pairedFieldCount: paired.fields.length,
+    pairedFieldCount: consolidated.fields.length,
     corpusEntryCount: corpus.length,
     enrichment: enrichmentResult.reason,
+  });
+  const curated = curateFields(enrichedFields, {
+    corpus,
+    recipes: options.recipes,
+    recipeCatalog: options.recipeCatalog,
+    corpusThreshold: options.corpusThreshold,
+    metadata: {
+      formId,
+      title: options.title || formId,
+      filename: options.filename,
+      pdfHash,
+    },
+  });
+
+  emitProgress(onProgress, {
+    stage: 'build-authoring',
+    detail:
+      enrichmentResult.reason === 'success' || enrichmentResult.reason === 'cache-hit'
+        ? `Applied ${enrichmentResult.provider} enrichment and building curated authoring JSON.`
+        : `Building curated authoring JSON from deterministic extraction. Enrichment: ${enrichmentResult.reason}.`,
+    elapsedMs: Date.now() - t0,
+    formId,
+    pdfHash,
+    pageCount: text.pageCount,
+    fieldCount: acroForm.fieldCount,
+    pairedFieldCount: consolidated.fields.length,
+    corpusEntryCount: corpus.length,
+    enrichment: enrichmentResult.reason,
+    curation: curated.report,
   });
   const authoring = buildAuthoringForm({
     formId,
@@ -182,7 +216,7 @@ export async function importPdf(pdfBytes, options = {}) {
     pdfHash,
     pdfUri: options.pdfUri || (options.filename ? `examples/${formId}/source.pdf` : null),
     importedBy: options.importedBy || 'importer',
-    fields: enrichedFields,
+    fields: curated.fields,
     corpus,
   });
 
@@ -196,9 +230,10 @@ export async function importPdf(pdfBytes, options = {}) {
     pdfHash,
     pageCount: text.pageCount,
     fieldCount: acroForm.fieldCount,
-    pairedFieldCount: paired.fields.length,
+    pairedFieldCount: consolidated.fields.length,
     corpusEntryCount: corpus.length,
     enrichment: enrichmentResult.reason,
+    curation: curated.report,
     chapterCount: migrated.chapters?.length || 0,
   });
   const validation = validateAuthoringForm(migrated);
@@ -230,10 +265,11 @@ export async function importPdf(pdfBytes, options = {}) {
     pdfHash,
     pageCount: acroForm.pageCount,
     fieldCount: acroForm.fieldCount,
-    pairedFieldCount: paired.fields.length,
+    pairedFieldCount: consolidated.fields.length,
     corpusEntryCount: corpus.length,
     corpusHits,
     enrichment: enrichmentResult.reason,
+    curation: curated.report,
     chapterCount: migrated.chapters?.length || 0,
     componentCount,
     validation,
@@ -255,6 +291,7 @@ export async function importPdf(pdfBytes, options = {}) {
         tokenEstimate: enrichmentResult.tokenEstimate,
         error: enrichmentResult.error || null,
       },
+      curation: curated.report,
       durationMs: Date.now() - t0,
       validation,
     },

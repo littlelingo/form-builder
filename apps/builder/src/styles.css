@@ -2947,6 +2947,20 @@ textarea {
   width: min(840px, 100%);
 }
 
+.pdf-import-progress--success {
+  background: transparent;
+  inset: auto;
+  justify-content: stretch;
+  padding: 0;
+  position: static;
+  z-index: auto;
+}
+
+.pdf-import-progress--success .pdf-import-progress__panel {
+  box-shadow: 0 8px 24px rgba(22, 46, 81, 0.12);
+  max-width: none;
+}
+
 .pdf-import-progress--success .pdf-import-progress__panel {
   border-color: var(--builder-success);
 }
@@ -3194,6 +3208,13 @@ textarea {
 
 .builder-review-footer {
   margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #ececec;
+  display: grid;
+  gap: 12px;
+}
+
+.builder-review-footer__group + .builder-review-footer__group {
   padding-top: 12px;
   border-top: 1px solid #ececec;
 }

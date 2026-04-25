@@ -34,3 +34,20 @@ export {
   listMigrations,
 } from './schema/migrations/registry.mjs';
 export { computeSchemaHash, computeBytesHash } from './schema/migrations/schemaHash.mjs';
+export { curateFields } from './import/curation/curate.mjs';
+export {
+  createRecipeCatalogFromAuthoringForm,
+  createRecipeFromAuthoringForm,
+} from './import/curation/fromAuthoring.mjs';
+export {
+  appendRecipe,
+  appendRecipes,
+  assertValidRecipeCatalog,
+  clearRuntimeRecipes,
+  exportRecipeCatalog,
+  loadRecipeCatalog,
+  loadRecipeCatalogVersion,
+  runtimeRecipeCount,
+  validateRecipe,
+  validateRecipeCatalog,
+} from './import/curation/recipes.mjs';
