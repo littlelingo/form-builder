@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://va.gov/form-builder/authoring-schema/v1",
+  "title": "VA Form Builder Authoring Schema",
+  "type": "object",
+  "required": ["schemaVersion", "formId", "title", "chapters"],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "formDefinitionVersion": { "type": "integer", "minimum": 1 },
+    "formId": { "type": "string" },
+    "title": { "type": "string" },
+    "plainLanguageHeader": { "type": "string" },
+    "subTitle": { "type": "string" },
+    "rootUrl": { "type": "string" },
+    "trackingPrefix": { "type": "string" },
+    "submitUrl": { "type": "string" },
+    "version": { "type": "integer", "minimum": 0 },
+    "prefill": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "mappings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "target"],
+            "properties": {
+              "source": { "type": "string" },
+              "target": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "componentSystems": {
+      "type": "object",
+      "properties": {
+        "primary": { "$ref": "#/$defs/componentSystemId" },
+        "generated": { "$ref": "#/$defs/componentSystemId" },
+        "preview": { "$ref": "#/$defs/componentSystemId" },
+        "additional": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/componentSystemId" }
+        }
+      }
+    },
+    "computedValues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/computedValue" }
+    },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/chapter" }
+    }
+  },
+  "$defs": {
+    "chapter": {
+      "type": "object",
+      "required": ["id", "title", "pages"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "enum": ["standard", "listLoop"] },
+        "title": { "type": "string" },
+        "condition": { "$ref": "#/$defs/rule" },
+        "options": { "type": "object" },
+        "itemNameLabel": { "type": "string" },
+        "sectionIntro": { "type": "string" },
+        "pages": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/page" }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "required": ["id", "title", "components"],
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" },
+        "title": { "type": "string" },
+        "bodyText": { "type": "string" },
+        "condition": { "$ref": "#/$defs/rule" },
+        "components": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/component" }
+        }
+      }
+    },
+    "component": {
+      "type": "object",
+      "required": ["id", "type", "label"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "enum": [
+            "textInput",
+            "textArea",
+            "characterCount",
+            "maskedInput",
+            "date",
+            "dateRange",
+            "memorableDate",
+            "radioButton",
+            "select",
+            "checkbox",
+            "fileUpload",
+            "address",
+            "phone",
+            "email",
+            "yesNo",
+            "alert",
+            "summaryBox",
+            "prose",
+            "table"
+          ]
+        },
+        "label": { "type": "string" },
+        "hint": { "type": "string" },
+        "description": { "type": "string" },
+        "dataPath": { "type": "string" },
+        "width": { "type": "string" },
+        "inputType": { "type": "string" },
+        "autocomplete": { "type": "string" },
+        "required": { "type": "boolean" },
+        "requiredIf": { "$ref": "#/$defs/rule" },
+        "showIf": { "$ref": "#/$defs/rule" },
+        "hideIf": { "$ref": "#/$defs/rule" },
+        "summaryCard": { "type": "boolean" },
+        "alertType": {
+          "enum": ["info", "warning", "error", "success"]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "headerRow": { "type": "boolean" },
+        "validations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/validation" }
+        },
+        "errorMessages": { "type": "object" },
+        "minLength": { "type": "integer" },
+        "maxLength": { "type": "integer" },
+        "pattern": { "type": "string" },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" },
+        "dateFormat": {
+          "enum": ["date", "month_year", "month-day-year", "month-year", "year"]
+        },
+        "startLabel": { "type": "string" },
+        "endLabel": { "type": "string" },
+        "startHint": { "type": "string" },
+        "endHint": { "type": "string" },
+        "allowFutureDates": { "type": "boolean" },
+        "multiple": { "type": "boolean" },
+        "accept": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "maxFileSize": { "type": "integer" },
+        "minFileSize": { "type": "integer" },
+        "maxFileCount": { "type": "integer" },
+        "fileUploadUrl": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "formNumber": { "type": "string" },
+        "skipUpload": { "type": "boolean" },
+        "disallowEncryptedPdfs": { "type": "boolean" },
+        "militaryAddress": { "type": "boolean" },
+        "omit": { "type": "array", "items": { "type": "string" } },
+        "labels": { "type": "object" },
+        "responseOptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "properties": {
+              "id": { "type": "string" },
+              "value": { "type": "string" },
+              "label": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "componentSystemId": {
+      "enum": ["uswds", "vaFormsSystem", "shadcn"]
+    },
+    "validation": {
+      "type": "object",
+      "required": ["message", "rule"],
+      "properties": {
+        "message": { "type": "string" },
+        "rule": { "$ref": "#/$defs/rule" }
+      }
+    },
+    "computedValue": {
+      "type": "object",
+      "required": ["id", "target", "operation"],
+      "properties": {
+        "id": { "type": "string" },
+        "target": { "type": "string" },
+        "operation": {
+          "enum": [
+            "literal",
+            "concat",
+            "sum",
+            "subtract",
+            "multiply",
+            "divide",
+            "coalesce",
+            "mapValue",
+            "booleanAny",
+            "booleanAll"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "value": {},
+        "separator": { "type": "string" },
+        "valueMap": { "type": "object" },
+        "defaultValue": {},
+        "condition": { "$ref": "#/$defs/rule" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rule" }
+        },
+        "any": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rule" }
+        },
+        "not": { "$ref": "#/$defs/rule" },
+        "field": { "type": "string" },
+        "operator": {
+          "enum": [
+            "equals",
+            "notEquals",
+            "in",
+            "notIn",
+            "exists",
+            "notExists",
+            "greaterThan",
+            "greaterThanOrEqual",
+            "lessThan",
+            "lessThanOrEqual"
+          ]
+        },
+        "value": {}
+      }
+    }
+  }
+}

@@ -1,0 +1,534 @@
+{
+  "schemaVersion": "1.0.0",
+  "formDefinitionVersion": 1,
+  "formId": "27-8832",
+  "title": "Personalized Career Planning and Guidance/Chapter 36",
+  "plainLanguageHeader": "Apply for personalized career planning and guidance",
+  "subTitle": "VA Form 27-8832",
+  "rootUrl": "/careers-employment/education-and-career-counseling/apply-career-guidance-form-27-8832",
+  "trackingPrefix": "27-8832-pcpg-",
+  "submitUrl": "/v0/form-27-8832",
+  "version": 0,
+  "componentSystems": {
+    "primary": "uswds",
+    "generated": "vaFormsSystem",
+    "preview": "uswds",
+    "additional": ["shadcn"]
+  },
+  "prefill": {
+    "enabled": false,
+    "mappings": []
+  },
+  "computedValues": [],
+  "chapters": [
+    {
+      "id": "introductionAndEligibility",
+      "type": "standard",
+      "title": "Introduction and eligibility",
+      "pages": [
+        {
+          "id": "eligibilitySummary",
+          "title": "Personalized career planning and guidance",
+          "bodyText": "Use this form to apply for Personalized Career Planning and Guidance benefits under 38 U.S.C. Chapter 36. You may be eligible if you are a Veteran with an education benefit, recently discharged under conditions other than dishonorable, on active duty with 6 months or less before release or discharge, or an eligible dependent with transferred Post-9/11 GI Bill benefits.",
+          "components": [
+            {
+              "id": "guidanceInterests",
+              "type": "checkbox",
+              "label": "What type of guidance are you interested in?",
+              "hint": "Select all that apply. This helps VA understand the services that may support your planning.",
+              "responseOptions": [
+                {
+                  "value": "educationCareerAssessment",
+                  "label": "Education and career assessment services"
+                },
+                {
+                  "value": "employmentServices",
+                  "label": "Employment services"
+                },
+                {
+                  "value": "educationalServices",
+                  "label": "Educational services"
+                },
+                {
+                  "value": "counselingServices",
+                  "label": "Counseling services"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "applicantType",
+      "type": "standard",
+      "title": "Applicant type",
+      "pages": [
+        {
+          "id": "applicantTypePage",
+          "title": "Tell us who is applying",
+          "bodyText": "The Veteran or service member information is required for every application. Complete claimant information only when the claimant is not the Veteran or service member.",
+          "components": [
+            {
+              "id": "applicantType",
+              "type": "radioButton",
+              "label": "Who is applying for this benefit?",
+              "required": true,
+              "responseOptions": [
+                {
+                  "value": "veteranOrServiceMember",
+                  "label": "Veteran or service member"
+                },
+                {
+                  "value": "dependentClaimant",
+                  "label": "Dependent claimant"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "veteranIdentity",
+      "type": "standard",
+      "title": "Veteran or service member identity",
+      "pages": [
+        {
+          "id": "veteranIdentityPage",
+          "title": "Veteran or service member information",
+          "bodyText": "Enter the Veteran or service member's identifying information.",
+          "components": [
+            {
+              "id": "veteranFullName",
+              "type": "textInput",
+              "label": "Veteran or service member's full name",
+              "hint": "First, middle, and last name",
+              "required": true,
+              "autocomplete": "name",
+              "maxLength": 80
+            },
+            {
+              "id": "veteranSsn",
+              "type": "textInput",
+              "label": "Veteran or service member's Social Security number",
+              "hint": "Production hardening gap: use a masked SSN control before deployment.",
+              "required": true,
+              "inputType": "text",
+              "pattern": "^[0-9]{9}$",
+              "maxLength": 9
+            },
+            {
+              "id": "veteranDateOfBirth",
+              "type": "date",
+              "label": "Veteran or service member's date of birth",
+              "required": true
+            },
+            {
+              "id": "veteranVaFileNumber",
+              "type": "textInput",
+              "label": "VA file number",
+              "hint": "If VA assigned an 8 digit file number, enter it here. Production hardening gap: use masking or stricter formatting before deployment.",
+              "pattern": "^[0-9]{8}$",
+              "maxLength": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "veteranContact",
+      "type": "standard",
+      "title": "Veteran or service member contact information",
+      "pages": [
+        {
+          "id": "veteranContactPage",
+          "title": "Veteran or service member contact information",
+          "bodyText": "VA will use this information to contact the Veteran or service member about this application.",
+          "components": [
+            {
+              "id": "veteranMailingAddress",
+              "type": "address",
+              "label": "Veteran or service member's mailing address",
+              "required": true,
+              "militaryAddress": true
+            },
+            {
+              "id": "veteranPhone",
+              "type": "phone",
+              "label": "Veteran or service member's phone number",
+              "required": true,
+              "autocomplete": "tel"
+            },
+            {
+              "id": "veteranEmail",
+              "type": "email",
+              "label": "Veteran or service member's email address",
+              "required": true,
+              "autocomplete": "email"
+            },
+            {
+              "id": "veteranElectronicCorrespondence",
+              "type": "checkbox",
+              "label": "Electronic correspondence",
+              "responseOptions": [
+                {
+                  "value": "agrees",
+                  "label": "I agree to receive electronic correspondence from VA about this claim."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "schoolTraining",
+      "type": "standard",
+      "title": "School or training attendance",
+      "pages": [
+        {
+          "id": "veteranSchoolTrainingPage",
+          "title": "Veteran or service member school or training",
+          "components": [
+            {
+              "id": "veteranAttendingSchool",
+              "type": "yesNo",
+              "label": "Are you currently attending a school or training facility?",
+              "required": true
+            },
+            {
+              "id": "veteranSchoolName",
+              "type": "textInput",
+              "label": "Name of school or training facility",
+              "requiredIf": {
+                "field": "veteranAttendingSchool",
+                "operator": "equals",
+                "value": true
+              },
+              "showIf": {
+                "field": "veteranAttendingSchool",
+                "operator": "equals",
+                "value": true
+              },
+              "maxLength": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "militaryService",
+      "type": "standard",
+      "title": "Military service",
+      "pages": [
+        {
+          "id": "militaryServiceDatesPage",
+          "title": "Military service dates",
+          "bodyText": "Enter the most recent period of active duty service. Add additional service dates in remarks.",
+          "components": [
+            {
+              "id": "activeDutyEnteredDate",
+              "type": "date",
+              "label": "Date entered active duty",
+              "required": true
+            },
+            {
+              "id": "activeDutySeparatedDate",
+              "type": "date",
+              "label": "Date separated from active duty or projected separation date",
+              "hint": "Production hardening gap: projected separation dates may need future-date support in generated VA output.",
+              "required": true
+            }
+          ]
+        },
+        {
+          "id": "militaryServiceDetailsPage",
+          "title": "Military service details",
+          "components": [
+            {
+              "id": "branchOfService",
+              "type": "radioButton",
+              "label": "Branch of service",
+              "required": true,
+              "responseOptions": [
+                { "value": "army", "label": "Army" },
+                { "value": "navy", "label": "Navy" },
+                { "value": "marineCorps", "label": "Marine Corps" },
+                { "value": "airForce", "label": "Air Force" },
+                { "value": "coastGuard", "label": "Coast Guard" },
+                { "value": "spaceForce", "label": "Space Force" },
+                { "value": "noaa", "label": "NOAA" },
+                { "value": "usphs", "label": "USPHS" }
+              ]
+            },
+            {
+              "id": "serviceComponent",
+              "type": "radioButton",
+              "label": "Component",
+              "required": true,
+              "responseOptions": [
+                { "value": "active", "label": "Active" },
+                { "value": "reserves", "label": "Reserves" },
+                { "value": "nationalGuard", "label": "National Guard" }
+              ]
+            },
+            {
+              "id": "characterOfDischarge",
+              "type": "radioButton",
+              "label": "Character of discharge",
+              "required": true,
+              "responseOptions": [
+                { "value": "honorable", "label": "Honorable" },
+                { "value": "otherThanHonorable", "label": "Other than honorable" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claimantIdentity",
+      "type": "standard",
+      "title": "Claimant identity",
+      "condition": {
+        "field": "applicantType",
+        "operator": "equals",
+        "value": "dependentClaimant"
+      },
+      "pages": [
+        {
+          "id": "claimantIdentityPage",
+          "title": "Claimant identification information",
+          "bodyText": "Complete this section only if the claimant is not the Veteran.",
+          "components": [
+            {
+              "id": "claimantFullName",
+              "type": "textInput",
+              "label": "Claimant's full name",
+              "hint": "First, middle initial, and last name",
+              "required": true,
+              "autocomplete": "name",
+              "maxLength": 80
+            },
+            {
+              "id": "claimantSsn",
+              "type": "textInput",
+              "label": "Claimant's Social Security number",
+              "hint": "Production hardening gap: use a masked SSN control before deployment.",
+              "required": true,
+              "inputType": "text",
+              "pattern": "^[0-9]{9}$",
+              "maxLength": 9
+            },
+            {
+              "id": "claimantDateOfBirth",
+              "type": "date",
+              "label": "Claimant's date of birth",
+              "required": true
+            },
+            {
+              "id": "claimantVaFileNumber",
+              "type": "textInput",
+              "label": "Claimant VA file number",
+              "hint": "If applicable",
+              "pattern": "^[0-9]{8}$",
+              "maxLength": 8
+            },
+            {
+              "id": "claimantRelationship",
+              "type": "radioButton",
+              "label": "Relationship to Veteran",
+              "hint": "Child includes biological children, adopted children, stepchildren, or married children with transferred entitlement and education benefits remaining.",
+              "required": true,
+              "responseOptions": [
+                { "value": "spouse", "label": "Spouse" },
+                { "value": "child", "label": "Child" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claimantContact",
+      "type": "standard",
+      "title": "Claimant contact information",
+      "condition": {
+        "field": "applicantType",
+        "operator": "equals",
+        "value": "dependentClaimant"
+      },
+      "pages": [
+        {
+          "id": "claimantContactPage",
+          "title": "Claimant contact information",
+          "components": [
+            {
+              "id": "claimantMailingAddress",
+              "type": "address",
+              "label": "Claimant mailing address",
+              "required": true,
+              "militaryAddress": true
+            },
+            {
+              "id": "claimantPhone",
+              "type": "phone",
+              "label": "Claimant phone number",
+              "required": true,
+              "autocomplete": "tel"
+            },
+            {
+              "id": "claimantEmail",
+              "type": "email",
+              "label": "Claimant email address",
+              "required": true,
+              "autocomplete": "email"
+            },
+            {
+              "id": "claimantElectronicCorrespondence",
+              "type": "checkbox",
+              "label": "Electronic correspondence",
+              "responseOptions": [
+                {
+                  "value": "agrees",
+                  "label": "I agree to receive electronic correspondence from VA about this claim."
+                }
+              ]
+            },
+            {
+              "id": "claimantAttendingSchool",
+              "type": "yesNo",
+              "label": "Are you currently attending a school or training facility?",
+              "required": true
+            },
+            {
+              "id": "claimantSchoolName",
+              "type": "textInput",
+              "label": "Name of school or training facility",
+              "requiredIf": {
+                "field": "claimantAttendingSchool",
+                "operator": "equals",
+                "value": true
+              },
+              "showIf": {
+                "field": "claimantAttendingSchool",
+                "operator": "equals",
+                "value": true
+              },
+              "maxLength": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "remarks",
+      "type": "standard",
+      "title": "Remarks",
+      "pages": [
+        {
+          "id": "remarksPage",
+          "title": "Remarks",
+          "bodyText": "Use this space to provide information that does not fit elsewhere on this form or that will help VA process your claim. Refer to item numbers when possible.",
+          "components": [
+            {
+              "id": "remarks",
+              "type": "textArea",
+              "label": "Remarks",
+              "maxLength": 3000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "certification",
+      "type": "standard",
+      "title": "Certification and signature",
+      "pages": [
+        {
+          "id": "certificationPage",
+          "title": "Certification",
+          "bodyText": "The paper form requires a wet signature. In this builder example, the signature is represented as a certification checkbox plus typed name and date fields. Production deployment must confirm digital signature and submission requirements.",
+          "components": [
+            {
+              "id": "certificationStatement",
+              "type": "checkbox",
+              "label": "Certification",
+              "required": true,
+              "responseOptions": [
+                {
+                  "value": "certified",
+                  "label": "I certify that I have completed this statement and that its information is true and correct to the best of my knowledge and belief."
+                }
+              ]
+            },
+            {
+              "id": "applicantSignatureName",
+              "type": "textInput",
+              "label": "Veteran, service member, or claimant typed signature",
+              "required": true,
+              "maxLength": 80
+            },
+            {
+              "id": "applicantSignatureDate",
+              "type": "date",
+              "label": "Date signed",
+              "required": true
+            },
+            {
+              "id": "hasAlternateSigner",
+              "type": "yesNo",
+              "label": "Will a parent, guardian, or custodian sign for the applicant?",
+              "required": true
+            }
+          ]
+        },
+        {
+          "id": "alternateSignerPage",
+          "title": "Parent, guardian, or custodian signature",
+          "bodyText": "Complete this section only when a parent, guardian, or custodian signs for the applicant.",
+          "condition": {
+            "field": "hasAlternateSigner",
+            "operator": "equals",
+            "value": true
+          },
+          "components": [
+            {
+              "id": "alternateSignerType",
+              "type": "radioButton",
+              "label": "Alternate signer relationship",
+              "required": true,
+              "responseOptions": [
+                { "value": "parent", "label": "Parent" },
+                { "value": "guardian", "label": "Guardian" },
+                { "value": "custodian", "label": "Custodian" }
+              ]
+            },
+            {
+              "id": "alternateSignerName",
+              "type": "textInput",
+              "label": "Parent, guardian, or custodian typed signature",
+              "required": true,
+              "maxLength": 80
+            },
+            {
+              "id": "alternateSignerDate",
+              "type": "date",
+              "label": "Date signed",
+              "required": true
+            },
+            {
+              "id": "alternateSignerPhone",
+              "type": "phone",
+              "label": "Parent, guardian, or custodian phone number",
+              "required": true,
+              "autocomplete": "tel"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
