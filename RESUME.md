@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after template helper review details
+Last updated: 2026-04-25 EDT after saved template import conflict handling
 
 ## Current Workspace
 
@@ -14,11 +14,12 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the template helper review details checkpoint. The latest passing
-slice added an expandable helper-preset review in the Patterns panel so authors
-can see Contact and Identity prefill mappings and computed summaries before
-applying built-in templates. The next recommended implementation slice is saved
-template import conflict handling for duplicate or overlapping imported labels.
+Resume from the saved template import conflict handling checkpoint. The latest
+passing slice makes imported saved-template labels unique when they overlap
+with existing templates and reports duplicate-name renames in the import
+message. The next recommended implementation slice is runner smoke factoring,
+because `tests/builder-smoke.mjs` is now long enough that named helper flows
+would make future failures easier to locate.
 
 Recent completed slices:
 
@@ -192,6 +193,15 @@ Recent completed slices:
     - Browser smoke now verifies the helper review content and the off-state
       helper detail.
 
+17. **Saved template import conflict handling**
+    - Imported saved templates keep their labels when no conflict exists.
+    - Duplicate imported labels are renamed deterministically with
+      `(imported)`, then `(imported 2)`, and so on.
+    - Import status text reports how many duplicate names were renamed.
+    - Browser smoke now imports a saved template while the original is still in
+      the library and verifies the conflict message plus the renamed imported
+      template.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -226,7 +236,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the template helper review details slice:
+Latest verification after the saved template import conflict handling slice:
 
 ```bash
 npm run builder:smoke
@@ -292,6 +302,8 @@ Confirmed:
   submit.
 - Automated smoke now verifies helper-preset review details for Contact and
   Identity templates plus the helper-presets-off message.
+- Automated smoke now verifies duplicate saved-template import renaming and the
+  import message for renamed duplicates.
 
 Known browser-console issue:
 
@@ -301,17 +313,17 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Saved template import conflict handling**
-   - Consider surfacing duplicate-name handling or rename-on-import if authors
-     import libraries with overlapping labels.
-
-2. **Runner smoke factoring**
+1. **Runner smoke factoring**
    - Split the long browser smoke into named helper flows if more runner paths
      are added, so failures stay easy to locate.
 
-3. **Helper preset precision**
+2. **Helper preset precision**
    - If authors need generated IDs before insertion, preview the exact IDs for
      the current form state rather than field-label mappings.
+
+3. **Saved template overwrite/merge choices**
+   - If imported libraries become larger, consider an explicit import review
+     step for skip, rename, or replace decisions.
 
 ## Suggested First Files To Read Next Session
 

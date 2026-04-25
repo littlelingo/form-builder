@@ -280,21 +280,24 @@ async function main() {
     const exportedTemplatePath = await download.path();
     assert.ok(exportedTemplatePath, 'Expected exported saved-template file path.');
 
-    await page.getByRole('button', { name: 'Delete Smoke renamed contact' }).click();
-    await page.getByRole('heading', { name: 'Saved templates' }).waitFor({ state: 'detached' });
-
     await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
     await expectVisible(
       page,
-      page.getByRole('heading', { name: 'Saved templates' }),
-      'Expected saved template import to restore the Saved templates group.',
+      page.getByText('Imported 1 saved template. 1 duplicate name was renamed.'),
+      'Expected saved template import to report duplicate label handling.',
+    );
+    await expectVisible(
+      page,
+      page.getByRole('button', { name: 'Add Smoke renamed contact (imported)' }),
+      'Expected imported duplicate saved template to receive a unique label.',
     );
     await expectVisible(
       page,
       page.getByText(/Section .* 3 fields .* Created .* Imported/),
       'Expected imported saved template metadata.',
     );
-    await page.getByRole('button', { name: 'Delete Smoke renamed contact' }).click();
+    await page.getByRole('button', { name: 'Delete Smoke renamed contact (imported)', exact: true }).click();
+    await page.getByRole('button', { name: 'Delete Smoke renamed contact', exact: true }).click();
     await page.getByRole('heading', { name: 'Saved templates' }).waitFor({ state: 'detached' });
 
     await page.getByRole('button', { name: 'Add Identity' }).click();

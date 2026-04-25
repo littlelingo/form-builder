@@ -147,6 +147,24 @@ function normalizeCustomTemplates(value: unknown) {
     : [];
 }
 
+function uniqueImportedTemplateLabel(label: string, usedLabels: Set<string>) {
+  const baseLabel = label.trim() || 'Imported template';
+  const labelKey = baseLabel.toLowerCase();
+  if (!usedLabels.has(labelKey)) {
+    usedLabels.add(labelKey);
+    return baseLabel;
+  }
+
+  let index = 1;
+  let nextLabel = `${baseLabel} (imported)`;
+  while (usedLabels.has(nextLabel.toLowerCase())) {
+    index += 1;
+    nextLabel = `${baseLabel} (imported ${index})`;
+  }
+  usedLabels.add(nextLabel.toLowerCase());
+  return nextLabel;
+}
+
 function loadCustomTemplates(): SavedCustomTemplate[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -473,12 +491,19 @@ export default function App() {
 
   function handleImportCustomTemplates(templates: SavedCustomTemplate[]) {
     const importedAt = new Date().toISOString();
-    const importedTemplates = normalizeCustomTemplates(templates).map((template, index) => ({
-      ...template,
-      id: `custom-imported-${Date.now()}-${index}`,
-      createdAt: template.createdAt || new Date().toISOString(),
-      importedAt,
-    }));
+    const usedLabels = new Set(customTemplates.map(template => template.label.toLowerCase()));
+    let renamedCount = 0;
+    const importedTemplates = normalizeCustomTemplates(templates).map((template, index) => {
+      const label = uniqueImportedTemplateLabel(template.label, usedLabels);
+      if (label !== template.label) renamedCount += 1;
+      return {
+        ...template,
+        id: `custom-imported-${Date.now()}-${index}`,
+        label,
+        createdAt: template.createdAt || new Date().toISOString(),
+        importedAt,
+      };
+    });
     if (importedTemplates.length === 0) return 0;
 
     setCustomTemplates(current => {
@@ -486,7 +511,10 @@ export default function App() {
       saveCustomTemplates(next);
       return next;
     });
-    return importedTemplates.length;
+    return {
+      importedCount: importedTemplates.length,
+      renamedCount,
+    };
   }
 
   function handleChapterChange(nextChapter: NonNullable<typeof selectedChapter>) {

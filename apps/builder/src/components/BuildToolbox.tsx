@@ -29,7 +29,9 @@ interface BuildToolboxProps {
   onAddScreen: (templateId: ScreenTemplateId, options?: TemplateInsertionOptions) => void;
   onAddSection: (templateId: SectionTemplateId, options?: TemplateInsertionOptions) => void;
   onExportCustomTemplates: () => void;
-  onImportCustomTemplates: (templates: SavedCustomTemplate[]) => number;
+  onImportCustomTemplates: (
+    templates: SavedCustomTemplate[],
+  ) => number | { importedCount: number; renamedCount?: number };
   onRemoveCustomTemplate: (templateId: string) => void;
   onRenameCustomTemplate: (templateId: string, label: string) => void;
   onSaveCustomTemplate: (label: string) => void;
@@ -193,13 +195,22 @@ export function BuildToolbox({
 
     try {
       const parsed = JSON.parse(await file.text());
-      const importedCount = onImportCustomTemplates(
+      const importResult = onImportCustomTemplates(
         Array.isArray(parsed) ? parsed : parsed.templates,
       );
+      const importedCount =
+        typeof importResult === 'number' ? importResult : importResult.importedCount;
+      const renamedCount =
+        typeof importResult === 'number' ? 0 : importResult.renamedCount || 0;
       setTemplateTransferMessage(
-        importedCount === 1
-          ? 'Imported 1 saved template.'
-          : `Imported ${importedCount} saved templates.`,
+        [
+          importedCount === 1
+            ? 'Imported 1 saved template.'
+            : `Imported ${importedCount} saved templates.`,
+          renamedCount
+            ? `${renamedCount} duplicate ${renamedCount === 1 ? 'name was' : 'names were'} renamed.`
+            : '',
+        ].filter(Boolean).join(' '),
       );
     } catch (error) {
       setTemplateTransferMessage(error instanceof Error ? error.message : String(error));
