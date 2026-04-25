@@ -31,6 +31,7 @@ interface BuildToolboxProps {
   onExportCustomTemplates: () => void;
   onImportCustomTemplates: (templates: SavedCustomTemplate[]) => number;
   onRemoveCustomTemplate: (templateId: string) => void;
+  onRenameCustomTemplate: (templateId: string, label: string) => void;
   onSaveCustomTemplate: (label: string) => void;
   onPaletteDragEnd: () => void;
   onPaletteDragStart: (item: PaletteDragItem) => void;
@@ -80,6 +81,28 @@ const advancedTemplateIds = new Set<SectionTemplateId>([
   'dependentLoop',
 ]);
 
+const helperPresetDetails = [
+  {
+    template: 'Contact information',
+    prefill: [
+      'profile.mailingAddress -> Current mailing address',
+      'profile.email -> Email address',
+      'profile.phone -> Phone number',
+    ],
+    computed: ['metadata.contactSummary from Email address + Phone number'],
+  },
+  {
+    template: 'Identity',
+    prefill: [
+      'profile.fullName -> Full name',
+      'profile.dateOfBirth -> Date of birth',
+      'profile.ssn -> Social Security number',
+      'profile.vaFileNumber -> VA file number',
+    ],
+    computed: ['metadata.identitySummary from Full name + Date of birth'],
+  },
+];
+
 export function BuildToolbox({
   disabled = false,
   onAddField,
@@ -89,6 +112,7 @@ export function BuildToolbox({
   onExportCustomTemplates,
   onImportCustomTemplates,
   onRemoveCustomTemplate,
+  onRenameCustomTemplate,
   onSaveCustomTemplate,
   onPaletteDragEnd,
   onPaletteDragStart,
@@ -101,6 +125,8 @@ export function BuildToolbox({
   const [activeTab, setActiveTab] = useState<BuildTab>('fields');
   const [customTemplateName, setCustomTemplateName] = useState('');
   const [includeTemplateHelpers, setIncludeTemplateHelpers] = useState(true);
+  const [renamingTemplateId, setRenamingTemplateId] = useState('');
+  const [renamingTemplateLabel, setRenamingTemplateLabel] = useState('');
   const [templateTransferMessage, setTemplateTransferMessage] = useState('');
   const screenSectionTemplates = sectionTemplates.filter(
     template => !advancedTemplateIds.has(template.id) && template.id !== 'standard',
@@ -180,6 +206,45 @@ export function BuildToolbox({
     } finally {
       if (customTemplateInputRef.current) customTemplateInputRef.current.value = '';
     }
+  }
+
+  function formatTemplateDate(value?: string) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  function templateMetadata(template: SavedCustomTemplate) {
+    const fieldCount = Math.max(0, template.fieldCount || 0);
+    const details = [
+      template.kind === 'screen' ? 'Screen' : 'Section',
+      `${fieldCount} field${fieldCount === 1 ? '' : 's'}`,
+      formatTemplateDate(template.createdAt) ? `Created ${formatTemplateDate(template.createdAt)}` : '',
+      formatTemplateDate(template.importedAt) ? `Imported ${formatTemplateDate(template.importedAt)}` : '',
+    ].filter(Boolean);
+    return details.join(' · ');
+  }
+
+  function beginRename(template: SavedCustomTemplate) {
+    setRenamingTemplateId(template.id);
+    setRenamingTemplateLabel(template.label);
+  }
+
+  function cancelRename() {
+    setRenamingTemplateId('');
+    setRenamingTemplateLabel('');
+  }
+
+  function saveRename(templateId: string) {
+    const nextLabel = renamingTemplateLabel.trim();
+    if (!nextLabel) return;
+    onRenameCustomTemplate(templateId, nextLabel);
+    cancelRename();
   }
 
   return (
@@ -271,6 +336,28 @@ export function BuildToolbox({
             <p id="template-helper-presets-hint">
               Applies template prefill mappings and computed summaries when available.
             </p>
+            <details className="builder-template-helper-details">
+              <summary>Review helper presets</summary>
+              {includeTemplateHelpers ? (
+                <div className="builder-template-helper-details__body">
+                  {helperPresetDetails.map(detail => (
+                    <div className="builder-template-helper-detail" key={detail.template}>
+                      <strong>{detail.template}</strong>
+                      <p>Prefill mappings</p>
+                      <ul>
+                        {detail.prefill.map(item => <li key={item}>{item}</li>)}
+                      </ul>
+                      <p>Computed values</p>
+                      <ul>
+                        {detail.computed.map(item => <li key={item}>{item}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>Helper presets are off. Templates will add fields only.</p>
+              )}
+            </details>
           </div>
 
           <div className="builder-save-template-control">
@@ -320,27 +407,77 @@ export function BuildToolbox({
               <div className="builder-custom-template-list">
                 {customTemplates.map(template => (
                   <div className="builder-custom-template-row" key={template.id}>
-                    <ToolTile
-                      disabled={disabled}
-                      icon={template.kind === 'screen' ? 'P' : 'S'}
-                      label={template.label}
-                      title={template.description || `Saved ${template.kind} template`}
-                      wide
-                      onClick={() => {
-                        if (!disabled) onAddCustomTemplate(template.id);
-                      }}
-                      onDragEnd={onPaletteDragEnd}
-                      onDragStart={event => handleCustomTemplateDragStart(event, template.id)}
-                    />
-                    <button
-                      aria-label={`Delete ${template.label}`}
-                      className="builder-icon-button builder-icon-button--danger"
-                      title="Delete saved template"
-                      type="button"
-                      onClick={() => onRemoveCustomTemplate(template.id)}
-                    >
-                      ×
-                    </button>
+                    {renamingTemplateId === template.id ? (
+                      <div className="builder-custom-template-edit">
+                        <label htmlFor={`custom-template-rename-${template.id}`}>
+                          Rename saved template
+                        </label>
+                        <input
+                          id={`custom-template-rename-${template.id}`}
+                          type="text"
+                          value={renamingTemplateLabel}
+                          onChange={event => setRenamingTemplateLabel(event.target.value)}
+                          onKeyDown={event => {
+                            if (event.key === 'Enter') saveRename(template.id);
+                            if (event.key === 'Escape') cancelRename();
+                          }}
+                        />
+                        <div className="builder-custom-template-actions">
+                          <button
+                            className="usa-button usa-button--secondary"
+                            disabled={!renamingTemplateLabel.trim()}
+                            type="button"
+                            onClick={() => saveRename(template.id)}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="usa-button usa-button--outline"
+                            type="button"
+                            onClick={cancelRename}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="builder-custom-template-main">
+                          <ToolTile
+                            disabled={disabled}
+                            icon={template.kind === 'screen' ? 'P' : 'S'}
+                            label={template.label}
+                            title={template.description || `Saved ${template.kind} template`}
+                            wide
+                            onClick={() => {
+                              if (!disabled) onAddCustomTemplate(template.id);
+                            }}
+                            onDragEnd={onPaletteDragEnd}
+                            onDragStart={event => handleCustomTemplateDragStart(event, template.id)}
+                          />
+                          <p>{templateMetadata(template)}</p>
+                        </div>
+                        <div className="builder-custom-template-actions">
+                          <button
+                            className="usa-button usa-button--outline"
+                            disabled={disabled}
+                            type="button"
+                            onClick={() => beginRename(template)}
+                          >
+                            Rename
+                          </button>
+                          <button
+                            aria-label={`Delete ${template.label}`}
+                            className="builder-icon-button builder-icon-button--danger"
+                            title="Delete saved template"
+                            type="button"
+                            onClick={() => onRemoveCustomTemplate(template.id)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

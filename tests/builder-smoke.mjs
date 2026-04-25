@@ -106,8 +106,8 @@ async function checkLabeledControl(page, label) {
       : page.getByLabel(label);
   const visibleLabel =
     typeof label === 'string'
-      ? page.getByText(label, { exact: true })
-      : page.getByText(label);
+      ? page.getByLabel('Form workspace').getByText(label, { exact: true })
+      : page.getByLabel('Form workspace').getByText(label);
   await visibleLabel.click();
   assert.equal(await control.isChecked(), true, `Expected "${String(label)}" to be checked.`);
 }
@@ -212,6 +212,17 @@ async function main() {
       true,
       'Expected template helper presets to be included by default.',
     );
+    await page.getByText('Review helper presets').click();
+    await expectVisible(
+      page,
+      page.getByText('profile.email -> Email address'),
+      'Expected helper preset review to show Contact prefill mappings.',
+    );
+    await expectVisible(
+      page,
+      page.getByText('metadata.identitySummary from Full name + Date of birth'),
+      'Expected helper preset review to show Identity computed values.',
+    );
     await page.getByRole('button', { name: 'Add Contact information' }).click();
     await expectMetric(page, 'Fields', 2);
 
@@ -222,9 +233,18 @@ async function main() {
       page.getByRole('heading', { name: 'Saved templates' }),
       'Expected saved templates group to appear.',
     );
+    await expectVisible(page, page.getByText(/Section .* 3 fields .* Created/), 'Expected saved template metadata.');
+    await page.getByRole('button', { name: 'Rename' }).click();
+    await page.getByLabel('Rename saved template').fill('Smoke renamed contact');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expectVisible(
+      page,
+      page.getByRole('button', { name: 'Add Smoke renamed contact' }),
+      'Expected renamed saved template to be available for insertion.',
+    );
 
     await page
-      .getByRole('button', { name: 'Add Smoke saved contact' })
+      .getByRole('button', { name: 'Add Smoke renamed contact' })
       .dragTo(page.getByLabel('Drop at end'));
     await expectMetric(page, 'Fields', 3);
 
@@ -260,7 +280,7 @@ async function main() {
     const exportedTemplatePath = await download.path();
     assert.ok(exportedTemplatePath, 'Expected exported saved-template file path.');
 
-    await page.getByRole('button', { name: 'Delete Smoke saved contact' }).click();
+    await page.getByRole('button', { name: 'Delete Smoke renamed contact' }).click();
     await page.getByRole('heading', { name: 'Saved templates' }).waitFor({ state: 'detached' });
 
     await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
@@ -269,7 +289,12 @@ async function main() {
       page.getByRole('heading', { name: 'Saved templates' }),
       'Expected saved template import to restore the Saved templates group.',
     );
-    await page.getByRole('button', { name: 'Delete Smoke saved contact' }).click();
+    await expectVisible(
+      page,
+      page.getByText(/Section .* 3 fields .* Created .* Imported/),
+      'Expected imported saved template metadata.',
+    );
+    await page.getByRole('button', { name: 'Delete Smoke renamed contact' }).click();
     await page.getByRole('heading', { name: 'Saved templates' }).waitFor({ state: 'detached' });
 
     await page.getByRole('button', { name: 'Add Identity' }).click();
@@ -308,6 +333,21 @@ async function main() {
         screen.components?.some(component => component.label === 'Average monthly income'),
       ),
       'Expected Employment list to include the average monthly income field.',
+    );
+
+    await page.getByRole('tab', { name: 'Canvas' }).click();
+    await page.getByRole('tab', { name: 'Patterns' }).click();
+    await page.getByRole('button', { name: 'Add Dependent list' }).click();
+    const withDependentList = await authoringForm(page);
+    const dependentChapter = withDependentList.chapters.find(chapter => chapter.id.includes('dependents'));
+    assert.equal(dependentChapter?.type, 'listLoop', 'Expected Dependent list to create a list-loop chapter.');
+    assert.equal(dependentChapter?.options?.nounSingular, 'dependent');
+    assert.equal(dependentChapter?.options?.nounPlural, 'dependents');
+    assert.ok(
+      dependentChapter?.pages?.some(screen =>
+        screen.components?.some(component => component.label === "Dependent's full name"),
+      ),
+      'Expected Dependent list to include dependent identity fields.',
     );
 
     await page.getByRole('tab', { name: 'Canvas' }).click();
@@ -355,6 +395,12 @@ async function main() {
       await page.getByRole('checkbox', { name: 'Include helper presets' }).isChecked(),
       false,
       'Expected helper presets to be declined before inserting another template.',
+    );
+    await page.getByText('Review helper presets').click();
+    await expectVisible(
+      page,
+      page.getByText('Helper presets are off. Templates will add fields only.'),
+      'Expected helper preset review to reflect the off state.',
     );
     await page.getByRole('button', { name: 'Add Contact information' }).click();
     const withDeclinedHelpers = await authoringForm(page);
@@ -435,6 +481,111 @@ async function main() {
       page,
       page.getByLabel('Submit this mock form').getByText('Mock submitted'),
       'Expected 27-8832 mock submit to complete successfully.',
+    );
+
+    await page.getByRole('tab', { name: 'Canvas' }).click();
+    await page.getByRole('tab', { name: 'Files' }).click();
+    await page.getByRole('button', { name: 'Personalized Career Planning and Guidance (27-8832)' }).click();
+    await page.getByRole('tab', { name: 'Run' }).click();
+    await expectVisible(
+      page,
+      page.getByRole('heading', { name: 'Personalized career planning and guidance', exact: true }),
+      'Expected 27-8832 dependent runner to restart on the eligibility page.',
+    );
+
+    await checkLabeledControl(page, 'Counseling services');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await checkLabeledControl(page, 'Dependent claimant');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel("Veteran or service member's full name").fill('Sam Veteran');
+    await page.getByLabel("Veteran or service member's Social Security number").fill('987654321');
+    await page.getByLabel("Veteran or service member's date of birth").fill('1975-05-05');
+    await page.getByLabel('VA file number').fill('87654321');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel('Street address').fill('500 Service Ave');
+    await page.getByLabel('City').fill('Arlington');
+    await page.getByLabel('State').fill('VA');
+    await page.getByLabel('ZIP code').fill('22201');
+    await page.getByLabel("Veteran or service member's phone number").fill('7035550100');
+    await page.getByLabel("Veteran or service member's email address").fill('sam.veteran@example.com');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await checkLabeledControl(page, 'No');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel('Date entered active duty').fill('1999-01-01');
+    await page.getByLabel('Date separated from active duty or projected separation date').fill('2004-01-01');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await checkLabeledControl(page, 'Navy');
+    await checkLabeledControl(page, 'Active');
+    await checkLabeledControl(page, 'Honorable');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expectVisible(
+      page,
+      page.getByRole('heading', { name: 'Claimant identification information' }),
+      'Expected dependent claimant path to include claimant identity.',
+    );
+    await page.getByLabel("Claimant's full name").fill('Casey Claimant');
+    await page.getByLabel("Claimant's Social Security number").fill('111223333');
+    await page.getByLabel("Claimant's date of birth").fill('2005-06-07');
+    await page.getByLabel('Claimant VA file number').fill('11223344');
+    await checkLabeledControl(page, 'Child');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByLabel('Street address').fill('900 Claimant Rd');
+    await page.getByLabel('City').fill('Richmond');
+    await page.getByLabel('State').fill('VA');
+    await page.getByLabel('ZIP code').fill('23220');
+    await page.getByLabel('Claimant phone number').fill('8045550100');
+    await page.getByLabel('Claimant email address').fill('casey.claimant@example.com');
+    await checkLabeledControl(page, 'Yes');
+    await page.getByLabel('Name of school or training facility').fill('Central Training Institute');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await page.getByRole('textbox', { name: 'Remarks' }).fill('Dependent claimant smoke test remarks.');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await checkLabeledControl(page, /I certify that I have completed this statement/);
+    await page.getByLabel('Veteran, service member, or claimant typed signature').fill('Casey Claimant');
+    await page.getByLabel('Date signed').fill('2026-04-25');
+    await checkLabeledControl(page, 'Yes');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expectVisible(
+      page,
+      page.getByRole('heading', { name: 'Parent, guardian, or custodian signature' }),
+      'Expected alternate signer page for dependent claimant path.',
+    );
+    await checkLabeledControl(page, 'Parent');
+    await page.getByLabel('Parent, guardian, or custodian typed signature').fill('Pat Parent');
+    await page.getByLabel('Date signed').fill('2026-04-25');
+    await page.getByLabel('Parent, guardian, or custodian phone number').fill('8045550199');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expectVisible(
+      page,
+      page.getByRole('heading', { name: 'Submit this mock form' }),
+      'Expected dependent 27-8832 runner review and submit page.',
+    );
+    await expectVisible(
+      page,
+      page.getByRole('heading', { level: 3, name: 'Claimant identity' }),
+      'Expected dependent 27-8832 review to include claimant identity.',
+    );
+    await expectVisible(
+      page,
+      page.getByRole('heading', { level: 3, name: 'Claimant contact information' }),
+      'Expected dependent 27-8832 review to include claimant contact.',
+    );
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expectVisible(
+      page,
+      page.getByLabel('Submit this mock form').getByText('Mock submitted'),
+      'Expected dependent 27-8832 mock submit to complete successfully.',
     );
 
     assert.deepEqual(browserErrors, [], `Unexpected browser errors:\n${browserErrors.join('\n')}`);

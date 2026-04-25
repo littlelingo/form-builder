@@ -76,6 +76,23 @@ function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function countTemplateFields(components: AuthoringComponent[] = []): number {
+  return components.reduce(
+    (count, component) =>
+      count + (component.type === 'sectionGroup' ? 0 : 1) + countTemplateFields(component.children || []),
+    0,
+  );
+}
+
+function savedTemplateFieldCount(template: Partial<SavedCustomTemplate>) {
+  if (typeof template.fieldCount === 'number' && Number.isFinite(template.fieldCount)) {
+    return Math.max(0, Math.floor(template.fieldCount));
+  }
+  if (template.kind === 'screen') return countTemplateFields(template.page?.components || []);
+  if (template.kind === 'section') return countTemplateFields(template.component?.children || []);
+  return 0;
+}
+
 function normalizeCustomTemplate(value: unknown): SavedCustomTemplate | null {
   if (!value || typeof value !== 'object') return null;
   const template = value as Partial<SavedCustomTemplate>;
@@ -115,6 +132,8 @@ function normalizeCustomTemplate(value: unknown): SavedCustomTemplate | null {
     label: template.label,
     description: typeof template.description === 'string' ? template.description : undefined,
     createdAt: typeof template.createdAt === 'string' ? template.createdAt : new Date().toISOString(),
+    importedAt: typeof template.importedAt === 'string' ? template.importedAt : undefined,
+    fieldCount: savedTemplateFieldCount(template),
     ...(template.kind === 'screen' ? { page: cloneJson(template.page) } : {}),
     ...(template.kind === 'section' ? { component: cloneJson(template.component) } : {}),
   };
@@ -406,14 +425,15 @@ export default function App() {
     if (!templateLabel) return;
 
     const fieldCount = sectionComponent
-      ? sectionComponent.children?.length || 0
-      : selectedPage.components.length;
+      ? countTemplateFields(sectionComponent.children || [])
+      : countTemplateFields(selectedPage.components);
     const template: SavedCustomTemplate = {
       id: `custom-${Date.now()}`,
       kind,
       label: templateLabel,
       description: `Saved ${kind} with ${fieldCount} field${fieldCount === 1 ? '' : 's'}.`,
       createdAt: new Date().toISOString(),
+      fieldCount,
       ...(sectionComponent
         ? { component: cloneJson(sectionComponent) }
         : { page: cloneJson(selectedPage) }),
@@ -421,6 +441,19 @@ export default function App() {
 
     setCustomTemplates(current => {
       const next = [template, ...current].slice(0, 25);
+      saveCustomTemplates(next);
+      return next;
+    });
+  }
+
+  function handleRenameCustomTemplate(templateId: string, label: string) {
+    const nextLabel = label.trim();
+    if (!nextLabel) return;
+
+    setCustomTemplates(current => {
+      const next = current.map(template =>
+        template.id === templateId ? { ...template, label: nextLabel } : template,
+      );
       saveCustomTemplates(next);
       return next;
     });
@@ -439,10 +472,12 @@ export default function App() {
   }
 
   function handleImportCustomTemplates(templates: SavedCustomTemplate[]) {
+    const importedAt = new Date().toISOString();
     const importedTemplates = normalizeCustomTemplates(templates).map((template, index) => ({
       ...template,
       id: `custom-imported-${Date.now()}-${index}`,
       createdAt: template.createdAt || new Date().toISOString(),
+      importedAt,
     }));
     if (importedTemplates.length === 0) return 0;
 
@@ -723,6 +758,7 @@ export default function App() {
               onExportCustomTemplates={handleExportCustomTemplates}
               onImportCustomTemplates={handleImportCustomTemplates}
               onRemoveCustomTemplate={handleRemoveCustomTemplate}
+              onRenameCustomTemplate={handleRenameCustomTemplate}
               onSaveCustomTemplate={handleSaveCustomTemplate}
               onPaletteDragEnd={() => setPaletteDragItem(null)}
               onPaletteDragStart={setPaletteDragItem}

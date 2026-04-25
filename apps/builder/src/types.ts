@@ -186,6 +186,8 @@ export interface SavedCustomTemplate {
   label: string;
   description?: string;
   createdAt: string;
+  importedAt?: string;
+  fieldCount?: number;
   page?: AuthoringPage;
   component?: AuthoringComponent;
 }

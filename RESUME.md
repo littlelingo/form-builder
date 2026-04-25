@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after template helper preset controls
+Last updated: 2026-04-25 EDT after template helper review details
 
 ## Current Workspace
 
@@ -14,12 +14,11 @@ truth and generates VA `formConfig` as an output artifact.
 
 ## Current State
 
-Resume from the template helper preset controls checkpoint. The latest passing
-slice added an explicit Patterns-panel toggle for including generated helper
-presets when built-in templates are inserted, and routes that choice through
-click and drag insertion. The next recommended implementation slice is saved
-template library polish, focused on rename/import metadata and clearer saved
-template details.
+Resume from the template helper review details checkpoint. The latest passing
+slice added an expandable helper-preset review in the Patterns panel so authors
+can see Contact and Identity prefill mappings and computed summaries before
+applying built-in templates. The next recommended implementation slice is saved
+template import conflict handling for duplicate or overlapping imported labels.
 
 Recent completed slices:
 
@@ -162,6 +161,37 @@ Recent completed slices:
     - Browser smoke now verifies the default helper behavior and the declined
       helper path.
 
+14. **Saved template library polish**
+    - Saved templates now show metadata for template kind, field count, created
+      date, and imported date when available.
+    - Saved template records now persist `fieldCount` and `importedAt`
+      metadata in local saved-template JSON.
+    - Authors can rename saved templates inline without changing the saved
+      component/page payload.
+    - Imported templates preserve the exported label and created date while
+      receiving a fresh local ID and imported timestamp.
+    - Browser smoke now verifies saved-template metadata, rename, export,
+      import, and imported metadata display.
+
+15. **Dependent runner smoke depth**
+    - Browser smoke now verifies the Dependent list template creates a real
+      `listLoop` chapter with dependent nouns and dependent identity fields.
+    - Browser smoke reloads the 27-8832 example and completes the dependent
+      claimant path through claimant identity, claimant contact, claimant
+      school, alternate signer, review, and mock submit.
+    - The 27-8832 dependent review smoke asserts claimant-only review sections
+      are present before submit.
+
+16. **Template helper review details**
+    - Patterns now includes an expandable "Review helper presets" detail inside
+      the helper-preset control.
+    - The detail lists Contact and Identity helper mappings, including prefill
+      profile sources, target field labels, and computed metadata summaries.
+    - When helper presets are off, the detail tells authors templates will add
+      fields only.
+    - Browser smoke now verifies the helper review content and the off-state
+      helper detail.
+
 ## Primary Files Changed Recently
 
 - `src/schema/authoring-schema.json`
@@ -196,7 +226,7 @@ npm run compile:example:27-8832
 npm run builder:smoke
 ```
 
-Latest verification after the template helper preset controls slice:
+Latest verification after the template helper review details slice:
 
 ```bash
 npm run builder:smoke
@@ -255,6 +285,13 @@ Confirmed:
 - Automated smoke now verifies the Patterns-panel helper preset control is on
   by default and that turning it off prevents additional Contact template
   prefill/computed helpers from being inserted.
+- Automated smoke now verifies saved-template rename, metadata display, and
+  imported metadata after export/import.
+- Automated smoke now verifies the Dependent list template and the 27-8832
+  dependent claimant runner path through claimant-only review sections and mock
+  submit.
+- Automated smoke now verifies helper-preset review details for Contact and
+  Identity templates plus the helper-presets-off message.
 
 Known browser-console issue:
 
@@ -264,18 +301,17 @@ Known browser-console issue:
 
 Recommended next sequence:
 
-1. **Saved template library polish**
-   - Consider renaming saved templates after import and showing imported
-   metadata such as kind, field count, and created date.
+1. **Saved template import conflict handling**
+   - Consider surfacing duplicate-name handling or rename-on-import if authors
+     import libraries with overlapping labels.
 
-2. **Additional runner smoke depth**
-   - Add a smaller follow-up browser check for the 27-8832 dependent claimant
-     path and the Dependent list template if runner coverage needs another
-     layer.
+2. **Runner smoke factoring**
+   - Split the long browser smoke into named helper flows if more runner paths
+     are added, so failures stay easy to locate.
 
-3. **Template helper review details**
-   - If authors need more visibility, show the exact helper mappings that will
-     be inserted before applying a built-in template.
+3. **Helper preset precision**
+   - If authors need generated IDs before insertion, preview the exact IDs for
+     the current form state rather than field-label mappings.
 
 ## Suggested First Files To Read Next Session
 
