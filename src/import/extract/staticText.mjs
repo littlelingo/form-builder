@@ -202,6 +202,12 @@ function cleanStaticLabel(label) {
   if (/^signature of employer or supervisor\b/i.test(fieldText)) {
     return 'Employer or supervisor signature';
   }
+  if (/^have you ever been adjudicated bankrupt\b/i.test(fieldText)) {
+    return 'Have you ever been adjudicated bankrupt?';
+  }
+  if (/^use this space and additional sheets, if necessary, to supply any pertinent information and to continue your answer to\b/i.test(fieldText)) {
+    return 'Additional financial information';
+  }
   if (/^purpose\s*:/i.test(text)) {
     return 'Purpose of request';
   }

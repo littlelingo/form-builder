@@ -98,3 +98,36 @@ test('unemployability pages infer employment and education structure', () => {
     ['Employment information', 'Education and training'],
   );
 });
+
+test('financial status pages infer financial information structure', () => {
+  const pages = segmentIntoPages([
+    field('cashInBank', 'Cash in bank checking and savings accounts', 0),
+    field('stocksAndBonds', 'Stocks and other bonds', 0),
+    field('realEstateOwned', 'Real estate owned', 0),
+    field('installmentPayments', 'Monthly payments on installment contracts and other debts', 0),
+    field('bankruptcy', 'Have you ever been adjudicated bankrupt?', 0),
+    field('mortgageCompany', 'VA or a mortgage company was involved', 0),
+    field('signature', 'Your signature', 0),
+  ]);
+  const chapters = segmentIntoChapters(pages);
+
+  assert.equal(pages[0].title, 'Financial information');
+  assert.equal(pages[0].semanticId, 'financialInformation');
+  assert.equal(chapters[0].title, 'Financial information');
+});
+
+test('semantic pages with the same topic are grouped into one chapter', () => {
+  const pages = segmentIntoPages([
+    field('cashInBank', 'Cash in bank checking and savings accounts', 0),
+    field('monthlyExpenses', 'Total monthly expenses and installment debts', 0),
+    field('bankruptcy', 'Have you ever been adjudicated bankrupt?', 0),
+    field('stocksAndBonds', 'Stocks and other bonds', 1),
+    field('realEstateOwned', 'Real estate owned', 1),
+    field('mortgageCompany', 'VA or a mortgage company was involved', 1),
+  ]);
+  const chapters = segmentIntoChapters(pages);
+
+  assert.equal(chapters.length, 1);
+  assert.equal(chapters[0].title, 'Financial information');
+  assert.equal(chapters[0].pages.length, 2);
+});

@@ -6,7 +6,7 @@ import { assessImportQuality, qualitySignals } from '../src/cli/import-corpus.mj
 import { validateAuthoringForm } from '../src/index.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
 
-const DD293_FIXTURE = new URL('../../form-samples/dd-form-293_2020.pdf', import.meta.url);
+const VA5655_FIXTURE = new URL('../../form-samples/va5655_2020.pdf', import.meta.url);
 
 async function fixtureAvailable(url) {
   try {
@@ -23,19 +23,20 @@ function allComponents(form) {
   );
 }
 
-test('DD Form 293 static correction board import has builder-native label quality', async t => {
-  if (!(await fixtureAvailable(DD293_FIXTURE))) {
-    t.skip('DD Form 293 sample fixture not present');
+test('VA5655 static financial status import has builder-native label quality', async t => {
+  if (!(await fixtureAvailable(VA5655_FIXTURE))) {
+    t.skip('VA5655 sample fixture not present');
     return;
   }
 
-  const bytes = await readFile(DD293_FIXTURE);
+  const bytes = await readFile(VA5655_FIXTURE);
   const { form, importReport } = await importPdf(bytes, {
-    filename: 'dd-form-293_2020.pdf',
+    filename: 'va5655_2020.pdf',
     enrich: false,
   });
   const validation = validateAuthoringForm(form);
   const components = allComponents(form);
+  const byLabel = new Map(components.map(component => [component.label, component]));
   const labels = components.map(component => component.label);
   const signals = qualitySignals(form, importReport);
   const quality = assessImportQuality({
@@ -51,17 +52,17 @@ test('DD Form 293 static correction board import has builder-native label qualit
   assert.equal(validation.valid, true, validation.errors.join('\n'));
   assert.equal(quality.level, 'builder-native');
   assert.deepEqual(signals.veryLongLabels, []);
+  assert.deepEqual(signals.duplicateLabels, []);
 
-  assert.ok(labels.includes('Branch At Time Of Inequity Or Impropriety'));
-  assert.ok(labels.includes('Highest Education Achieved'));
-  assert.ok(labels.includes('Applicant Signature'));
-  assert.ok(labels.includes('Documents In Support Of Claim'));
-  assert.ok(labels.includes('Discharge Inequity Statement'));
-  assert.ok(labels.includes('Discharge Impropriety Statement'));
-  assert.equal(labels.some(label => label.length > 90), false);
   assert.deepEqual(
     form.chapters.map(chapter => chapter.title),
-    ['Military service', 'Applicant information'],
+    ['Financial information'],
   );
   assert.equal(form.chapters[0].pages.length, 2);
+  assert.ok(labels.includes('Have You Ever Been Adjudicated Bankrupt?'));
+  assert.ok(labels.includes('Additional Financial Information'));
+  assert.equal(byLabel.get('Have You Ever Been Adjudicated Bankrupt?')?.type, 'yesNo');
+  assert.equal(byLabel.get('Additional Financial Information')?.type, 'textArea');
+  assert.equal(labels.some(label => label.length > 90), false);
+  assert.equal(importReport.componentCount, 42);
 });

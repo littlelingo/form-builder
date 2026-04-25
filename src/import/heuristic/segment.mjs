@@ -137,6 +137,9 @@ const SEMANTIC_PAGE_RULES = [
       /\bincome\b|\basset\b|\bexpense\b|\bdebt\b/,
       /\bbank\b|\baccount\b|\brouting\b/,
       /\bnet worth\b|\bfinancial\b/,
+      /\bbankrupt(?:cy)?\b|\bmortgage\b/,
+      /\binstallment\b|\bamounts? owed\b|\bcreditor\b/,
+      /\bcash\b|\bsavings\b|\bbonds\b|\bstocks\b|\breal estate\b/,
     ],
   },
   {
@@ -371,22 +374,36 @@ export function segmentIntoChapters(pages) {
   const hasSemanticPages = pages.some(page => page.semanticId);
 
   if (hasSemanticPages) {
-    return [
-      ...segmentPages.map((page, index) => ({
-        id: page.semanticId
-          ? `${page.semanticId}${index + 1}`
-          : `needsReview${index + 1}`,
-        title: page.semanticId ? page.title : 'Needs review',
-        pages: [
-          {
-            ...page,
-            id: `${slug(page.title, page.id)}${index + 1}`,
-            title: page.semanticId ? 'Details' : page.title,
-          },
-        ],
-      })),
-      ...repeatedGroup.chapters,
-    ];
+    const chapters = [];
+    const bySemanticId = new Map();
+    segmentPages.forEach((page, index) => {
+      const pageForChapter = {
+        ...page,
+        id: `${slug(page.title, page.id)}${index + 1}`,
+        title: page.semanticId ? 'Details' : page.title,
+      };
+
+      if (!page.semanticId) {
+        chapters.push({
+          id: `needsReview${index + 1}`,
+          title: 'Needs review',
+          pages: [pageForChapter],
+        });
+        return;
+      }
+
+      if (!bySemanticId.has(page.semanticId)) {
+        const chapter = {
+          id: `${page.semanticId}${chapters.length + 1}`,
+          title: page.title,
+          pages: [],
+        };
+        bySemanticId.set(page.semanticId, chapter);
+        chapters.push(chapter);
+      }
+      bySemanticId.get(page.semanticId).pages.push(pageForChapter);
+    });
+    return [...chapters, ...repeatedGroup.chapters];
   }
 
   if (segmentPages.length === 0) return repeatedGroup.chapters;
