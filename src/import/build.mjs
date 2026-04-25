@@ -103,9 +103,17 @@ function isUsefulFieldStem(stem) {
     !/^(field|subform|form|check box|checkbox|radio button list)$/i.test(stem);
 }
 
+function cleanImportedLabel(label) {
+  const text = String(label || '').replace(/\s+/g, ' ').trim();
+  if (/^do not pay me va compensation\b/i.test(text)) {
+    return 'Do not pay me VA compensation';
+  }
+  return text;
+}
+
 function importedComponentLabel(component) {
-  const label = String(component.label || '').replace(/\s+/g, ' ').trim();
-  const stem = fieldNameStem(component.provenance?.pdfFieldName);
+  const label = cleanImportedLabel(component.label);
+  const stem = cleanImportedLabel(fieldNameStem(component.provenance?.pdfFieldName));
   if ((label.length > 90 || isWeakImportedLabel(label)) && isUsefulFieldStem(stem)) {
     return stem;
   }

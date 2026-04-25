@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after DD-293 builder-native label cleanup
+Last updated: 2026-04-25 EDT after VBA-21-526EZ builder-native label cleanup
 
 ## Current Workspace
 
@@ -15,7 +15,7 @@ as the source of truth and generates VA `formConfig` as an output artifact.
 
 ## Snapshot
 
-- 137 tests total: 135 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
+- 138 tests total: 136 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
 - `npm run builder:build` green.
 - `npm run compile:example` and `npm run compile:example:27-8832` produce valid output.
 - Pilot smoke confirmed: real `VBA-27-8832-ARE.pdf` imports end-to-end via local Ollama (`llama3.1:8b`, ~18 min on CPU). Output schema valid, type mix improves over deterministic-only.
@@ -76,7 +76,7 @@ Recent implementation already completed:
 - Fixed static-PDF coverage and label-quality gaps in `src/import/extract/staticText.mjs`: pages with Privacy Act/respondent-burden language are no longer skipped when they also contain several numbered fields; numbered parsing no longer treats embedded years/form numbers such as `1974` or `180` as field numbers; suffix-only groups such as `9A/9B/9C` now become named subfields instead of fake `Item 9` radio groups; obvious instruction/help/legal labels are filtered. This turned three previously empty imports into valid drafts: 21-22a, 21-4142, and 21-4192. Added a synthetic regression for mixed instruction + field pages and suffix-only groups in `tests/import.test.mjs`.
 - Added an import quality ladder to `src/cli/import-corpus.mjs`: `raw`, `valid`, `structured`, `builder-native`, and `curated`, plus a representative target matrix for VA9, 10-10EZ, 21-526EZ, SF-180, and 21-4142. The report now distinguishes successful import coverage from builder-shaped conversion quality.
 - Added generic semantic page/chapter inference in `src/import/heuristic/segment.mjs` using field labels/names to infer categories such as Veteran information, Contact information, Claim information, Military service, Medical information, Employment information, Financial information, Education and training, and Authorization and signature. This moves many generic imports out of the one-chapter `Imported form` shape without form-specific JavaScript recipes.
-- Latest corpus result over the 22 sample PDFs: 22/22 ok, 2356 components, 5 curated, 11 builder-native, 5 structured, 1 valid, 0 raw/failed. Representative targets met: 10/10: baseline set 5/5, next-risk set 5/5.
+- Latest corpus result over the 22 sample PDFs: 22/22 ok, 2356 components, 5 curated, 12 builder-native, 4 structured, 1 valid, 0 raw/failed. Representative targets met: 10/10: baseline set 5/5, next-risk set 5/5.
 - Added generic compact repeated-group detection for provider/treatment rows in `src/import/heuristic/segment.mjs`. The importer now collapses repeated 21-4142 provider rows into a `listLoop` chapter named `Treatment providers` with one provider detail page. `src/import/build.mjs` preserves `listLoop` chapter metadata from segmentation so imported repeatable groups compile through the existing array-builder path. The detector is intentionally capped at small prototype groups to avoid over-collapsing large XFA forms.
 - Added generic SF-180-style static label cleanup and confidence improvements. Static extraction now shortens prose-heavy labels such as purpose, authorization signature, and requester relationship; treats obvious `NO YES` questions as `yesNo`; avoids classifying `Place of birth` as a date; and gives bounded numbered static labels enough confidence to avoid low-confidence review solely because they came from visible text. The real SF-180 target now imports as builder-native with no long labels, no duplicates, and no low-confidence components.
 - Expanded the representative corpus target matrix in `src/cli/import-corpus.mjs` from 5 baseline targets to 10 total targets. The original baseline set remains green, and the new `next-risk` set is DD-293, VA Form 95, 21-8940, 21P-527EZ, and 21P-534EZ. The report now shows target set, current level, target level, and gaps for each target.
@@ -89,6 +89,7 @@ Recent implementation already completed:
 - Extended curation recipe metadata so recipes can preserve `listLoop` chapter type/options, item-name labels, section intros, and reviewed field order instead of flattening repeatable sections. `createRecipeFromAuthoringForm` now includes those chapter details when promoting reviewed imports.
 - Added checked-in VA Form 21-4142 curation recipe data in `src/import/curation/catalog.json` and regression coverage in `tests/import-4142.test.mjs`. The real `va-form-21-4142_2020.pdf` now imports 12/12 extracted static fields into 9 builder components as a curated authorization workflow with Veteran information, Patient information, and a Treatment providers `listLoop`.
 - Added generic DD-293-oriented static label cleanup in `src/import/extract/staticText.mjs` for common option-list and instruction/prose tails such as branch/component choices, highest education, applicant signature, support documents, and discharge inequity/impropriety statements. The real `dd-form-293_2020.pdf` now has no overlong labels, no duplicate labels, and moves from `structured` to `builder-native`; `tests/import-dd293.test.mjs` locks the quality level.
+- Added generic XFA label cleanup in `src/import/build.mjs` for the compensation-election pattern `Do not pay me VA compensation`. The real `VBA-21-526EZ-ARE.pdf` now has no overlong labels, no duplicate labels, and moves from `structured` to `builder-native`; `tests/import-526ez.test.mjs` locks the large-form quality level.
 
 Verified after these changes:
 
@@ -133,21 +134,22 @@ Latest corpus verification:
 
 ```bash
 npm run import:corpus -- ../form-samples --out build/import-corpus-report.json --markdown build/import-corpus-report.md
-npm test -- tests/import-dd293.test.mjs   # script ran full node suite: 135 pass, 2 gated skips
+npm test -- tests/import-526ez.test.mjs   # script ran full node suite: 136 pass, 2 gated skips
 node --input-type=module - <<'NODE'
 import { readFile } from 'node:fs/promises';
 import { importPdf } from './src/import/pipeline.mjs';
 import { assessImportQuality, qualitySignals } from './src/cli/import-corpus.mjs';
 import { validateAuthoringForm } from './src/index.mjs';
-const bytes = await readFile('../form-samples/dd-form-293_2020.pdf');
-const { form, importReport } = await importPdf(bytes, { filename: 'dd-form-293_2020.pdf', enrich: false });
+const bytes = await readFile('../form-samples/VBA-21-526EZ-ARE.pdf');
+const { form, importReport } = await importPdf(bytes, { filename: 'VBA-21-526EZ-ARE.pdf', enrich: false });
 const signals = qualitySignals(form, importReport);
 console.log({
   valid: validateAuthoringForm(form).valid,
   importValid: importReport.validation.valid,
   quality: assessImportQuality({ status: 'ok', componentCount: importReport.componentCount, validation: importReport.validation, curation: importReport.curation, qualitySignals: signals }).level,
   veryLongLabels: signals.veryLongLabels,
-  chapters: form.chapters.map(chapter => chapter.title),
+  duplicateLabels: signals.duplicateLabels,
+  componentCount: importReport.componentCount,
 });
 NODE
 ```
@@ -245,8 +247,8 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 ## Recommended Next Sequence
 
 1. **Use the quality ladder and target matrix as the main improvement loop** — run `npm run import:corpus -- ../form-samples --out build/import-corpus-report.json --markdown build/import-corpus-report.md`, inspect representative target gaps first, and move forms upward one level at a time instead of treating 22/22 successful imports as quality.
-2. **Move VBA-21-526EZ from structured to builder-native next** — it is now the highest-risk representative form in the corpus report: large XFA, semantically structured, but still held back by a remaining overlong-label cleanup issue. This should harden large-form conversion without adding a form-specific recipe.
-3. **Then reduce static structured-form label debt** — good follow-ups are 21-22a, the older 21-526 application PDF, 21-4192, and VA5655, which are all structured but still have overlong labels in the corpus report.
+2. **Move VA Form 21-22a from structured to builder-native next** — it is now the highest-risk remaining structured static form in the corpus report, with several overlong labels but no generic page/chapter issue. A focused static-label cleanup pass should reduce broad label debt without adding a form-specific recipe.
+3. **Then continue static structured-form label debt** — good follow-ups are the older 21-526 application PDF, 21-4192, and VA5655, which are still structured due to overlong labels in the corpus report.
 4. **Use the current target matrix as regression guardrails** — DD-293, VA Form 95, 21-8940, 21P-527EZ, and 21P-534EZ now meet their target levels. Keep them in the representative matrix while improving label cleanup so broad generic changes do not regress them.
 5. **Harden AcroForm/XFA semantic grouping** — 10-10EZ and 21-526EZ meet their current targets, but high-volume forms still need better chapter grouping, duplicate-label handling, and eventual recipe/corpus promotion before they are curated.
 6. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.

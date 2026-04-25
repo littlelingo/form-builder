@@ -36,7 +36,7 @@ export const REPRESENTATIVE_TARGETS = [
     filename: 'VBA-21-526EZ-ARE.pdf',
     targetSet: 'baseline',
     category: 'large-xfa-stress-case',
-    targetLevel: 'structured',
+    targetLevel: 'builder-native',
     focus: 'Large XFA/AcroForm stress case for section inference.',
   },
   {
