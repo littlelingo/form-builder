@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after VA Form 21-526EZ curated recipe promotion
+Last updated: 2026-04-25 EDT after corpus round-trip guard
 
 ## Current Workspace
 
@@ -15,7 +15,7 @@ as the source of truth and generates VA `formConfig` as an output artifact.
 
 ## Snapshot
 
-- 154 tests total: 152 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
+- 157 tests total: 155 passing, 2 gated (skipped without `IMPORT_RUN_OLLAMA_TESTS=1` or `ANTHROPIC_API_KEY + IMPORT_RUN_CLOUD_TESTS=1`).
 - `npm run builder:build` green.
 - `npm run compile:example` and `npm run compile:example:27-8832` produce valid output.
 - Pilot smoke confirmed: real `VBA-27-8832-ARE.pdf` imports end-to-end via local Ollama (`llama3.1:8b`, ~18 min on CPU). Output schema valid, type mix improves over deterministic-only.
@@ -76,7 +76,7 @@ Recent implementation already completed:
 - Fixed static-PDF coverage and label-quality gaps in `src/import/extract/staticText.mjs`: pages with Privacy Act/respondent-burden language are no longer skipped when they also contain several numbered fields; numbered parsing no longer treats embedded years/form numbers such as `1974` or `180` as field numbers; suffix-only groups such as `9A/9B/9C` now become named subfields instead of fake `Item 9` radio groups; obvious instruction/help/legal labels are filtered. This turned three previously empty imports into valid drafts: 21-22a, 21-4142, and 21-4192. Added a synthetic regression for mixed instruction + field pages and suffix-only groups in `tests/import.test.mjs`.
 - Added an import quality ladder to `src/cli/import-corpus.mjs`: `raw`, `valid`, `structured`, `builder-native`, and `curated`, plus a representative target matrix for VA9, 10-10EZ, 21-526EZ, SF-180, and 21-4142. The report now distinguishes successful import coverage from builder-shaped conversion quality.
 - Added generic semantic page/chapter inference in `src/import/heuristic/segment.mjs` using field labels/names to infer categories such as Veteran information, Contact information, Claim information, Military service, Medical information, Employment information, Financial information, Education and training, and Authorization and signature. This moves many generic imports out of the one-chapter `Imported form` shape without form-specific JavaScript recipes.
-- Current corpus result over the 22 sample PDFs: 22/22 ok, 2226 components, 20 curated, 2 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12. Remaining review count: 2.
+- Current corpus result over the 22 sample PDFs: 22/22 ok, 2226 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12. Remaining review count: 0.
 - Added generic compact repeated-group detection for provider/treatment rows in `src/import/heuristic/segment.mjs`. The importer now collapses repeated 21-4142 provider rows into a `listLoop` chapter named `Treatment providers` with one provider detail page. `src/import/build.mjs` preserves `listLoop` chapter metadata from segmentation so imported repeatable groups compile through the existing array-builder path. The detector is intentionally capped at small prototype groups to avoid over-collapsing large XFA forms.
 - Added generic SF-180-style static label cleanup and confidence improvements. Static extraction now shortens prose-heavy labels such as purpose, authorization signature, and requester relationship; treats obvious `NO YES` questions as `yesNo`; avoids classifying `Place of birth` as a date; and gives bounded numbered static labels enough confidence to avoid low-confidence review solely because they came from visible text. The real SF-180 target now imports as builder-native with no long labels, no duplicates, and no low-confidence components.
 - Expanded the representative corpus target matrix in `src/cli/import-corpus.mjs` from 5 baseline targets to 10 total targets. The original baseline set remains green, and the new `next-risk` set is DD-293, VA Form 95, 21-8940, 21P-527EZ, and 21P-534EZ. The report now shows target set, current level, target level, and gaps for each target.
@@ -105,6 +105,9 @@ Recent implementation already completed:
 - Added a checked-in curation recipe and regression coverage for VA Form 10-10EZ. The real `VA Form 10-10EZ.pdf` now imports as a curated health-benefits application workflow with 116/116 consolidated fields matched into Benefit selection, Veteran identity/contact, Military service information, Insurance information, Dependent information, Employment information, Financial disclosure, and Consent/signature chapters. The current corpus has 4 remaining generic-fallback `builder-native` forms.
 - Added a checked-in curation recipe and regression coverage for VA Form 21P-535. The real `VBA-21P-535-ARE.pdf` now imports as a curated parent D.I.C. workflow with 204/204 consolidated fields matched across the VA 21P-535 pages and the attached SSA-24 survivors-benefits pages. The current corpus has 3 remaining generic-fallback `builder-native` forms.
 - Added a checked-in curation recipe and regression coverage for VA Form 21-526EZ. The real `VBA-21-526EZ-ARE.pdf` now imports as a curated disability-compensation workflow with 313/313 consolidated fields matched into claim type, Veteran identity/contact, change of address, homelessness, toxic exposure, disabilities claimed, treatment, military service, payment, certification, and alternate-signer chapters. The current corpus has 2 remaining generic-fallback `builder-native` forms.
+- Added a checked-in curation recipe and regression coverage for VA Form 21P-527EZ. The real `VBA-21P-527EZ-ARE.pdf` now imports as a curated Veterans Pension workflow with 491/491 consolidated fields matched into evidence checklist, Veteran identity/contact, military service, pension, employment, marital history, dependent children, income/assets, medical expenses, direct deposit, certification/signature, alternate signer, care facility worksheet, and in-home care worksheet chapters. The current corpus has 1 remaining generic-fallback `builder-native` form.
+- Added a checked-in curation recipe and regression coverage for VA Form 21P-534EZ. The real `VBA-21P-534EZ-ARE.pdf` now imports as a curated survivor benefits workflow with 569/569 consolidated fields matched into evidence checklist, Veteran identity, claimant identity/contact, benefit selection, military service, marital information/history, child of Veteran, D.I.C., special monthly pension/D.I.C., income/assets, medical/final expenses, direct deposit, certification/signature, witnesses, alternate signer, care facility worksheet, and in-home care worksheet chapters. The full 22-form corpus is now curated with no remaining generic-fallback forms.
+- Added `tests/import-corpus-roundtrip.test.mjs` as the first final corpus polish guard. It imports all 22 PDFs from `../form-samples`, requires curated recipe provenance, saves/re-opens the generated authoring JSON, validates the re-opened form, compares the preserved builder structure, and verifies each re-opened form can still generate VA `formConfig`. While adding it, cleaned importer output so optional chapter metadata and curation provenance omit absent values instead of carrying explicit `undefined` properties that disappear on JSON export.
 
 Verified after these changes:
 
@@ -234,11 +237,11 @@ npm run builder:build
 git diff --check
 ```
 
-Latest verification after VA Form 21-526EZ recipe promotion:
+Latest verification after corpus round-trip guard:
 
 ```bash
 node --input-type=module -e 'import catalog from "./src/import/curation/catalog.json" with { type: "json" }; import { validateRecipeCatalog } from "./src/import/curation/recipes.mjs"; console.log(JSON.stringify(validateRecipeCatalog(catalog), null, 2));'
-node --test tests/import-526ez.test.mjs tests/import-corpus.test.mjs
+node --test tests/import-corpus-roundtrip.test.mjs tests/import-corpus.test.mjs
 npm run import:corpus -- ../form-samples --out build/import-corpus-report.json --markdown build/import-corpus-report.md
 npm test
 npm run compile:example
@@ -247,7 +250,7 @@ npm run builder:build
 git diff --check
 ```
 
-Latest corpus result over the 22 sample PDFs: 22/22 ok, 2226 components, 20 curated, 2 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12, including `VBA-21-526EZ-ARE.pdf` at `curated`. Remaining review count: 2.
+Latest corpus result over the 22 sample PDFs: 22/22 ok, 2226 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12, including `VBA-21P-534EZ-ARE.pdf` at `curated`. Remaining review count: 0.
 
 Current curated forms in the corpus report:
 
@@ -267,6 +270,8 @@ Current curated forms in the corpus report:
 - `VBA-20-0995-ARE.pdf`
 - `VBA-21-0966-ARE.pdf`
 - `VBA-21-526EZ-ARE.pdf`
+- `VBA-21P-527EZ-ARE.pdf`
+- `VBA-21P-534EZ-ARE.pdf`
 - `VBA-21P-534a-ARE.pdf`
 - `VBA-21P-535-ARE.pdf`
 - `VBA-27-8832-ARE.pdf`
@@ -274,8 +279,7 @@ Current curated forms in the corpus report:
 
 Remaining generic-fallback builder-native forms:
 
-- `VBA-21P-527EZ-ARE.pdf` — 491 components, high-risk large pension XFA.
-- `VBA-21P-534EZ-ARE.pdf` — 569 components, high-risk survivor pension XFA.
+- None.
 
 Previous verification:
 
@@ -348,10 +352,10 @@ ANTHROPIC_API_KEY=sk-ant-... IMPORT_RUN_CLOUD_TESTS=1 npm test
 
 PDF AcroForm → authoring JSON pipeline shipped. V1.5/V2 backlog still open:
 
-- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. Additional reviewed forms still need recipe/corpus data.
+- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. The 22-form sample corpus is curated and now has a save/re-open/generate round-trip guard; the next quality pass should focus on recipe duplication and repeated-group/list-loop opportunities.
 - VA9 regression target: `/Users/clint/Downloads/va9_2020.pdf` now drives a curated structural regression test. Next quality pass should exercise it in the builder UI and then tighten recipe/generic extraction data from what the review panel reveals.
 - Recipe layer: known form families (VA9, 21-0966, 27-8832, 28-1900, future forms) should improve generic imports without requiring every converted form to live in `examples/`. Keep recipes/corpus data-driven and reviewable.
-- Continue hardening generic import quality on remaining builder-native XFA/static forms while promoting them into curated workflows.
+- Continue hardening generic import quality with the curated corpus as regression data, especially where repeated XFA/static groups should become richer builder-native list loops.
 - Prompt update to strip PDF parenthetical artifacts ("(SSN)", "(MM-DD-YYYY)") for optional enrichment paths.
 - Real `vetsWebsiteScrape.json` scraper for the standards layer.
 - `apps/proxy/` for browser-side LLM enrichment (currently Node CLI only).
@@ -369,11 +373,10 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 
 ## Recommended Next Sequence
 
-1. **Use the quality ladder and target matrix as the main improvement loop** — run `npm run import:corpus -- ../form-samples --out build/import-corpus-report.json --markdown build/import-corpus-report.md`, inspect representative target gaps first, and move forms upward one level at a time instead of treating 22/22 successful imports as quality.
-2. **Promote `VBA-21P-527EZ-ARE.pdf` next** — it is the smaller of the two remaining generic-fallback forms (491 components) and should establish the pension-EZ recipe pattern before the larger survivor pension form.
-3. **Then finish `VBA-21P-534EZ-ARE.pdf`** — it remains the largest generic fallback (569 components) and should be easier after the 21P-527EZ pension workflow is mapped.
-4. **Use the current target matrix as regression guardrails** — all 12 representative targets now meet their target levels. Keep them in the matrix while promoting generic-fallback forms so broad recipe or consolidation changes do not regress them.
-5. **Later: execute `form-route-to-va-gov.md`** — still useful, but PDF curation quality is now the active priority.
+1. **Audit repeated structures for list-loop promotion** — the corpus now round-trips cleanly, so review income, medical expense, dependent child, marital history, care facility, and in-home care worksheet sections for repeated groups that should become authorable list loops.
+2. **Use the quality ladder and target matrix as regression guardrails** — all 12 representative targets now meet their target levels. Keep them in the matrix so broad recipe or consolidation changes do not regress curated quality.
+3. **Review recipe duplication and label polish across the complete curated set** — now that save/re-open/generate is covered, look for recipe data that can be simplified without reducing form-specific quality.
+4. **Later: execute `form-route-to-va-gov.md`** — still useful, but corpus polish is the better next step now that PDF curation quality has reached full coverage.
 
 ## Suggested First Files To Read Next Session
 

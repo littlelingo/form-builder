@@ -102,13 +102,13 @@ function normalizeCuration(curation = {}, source) {
   const pageId = curation.pageId || 'page1';
   return {
     source,
-    order: curation.order,
+    ...(curation.order !== undefined ? { order: curation.order } : {}),
     chapterId,
     chapterTitle: curation.chapterTitle || titleFromId(chapterId),
-    chapterType: curation.chapterType || undefined,
-    chapterOptions: curation.chapterOptions || undefined,
-    itemNameLabel: curation.itemNameLabel || undefined,
-    sectionIntro: curation.sectionIntro || undefined,
+    ...(curation.chapterType !== undefined ? { chapterType: curation.chapterType } : {}),
+    ...(curation.chapterOptions !== undefined ? { chapterOptions: curation.chapterOptions } : {}),
+    ...(curation.itemNameLabel !== undefined ? { itemNameLabel: curation.itemNameLabel } : {}),
+    ...(curation.sectionIntro !== undefined ? { sectionIntro: curation.sectionIntro } : {}),
     pageId,
     pageTitle: curation.pageTitle || titleFromId(pageId, 'Page 1'),
   };

@@ -304,9 +304,9 @@ function buildChapter(chapter, takenIds, corpus) {
     id: chapter.id,
     type: chapter.type || 'standard',
     title: chapter.title,
-    options: chapter.options,
-    itemNameLabel: chapter.itemNameLabel,
-    sectionIntro: chapter.sectionIntro,
+    ...(chapter.options !== undefined ? { options: chapter.options } : {}),
+    ...(chapter.itemNameLabel !== undefined ? { itemNameLabel: chapter.itemNameLabel } : {}),
+    ...(chapter.sectionIntro !== undefined ? { sectionIntro: chapter.sectionIntro } : {}),
     pages: chapter.pages.map(page => buildPage(page, takenIds, corpus)),
   };
 }
@@ -348,9 +348,9 @@ function segmentCuratedFields(fields) {
         id: chapterId,
         title: curation.chapterTitle || titleFromId(chapterId),
         type: curation.chapterType || 'standard',
-        options: curation.chapterOptions,
-        itemNameLabel: curation.itemNameLabel,
-        sectionIntro: curation.sectionIntro,
+        ...(curation.chapterOptions !== undefined ? { options: curation.chapterOptions } : {}),
+        ...(curation.itemNameLabel !== undefined ? { itemNameLabel: curation.itemNameLabel } : {}),
+        ...(curation.sectionIntro !== undefined ? { sectionIntro: curation.sectionIntro } : {}),
         pages: [],
         pageMap: new Map(),
       };
