@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { access } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { chromium } from 'playwright';
@@ -7,6 +8,7 @@ import { chromium } from 'playwright';
 const port = Number(process.env.BUILDER_SMOKE_PORT || 4173);
 const baseUrl = `http://127.0.0.1:${port}`;
 const repoRoot = new URL('..', import.meta.url);
+const pensionPdfFixture = new URL('../../form-samples/VBA-21P-527EZ-ARE.pdf', import.meta.url);
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 function startDevServer() {
@@ -122,6 +124,10 @@ async function authoringForm(page) {
   return JSON.parse(authoringJson || '{}');
 }
 
+function savedTemplateImportInput(page) {
+  return page.getByRole('region', { name: 'Add to canvas' }).locator('input[type="file"]');
+}
+
 function collectComponentIds(components = []) {
   return components.flatMap(component => [
     component.id,
@@ -156,6 +162,102 @@ async function loadBlankBuilder(page) {
     page,
     page.getByRole('heading', { name: 'Start building' }),
     'Expected the blank builder canvas to load.',
+  );
+}
+
+async function smokeCuratedPdfImport(page) {
+  try {
+    await access(pensionPdfFixture);
+  } catch {
+    console.warn(`Skipping curated PDF import smoke; fixture not found at ${pensionPdfFixture.pathname}`);
+    return;
+  }
+
+  await loadBlankBuilder(page);
+
+  const fileChooserPromise = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Import PDF' }).click();
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles(pensionPdfFixture.pathname);
+
+  await expectVisible(
+    page,
+    page.getByRole('heading', { name: 'PDF import loaded into the canvas' }),
+    'Expected fully curated PDF import to load into the canvas.',
+  );
+  await expectMetric(page, 'Sections', 20);
+  await expectMetric(page, 'Fields', 346);
+  await expectVisible(
+    page,
+    page.getByText('Recipe curation matched all 491 source fields'),
+    'Expected fully recipe-curated imports to report complete recipe coverage.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('curated 491/491'),
+    'Expected import progress to show full curation coverage.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('45 source fields converted into 15 loop fields across about 3 children'),
+    'Expected dependent child list-loop curation decision in progress panel.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('32 source fields converted into 8 loop fields across about 4 income sources'),
+    'Expected income source list-loop curation decision in progress panel.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('54 source fields converted into 18 loop fields across about 3 providers'),
+    'Expected care provider list-loop curation decision in progress panel.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('66 source fields converted into 11 loop fields across about 6 medical expenses'),
+    'Expected medical expense list-loop curation decision in progress panel.',
+  );
+  await expectVisible(
+    page,
+    page.getByRole('heading', { name: 'Screens' }),
+    'Expected imported form outline to be populated.',
+  );
+  await expectVisible(
+    page,
+    page.getByRole('button', { name: /^Dependent child entries\b/ }).first(),
+    'Expected imported outline to include curated list-loop chapter.',
+  );
+  await expectVisible(
+    page,
+    page.getByLabel('Form workspace').getByRole('heading', { name: 'Supporting forms and evidence' }),
+    'Expected imported form canvas to be populated.',
+  );
+  assert.equal(
+    await page.getByRole('dialog', { name: /Step \d+ of \d+/ }).count(),
+    0,
+    'Expected fully recipe-curated imports not to open the low-confidence review wizard.',
+  );
+
+  await page.getByRole('tab', { name: 'Review' }).click();
+  await expectVisible(
+    page,
+    page.getByRole('heading', { name: 'Imported components (0)' }),
+    'Expected fully recipe-curated imports to have no required human review rows.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('All imported components reviewed.'),
+    'Expected Review panel to state that all imported components are reviewed.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('Converted by recipe into a list loop with 15 fields at dependentChildren.'),
+    'Expected Review panel to explain dependent child curation decision.',
+  );
+  await expectVisible(
+    page,
+    page.getByText('Converted by recipe into a list loop with 11 fields at medicalExpenses.'),
+    'Expected Review panel to explain medical expense curation decision.',
   );
 }
 
@@ -291,7 +393,7 @@ async function smokeSavedTemplateLibrary(page) {
   const exportedTemplatePath = await download.path();
   assert.ok(exportedTemplatePath, 'Expected exported saved-template file path.');
 
-  await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
+  await savedTemplateImportInput(page).setInputFiles(exportedTemplatePath);
   await expectVisible(
     page,
     page.getByRole('heading', { name: 'Review import conflicts' }),
@@ -343,7 +445,7 @@ async function smokeSavedTemplateLibrary(page) {
     page.getByText(/Section .* 3 fields .* Created .* Imported/),
     'Expected imported saved template metadata.',
   );
-  await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
+  await savedTemplateImportInput(page).setInputFiles(exportedTemplatePath);
   await page.getByRole('button', { name: 'Skip duplicates' }).click();
   await expectVisible(
     page,
@@ -355,7 +457,7 @@ async function smokeSavedTemplateLibrary(page) {
     0,
     'Expected skipped duplicate import not to create another renamed template.',
   );
-  await page.locator('input[type="file"]').setInputFiles(exportedTemplatePath);
+  await savedTemplateImportInput(page).setInputFiles(exportedTemplatePath);
   await page.getByRole('button', { name: 'Replace existing' }).click();
   await expectVisible(
     page,
@@ -490,7 +592,10 @@ async function smokeDeclinedHelperPresets(page, counts) {
 async function loadCareerGuidanceRunner(page, message) {
   await page.getByRole('tab', { name: 'Canvas' }).click();
   await page.getByRole('tab', { name: 'Files' }).click();
-  await page.getByRole('button', { name: 'Personalized Career Planning and Guidance (27-8832)' }).click();
+  await page
+    .getByRole('button', { name: /^Personalized Career Planning and Guidance \(27-8832\)/ })
+    .first()
+    .click();
   await expectMetric(page, 'Fields', 37);
   await page.getByRole('tab', { name: 'Run' }).click();
   await expectVisible(
@@ -693,6 +798,8 @@ async function main() {
     const page = await context.newPage();
     const browserErrors = trackBrowserErrors(page);
 
+    await loadBlankBuilder(page);
+    await smokeCuratedPdfImport(page);
     await loadBlankBuilder(page);
     await smokeBasicAuthoringAndRunner(page);
     await smokeHelperPresetReview(page);

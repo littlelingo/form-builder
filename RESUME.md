@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after recipe-curated review burden fix
+Last updated: 2026-04-25 EDT after curated-import smoke automation and 21P-534a child loop promotion
 
 ## Current Workspace
 
@@ -78,7 +78,7 @@ Recent implementation already completed:
 - Fixed static-PDF coverage and label-quality gaps in `src/import/extract/staticText.mjs`: pages with Privacy Act/respondent-burden language are no longer skipped when they also contain several numbered fields; numbered parsing no longer treats embedded years/form numbers such as `1974` or `180` as field numbers; suffix-only groups such as `9A/9B/9C` now become named subfields instead of fake `Item 9` radio groups; obvious instruction/help/legal labels are filtered. This turned three previously empty imports into valid drafts: 21-22a, 21-4142, and 21-4192. Added a synthetic regression for mixed instruction + field pages and suffix-only groups in `tests/import.test.mjs`.
 - Added an import quality ladder to `src/cli/import-corpus.mjs`: `raw`, `valid`, `structured`, `builder-native`, and `curated`, plus a representative target matrix for VA9, 10-10EZ, 21-526EZ, SF-180, and 21-4142. The report now distinguishes successful import coverage from builder-shaped conversion quality.
 - Added generic semantic page/chapter inference in `src/import/heuristic/segment.mjs` using field labels/names to infer categories such as Veteran information, Contact information, Claim information, Military service, Medical information, Employment information, Financial information, Education and training, and Authorization and signature. This moves many generic imports out of the one-chapter `Imported form` shape without form-specific JavaScript recipes.
-- Current corpus result over the 22 sample PDFs: 22/22 ok, 2049 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12. Remaining review count: 0.
+- Current corpus result over the 22 sample PDFs: 22/22 ok, 2034 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12. Remaining review count: 0.
 - Added generic compact repeated-group detection for provider/treatment rows in `src/import/heuristic/segment.mjs`. The importer now collapses repeated 21-4142 provider rows into a `listLoop` chapter named `Treatment providers` with one provider detail page. `src/import/build.mjs` preserves `listLoop` chapter metadata from segmentation so imported repeatable groups compile through the existing array-builder path. The detector is intentionally capped at small prototype groups to avoid over-collapsing large XFA forms.
 - Added generic SF-180-style static label cleanup and confidence improvements. Static extraction now shortens prose-heavy labels such as purpose, authorization signature, and requester relationship; treats obvious `NO YES` questions as `yesNo`; avoids classifying `Place of birth` as a date; and gives bounded numbered static labels enough confidence to avoid low-confidence review solely because they came from visible text. The real SF-180 target now imports as builder-native with no long labels, no duplicates, and no low-confidence components.
 - Expanded the representative corpus target matrix in `src/cli/import-corpus.mjs` from 5 baseline targets to 10 total targets. The original baseline set remains green, and the new `next-risk` set is DD-293, VA Form 95, 21-8940, 21P-527EZ, and 21P-534EZ. The report now shows target set, current level, target level, and gaps for each target.
@@ -116,6 +116,8 @@ Recent implementation already completed:
 - Promoted the clear repeated income source H-K rows in VA Form 21P-527EZ into an `Income sources` `listLoop`. The recipe still matches and curates all 491 extracted fields, but the builder representation now has 401 components because the repeated payer/recipient/type/amount rows collapse into one authorable loop with 8 item fields. The malformed `Monthy_Amount` source selector is preserved but mapped to the canonical monthly income amount field instead of remaining a duplicate dollars field.
 - Promoted the clear repeated medical expense E-J rows in VA Form 21P-527EZ into a `Medical expenses` `listLoop`. The recipe still matches and curates all 491 extracted fields, but the builder representation now has 346 components because the repeated paid-to/date/recipient/frequency/purpose/amount rows collapse into one authorable loop with 11 item fields. The recipe corrects the bad deterministic inference that treated some cents fields as `date`; the converted builder fields are `textInput`.
 - Added visible import-time curation decision summaries. `curateFields` now reports list-loop decisions with source field count, canonical item field count, estimated repeated item count, array path, and recipe/source metadata. The browser import progress panel and import review panel now show which builder-native list loops were applied during PDF conversion, so users can see why known PDFs imported as loops instead of flat fields.
+- Added automated builder smoke coverage for the curated-import UX contract. `npm run builder:smoke` now imports `VBA-21P-527EZ-ARE.pdf` when the sample fixture is available and asserts Canvas/Outline population, `curated 491/491`, all four visible list-loop curation decisions, no low-confidence wizard, and Review panel `Imported components (0)`.
+- Promoted the clear four-row child table in VA Form 21P-534a into a `Children in custody` `listLoop`. The recipe still matches and curates all 51 extracted fields, but the builder representation now has 36 components because the repeated child name/date/SSN/place/relationship rows collapse into one authorable loop with 5 item fields.
 
 Verified after these changes:
 
@@ -261,17 +263,17 @@ npm run builder:build
 git diff --check
 ```
 
-Latest verification after recipe-curated review burden fix:
+Latest verification after curated-import smoke automation and 21P-534a child loop promotion:
 
 ```bash
 node --input-type=module -e 'import catalog from "./src/import/curation/catalog.json" with { type: "json" }; import { validateRecipeCatalog } from "./src/import/curation/recipes.mjs"; console.log(JSON.stringify(validateRecipeCatalog(catalog), null, 2));'
-node --test tests/import-21p-527ez.test.mjs tests/curation.test.mjs tests/import-corpus.test.mjs
+node --test tests/import-21p-534a.test.mjs tests/curation.test.mjs
+npm run builder:smoke
 npm run import:corpus -- ../form-samples --out build/import-corpus-report.json --markdown build/import-corpus-report.md
 npm test
 npm run compile:example
 npm run compile:example:27-8832
 npm run builder:build
-node --input-type=module -e 'import { readFile } from "node:fs/promises"; import { importPdf } from "./src/import/pipeline.mjs"; const bytes = await readFile("../form-samples/VBA-21P-527EZ-ARE.pdf"); const result = await importPdf(bytes, { fileName: "VBA-21P-527EZ-ARE.pdf" }); console.log(JSON.stringify(result.importReport.curation.decisions, null, 2));'
 git diff --check
 ```
 
@@ -284,7 +286,7 @@ npm test
 npm run builder:build
 ```
 
-Latest corpus result over the 22 sample PDFs: 22/22 ok, 2049 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12, including `VBA-21P-527EZ-ARE.pdf` and `VBA-21P-534EZ-ARE.pdf` at `curated`. Remaining review count: 0.
+Latest corpus result over the 22 sample PDFs: 22/22 ok, 2034 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12, including `VBA-21P-527EZ-ARE.pdf`, `VBA-21P-534a-ARE.pdf`, and `VBA-21P-534EZ-ARE.pdf` at `curated`. Remaining review count: 0.
 
 Current curated forms in the corpus report:
 
@@ -386,7 +388,7 @@ ANTHROPIC_API_KEY=sk-ant-... IMPORT_RUN_CLOUD_TESTS=1 npm test
 
 PDF AcroForm → authoring JSON pipeline shipped. V1.5/V2 backlog still open:
 
-- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. The 22-form sample corpus is curated and now has a save/re-open/generate round-trip guard; curation decisions are now visible in the import progress/report UI and browser-smoked with a looped 21P-527EZ import. Fully recipe-curated imports no longer open a large review wizard solely because source PDF field confidence was low. The next quality pass should keep browser coverage around these product semantics, then continue recipe duplication and repeated-group/list-loop opportunities.
+- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. The 22-form sample corpus is curated and now has a save/re-open/generate round-trip guard; curation decisions are now visible in the import progress/report UI and covered by the builder smoke path for a looped 21P-527EZ import. Fully recipe-curated imports no longer open a large review wizard solely because source PDF field confidence was low. The next quality pass should continue selective repeated-group/list-loop opportunities only where the source rows are complete and regular.
 - VA9 regression target: `/Users/clint/Downloads/va9_2020.pdf` now drives a curated structural regression test. Next quality pass should exercise it in the builder UI and then tighten recipe/generic extraction data from what the review panel reveals.
 - Recipe layer: known form families (VA9, 21-0966, 27-8832, 28-1900, future forms) should improve generic imports without requiring every converted form to live in `examples/`. Keep recipes/corpus data-driven and reviewable.
 - Continue hardening generic import quality with the curated corpus as regression data, especially where repeated XFA/static groups should become richer builder-native list loops.
@@ -407,8 +409,8 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 
 ## Recommended Next Sequence
 
-1. **Add automated browser coverage for the curated-import UX contract** — the live browser smoke is green for 21P-527EZ, but it is still manual. The next higher-value step is to extend the builder smoke path so a fully recipe-curated import proves: curation decisions visible, no low-confidence wizard, Review count 0, Canvas/Outline populated.
-2. **Only continue list-loop promotion where row semantics are still clear** — 21P-527EZ dependent children, income sources, medical expenses, and care-provider expenses plus 21P-534EZ dependent children are now looped. Marital history remains risky because the rows are incomplete and mixed between Veteran/spouse prior marriages.
+1. **Continue selective list-loop promotion where row semantics are complete and regular** — 21P-527EZ dependent children/income/medical/care-provider rows, 21P-534EZ dependent children, and 21P-534a children are now looped. Avoid 21P-534EZ medical/care expenses and marital history for now; the row semantics are mixed, shifted, or incomplete enough to risk a misleading builder shape.
+2. **Use the automated builder smoke as the import UX contract guardrail** — keep `npm run builder:smoke` green whenever changing import status, review burden semantics, or curation-decision display.
 3. **Use the quality ladder and target matrix as regression guardrails** — all 12 representative targets now meet their target levels. Keep them in the matrix so broad recipe or consolidation changes do not regress curated quality.
 4. **Later: execute `form-route-to-va-gov.md`** — still useful, but corpus polish is the better next step now that PDF curation quality has reached full coverage.
 

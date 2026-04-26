@@ -38,7 +38,7 @@ test('VBA 21P-534a imports as a curated in-service death DIC workflow', async t 
   const labels = components.map(component => component.label);
 
   assert.equal(importReport.acroFormFieldCount, 64);
-  assert.equal(importReport.componentCount, 51);
+  assert.equal(importReport.componentCount, 36);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(
     importReport.curation.recipe.recipeId,
@@ -46,6 +46,26 @@ test('VBA 21P-534a imports as a curated in-service death DIC workflow', async t 
   );
   assert.equal(importReport.curation.recipe.matchedFieldCount, 51);
   assert.equal(importReport.curation.curatedFieldCount, 51);
+  assert.deepEqual(
+    importReport.curation.decisions.map(decision => ({
+      type: decision.type,
+      chapterId: decision.chapterId,
+      arrayPath: decision.arrayPath,
+      sourceFieldCount: decision.sourceFieldCount,
+      itemFieldCount: decision.itemFieldCount,
+      estimatedItemCount: decision.estimatedItemCount,
+    })),
+    [
+      {
+        type: 'listLoop',
+        chapterId: 'children',
+        arrayPath: 'childrenInCustody',
+        sourceFieldCount: 20,
+        itemFieldCount: 5,
+        estimatedItemCount: 4,
+      },
+    ],
+  );
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
 
@@ -77,8 +97,8 @@ test('VBA 21P-534a imports as a curated in-service death DIC workflow', async t 
   assert.equal(byId('claimantFirstName')?.type, 'textInput');
   assert.equal(byId('claimantSsn')?.type, 'maskedInput');
   assert.equal(byId('survivingSpouseDateOfBirth')?.type, 'date');
-  assert.equal(byId('child1DateOfBirth')?.type, 'date');
-  assert.equal(byId('child4Ssn')?.type, 'maskedInput');
+  assert.equal(byId('childDateOfBirth')?.type, 'date');
+  assert.equal(byId('childSocialSecurityNumber')?.type, 'maskedInput');
   assert.equal(byId('claimantCurrentMailingAddress')?.type, 'address');
   assert.equal(byId('claimantDaytimePhone')?.type, 'phone');
   assert.equal(byId('accountNumber')?.type, 'textInput');
@@ -88,7 +108,7 @@ test('VBA 21P-534a imports as a curated in-service death DIC workflow', async t 
   assert.equal(byId('caoEmail')?.type, 'email');
 
   assert.ok(labels.includes('I lived continuously with the Veteran from marriage until the date of death'));
-  assert.ok(labels.includes('Child 4 relationship to claimant'));
+  assert.ok(labels.includes('Child relationship to claimant'));
   assert.ok(labels.includes('Claimant current mailing address'));
   assert.ok(labels.includes('I want VA payment directly deposited to my financial account'));
   assert.ok(labels.includes('Name and rank of Military Casualty Assistance Officer'));
@@ -99,4 +119,27 @@ test('VBA 21P-534a imports as a curated in-service death DIC workflow', async t 
   );
   assert.equal(labels.some(label => /\b(?:subform|NumberAndStreet|SSNChild|PlaceBirth)\b/i.test(label)), false);
   assert.equal(labels.some(label => label.length > 95), false);
+
+  const children = form.chapters.find(chapter => chapter.id === 'children');
+  assert.equal(children?.type, 'listLoop');
+  assert.deepEqual(children?.options, {
+    nounSingular: 'child',
+    nounPlural: 'children',
+    arrayPath: 'childrenInCustody',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(children?.itemNameLabel, 'Child full name');
+  assert.equal(children?.sectionIntro, 'Add each child in custody listed on the source form.');
+  assert.deepEqual(
+    children?.pages[0].components.map(component => component.id),
+    [
+      'childFullName',
+      'childDateOfBirth',
+      'childSocialSecurityNumber',
+      'childPlaceOfBirth',
+      'childRelationshipToClaimant',
+    ],
+  );
+  assert.equal(children?.pages[0].components[0].summaryCard, true);
 });

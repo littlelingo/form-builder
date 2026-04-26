@@ -7257,284 +7257,508 @@
           }
         },
         {
-          "id": "child1PlaceOfBirth",
-          "selector": {
-            "namePattern": "PlaceBirth1\\[0\\]"
-          },
-          "chapterId": "children",
-          "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
-          "component": {
-            "type": "textInput",
-            "label": "Child 1 place of birth"
-          }
-        },
-        {
-          "id": "child1FullName",
+          "id": "childFullName",
           "selector": {
             "namePattern": "ChildrenName1\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 1 full name"
-          }
+            "label": "Child full name",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child1DateOfBirth",
+          "id": "childDateOfBirth",
           "selector": {
             "namePattern": "Date_Of_Childs_Birth1\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "date",
-            "label": "Child 1 date of birth"
-          }
+            "label": "Child date of birth"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child1Ssn",
+          "id": "childSocialSecurityNumber",
           "selector": {
             "namePattern": "SSNChild1\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "maskedInput",
-            "label": "Child 1 Social Security number"
-          }
+            "label": "Child Social Security number"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child1RelationshipToClaimant",
+          "id": "childPlaceOfBirth",
+          "selector": {
+            "namePattern": "PlaceBirth1\\[0\\]"
+          },
+          "chapterId": "children",
+          "chapterTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
+          "component": {
+            "type": "textInput",
+            "label": "Child place of birth"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
+        },
+        {
+          "id": "childRelationshipToClaimant",
           "selector": {
             "namePattern": "RelationToClaimant1\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 1 relationship to claimant"
-          }
-        },
-        {
-          "id": "child2PlaceOfBirth",
-          "selector": {
-            "namePattern": "PlaceBirth2\\[0\\]"
+            "label": "Child relationship to claimant"
           },
-          "chapterId": "children",
-          "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
-          "component": {
-            "type": "textInput",
-            "label": "Child 2 place of birth"
-          }
+          "order": 5,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child2FullName",
+          "id": "childFullName",
           "selector": {
             "namePattern": "ChildrenName2\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 2 full name"
-          }
+            "label": "Child full name",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child2DateOfBirth",
+          "id": "childDateOfBirth",
           "selector": {
             "namePattern": "Date_Of_Childs_Birth2\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "date",
-            "label": "Child 2 date of birth"
-          }
+            "label": "Child date of birth"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child2Ssn",
+          "id": "childSocialSecurityNumber",
           "selector": {
             "namePattern": "SSNChild2\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "maskedInput",
-            "label": "Child 2 Social Security number"
-          }
+            "label": "Child Social Security number"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child2RelationshipToClaimant",
+          "id": "childPlaceOfBirth",
+          "selector": {
+            "namePattern": "PlaceBirth2\\[0\\]"
+          },
+          "chapterId": "children",
+          "chapterTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
+          "component": {
+            "type": "textInput",
+            "label": "Child place of birth"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
+        },
+        {
+          "id": "childRelationshipToClaimant",
           "selector": {
             "namePattern": "RelationToClaimant2\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 2 relationship to claimant"
-          }
-        },
-        {
-          "id": "child3PlaceOfBirth",
-          "selector": {
-            "namePattern": "PlaceBirth3\\[0\\]"
+            "label": "Child relationship to claimant"
           },
-          "chapterId": "children",
-          "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
-          "component": {
-            "type": "textInput",
-            "label": "Child 3 place of birth"
-          }
-        },
-        {
-          "id": "child3RelationshipToClaimant",
-          "selector": {
-            "namePattern": "RelationToClaimant3\\[0\\]"
+          "order": 5,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
           },
-          "chapterId": "children",
-          "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
-          "component": {
-            "type": "textInput",
-            "label": "Child 3 relationship to claimant"
-          }
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child3FullName",
+          "id": "childFullName",
           "selector": {
             "namePattern": "ChildrenName3\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 3 full name"
-          }
+            "label": "Child full name",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child3DateOfBirth",
+          "id": "childDateOfBirth",
           "selector": {
             "namePattern": "DateChildBirth3\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "date",
-            "label": "Child 3 date of birth"
-          }
+            "label": "Child date of birth"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child3Ssn",
+          "id": "childSocialSecurityNumber",
           "selector": {
             "namePattern": "SSNChild3\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "maskedInput",
-            "label": "Child 3 Social Security number"
-          }
+            "label": "Child Social Security number"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child4RelationshipToClaimant",
+          "id": "childPlaceOfBirth",
           "selector": {
-            "namePattern": "RelationToClaimant4\\[0\\]"
+            "namePattern": "PlaceBirth3\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 4 relationship to claimant"
-          }
+            "label": "Child place of birth"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child4PlaceOfBirth",
+          "id": "childRelationshipToClaimant",
           "selector": {
-            "namePattern": "PlaceBirth4\\[0\\]"
+            "namePattern": "RelationToClaimant3\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 4 place of birth"
-          }
+            "label": "Child relationship to claimant"
+          },
+          "order": 5,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child4FullName",
+          "id": "childFullName",
           "selector": {
             "namePattern": "ChildrenName4\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "textInput",
-            "label": "Child 4 full name"
-          }
+            "label": "Child full name",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child4DateOfBirth",
+          "id": "childDateOfBirth",
           "selector": {
             "namePattern": "DateChildBirth4\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "date",
-            "label": "Child 4 date of birth"
-          }
+            "label": "Child date of birth"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
-          "id": "child4Ssn",
+          "id": "childSocialSecurityNumber",
           "selector": {
             "namePattern": "SSNChild4\\[0\\]"
           },
           "chapterId": "children",
           "chapterTitle": "Children in custody",
-          "pageId": "childrenInCustody",
-          "pageTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
           "component": {
             "type": "maskedInput",
-            "label": "Child 4 Social Security number"
-          }
+            "label": "Child Social Security number"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
+        },
+        {
+          "id": "childPlaceOfBirth",
+          "selector": {
+            "namePattern": "PlaceBirth4\\[0\\]"
+          },
+          "chapterId": "children",
+          "chapterTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
+          "component": {
+            "type": "textInput",
+            "label": "Child place of birth"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
+        },
+        {
+          "id": "childRelationshipToClaimant",
+          "selector": {
+            "namePattern": "RelationToClaimant4\\[0\\]"
+          },
+          "chapterId": "children",
+          "chapterTitle": "Children in custody",
+          "pageId": "childDetails",
+          "pageTitle": "Child details",
+          "component": {
+            "type": "textInput",
+            "label": "Child relationship to claimant"
+          },
+          "order": 5,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "child",
+            "nounPlural": "children",
+            "arrayPath": "childrenInCustody",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Child full name",
+          "sectionIntro": "Add each child in custody listed on the source form."
         },
         {
           "id": "claimantCurrentMailingAddress",
