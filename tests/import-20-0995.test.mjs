@@ -38,7 +38,7 @@ test('VBA 20-0995 imports as a curated supplemental claim workflow', async t => 
   const labels = components.map(component => component.label);
 
   assert.equal(importReport.acroFormFieldCount, 144);
-  assert.equal(importReport.componentCount, 94);
+  assert.equal(importReport.componentCount, 70);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(
     importReport.curation.recipe.recipeId,
@@ -46,6 +46,34 @@ test('VBA 20-0995 imports as a curated supplemental claim workflow', async t => 
   );
   assert.equal(importReport.curation.recipe.matchedFieldCount, 94);
   assert.equal(importReport.curation.curatedFieldCount, 94);
+  assert.deepEqual(
+    importReport.curation.decisions.map(decision => ({
+      type: decision.type,
+      chapterId: decision.chapterId,
+      arrayPath: decision.arrayPath,
+      sourceFieldCount: decision.sourceFieldCount,
+      itemFieldCount: decision.itemFieldCount,
+      estimatedItemCount: decision.estimatedItemCount,
+    })),
+    [
+      {
+        type: 'listLoop',
+        chapterId: 'issues',
+        arrayPath: 'supplementalClaimIssues',
+        sourceFieldCount: 18,
+        itemFieldCount: 2,
+        estimatedItemCount: 9,
+      },
+      {
+        type: 'listLoop',
+        chapterId: 'treatmentFacilities',
+        arrayPath: 'treatmentFacilities',
+        sourceFieldCount: 12,
+        itemFieldCount: 4,
+        estimatedItemCount: 3,
+      },
+    ],
+  );
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
 
@@ -60,6 +88,7 @@ test('VBA 20-0995 imports as a curated supplemental claim workflow', async t => 
       'Homeless information',
       'Issues for supplemental claim',
       'New and relevant evidence',
+      'Treatment facilities',
       '5103 notice acknowledgment',
       'VHA notification option',
       'Certification and signature',
@@ -78,8 +107,10 @@ test('VBA 20-0995 imports as a curated supplemental claim workflow', async t => 
   assert.equal(byId('claimantSsn')?.type, 'maskedInput');
   assert.equal(byId('claimantRelationship')?.type, 'radioButton');
   assert.equal(byId('currentlyHomelessOrAtRisk')?.type, 'yesNo');
-  assert.equal(byId('issue1DecisionNoticeDate')?.type, 'date');
-  assert.equal(byId('issue9SpecificIssue')?.type, 'textInput');
+  assert.equal(byId('decisionNoticeDate')?.type, 'date');
+  assert.equal(byId('supplementalClaimIssue')?.type, 'textInput');
+  assert.equal(byId('facilityNameAndLocation')?.type, 'textInput');
+  assert.equal(byId('noTreatmentDate')?.type, 'checkbox');
   assert.equal(byId('evidenceVaMedicalCenter')?.type, 'checkbox');
   assert.equal(byId('reviewed5103Notice')?.type, 'yesNo');
   assert.equal(byId('vhaNotificationConsent')?.type, 'radioButton');
@@ -113,7 +144,8 @@ test('VBA 20-0995 imports as a curated supplemental claim workflow', async t => 
     ],
   );
 
-  assert.ok(labels.includes('Issue 9 VA decision notice date'));
+  assert.ok(labels.includes('VA decision notice date'));
+  assert.ok(labels.includes('Facility name and location'));
   assert.ok(labels.includes('Private health care provider records'));
   assert.ok(labels.includes('Veteran or claimant signature'));
   assert.ok(labels.includes('Power of attorney or authorized representative signature'));
@@ -124,4 +156,41 @@ test('VBA 20-0995 imports as a curated supplemental claim workflow', async t => 
   );
   assert.equal(labels.some(label => /\b(?:subform|Radio Button List|SPECIFICISSUE|Vafile|Date Day)\b/i.test(label)), false);
   assert.equal(labels.some(label => label.length > 95), false);
+
+  const issues = form.chapters.find(chapter => chapter.id === 'issues');
+  assert.equal(issues?.type, 'listLoop');
+  assert.deepEqual(issues?.options, {
+    nounSingular: 'issue',
+    nounPlural: 'issues',
+    arrayPath: 'supplementalClaimIssues',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(issues?.itemNameLabel, 'Specific issue');
+  assert.equal(issues?.sectionIntro, 'Add each issue listed for supplemental claim review.');
+  assert.deepEqual(
+    issues?.pages[0].components.map(component => component.id),
+    ['supplementalClaimIssue', 'decisionNoticeDate'],
+  );
+  assert.equal(issues?.pages[0].components[0].summaryCard, true);
+
+  const treatmentFacilities = form.chapters.find(chapter => chapter.id === 'treatmentFacilities');
+  assert.equal(treatmentFacilities?.type, 'listLoop');
+  assert.deepEqual(treatmentFacilities?.options, {
+    nounSingular: 'facility',
+    nounPlural: 'facilities',
+    arrayPath: 'treatmentFacilities',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(treatmentFacilities?.itemNameLabel, 'Facility name and location');
+  assert.equal(
+    treatmentFacilities?.sectionIntro,
+    'Add each VA or military treatment facility listed for new and relevant evidence.',
+  );
+  assert.deepEqual(
+    treatmentFacilities?.pages[0].components.map(component => component.id),
+    ['facilityNameAndLocation', 'treatmentMonth', 'treatmentYear', 'noTreatmentDate'],
+  );
+  assert.equal(treatmentFacilities?.pages[0].components[0].summaryCard, true);
 });

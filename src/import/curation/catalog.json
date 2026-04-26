@@ -5792,256 +5792,463 @@
           }
         },
         {
-          "id": "issue1SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE2\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 1 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue1DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[0\\].*Date_Year\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 1 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue2SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE3\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 2 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue2DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[1\\].*Date_Year\\[1\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 2 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue3SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE4\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 3 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue3DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[2\\].*Date_Year\\[2\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 3 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue4SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE5\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 4 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue4DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[3\\].*Date_Year\\[3\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 4 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue5SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE6\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 5 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue5DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[4\\].*Date_Year\\[4\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 5 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue6SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE7\\[0\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 6 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue6DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[5\\].*Date_Year\\[5\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 6 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue7SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE7\\[1\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 7 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue7DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[6\\].*Date_Year\\[6\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 7 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue8SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE7\\[2\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 8 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue8DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[7\\].*Date_Year\\[7\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 8 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue9SpecificIssue",
+          "id": "supplementalClaimIssue",
           "selector": {
             "namePattern": "SPECIFICISSUE7\\[3\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "textInput",
-            "label": "Issue 9 specific issue"
-          }
+            "label": "Specific issue",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
-          "id": "issue9DecisionNoticeDate",
+          "id": "decisionNoticeDate",
           "selector": {
             "namePattern": "Date_Of_VA_Decision_Notice_Month\\[8\\].*Date_Year\\[8\\]$"
           },
           "chapterId": "issues",
           "chapterTitle": "Issues for supplemental claim",
-          "pageId": "issuesForReview",
-          "pageTitle": "Issues for review",
+          "pageId": "issueDetails",
+          "pageTitle": "Issue details",
           "component": {
             "type": "date",
-            "label": "Issue 9 VA decision notice date"
-          }
+            "label": "VA decision notice date"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "issue",
+            "nounPlural": "issues",
+            "arrayPath": "supplementalClaimIssues",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Specific issue",
+          "sectionIntro": "Add each issue listed for supplemental claim review."
         },
         {
           "id": "evidencePrivateProvider",
@@ -6142,172 +6349,307 @@
           }
         },
         {
-          "id": "treatmentFacility1NameAndLocation",
+          "id": "facilityNameAndLocation",
           "selector": {
             "namePattern": "Name_And_Location_Of_Treatment_Facility\\[0\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 1 name and location"
-          }
+            "label": "Facility name and location",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility1Month",
+          "id": "treatmentMonth",
           "selector": {
             "namePattern": "Date_Of_Treatment_Month\\[0\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 1 treatment month"
-          }
+            "label": "Treatment month"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility1Year",
+          "id": "treatmentYear",
           "selector": {
             "namePattern": "Date_Of_Treatment_Year\\[0\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 1 treatment year"
-          }
+            "label": "Treatment year"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility1NoDate",
+          "id": "noTreatmentDate",
           "selector": {
             "namePattern": "Check_Box_Do_Not_Have_Date_s\\[0\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "checkbox",
-            "label": "I do not have treatment dates for facility 1"
-          }
+            "label": "I do not have treatment dates for this facility"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility2NameAndLocation",
+          "id": "facilityNameAndLocation",
           "selector": {
             "namePattern": "Name_And_Location_Of_Treatment_Facility\\[1\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 2 name and location"
-          }
+            "label": "Facility name and location",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility2Month",
+          "id": "treatmentMonth",
           "selector": {
             "namePattern": "Date_Of_Treatment_Month\\[1\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 2 treatment month"
-          }
+            "label": "Treatment month"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility2Year",
+          "id": "treatmentYear",
           "selector": {
             "namePattern": "Date_Of_Treatment_Year\\[1\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 2 treatment year"
-          }
+            "label": "Treatment year"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility2NoDate",
+          "id": "noTreatmentDate",
           "selector": {
             "namePattern": "Check_Box_Do_Not_Have_Date_s\\[1\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "checkbox",
-            "label": "I do not have treatment dates for facility 2"
-          }
+            "label": "I do not have treatment dates for this facility"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility3NameAndLocation",
+          "id": "facilityNameAndLocation",
           "selector": {
             "namePattern": "Name_And_Location_Of_Treatment_Facility\\[2\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 3 name and location"
-          }
+            "label": "Facility name and location",
+            "summaryCard": true
+          },
+          "order": 1,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility3Month",
+          "id": "treatmentMonth",
           "selector": {
             "namePattern": "Date_Of_Treatment_Month\\[2\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 3 treatment month"
-          }
+            "label": "Treatment month"
+          },
+          "order": 2,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility3Year",
+          "id": "treatmentYear",
           "selector": {
             "namePattern": "Date_Of_Treatment_Year\\[2\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "textInput",
-            "label": "Treatment facility 3 treatment year"
-          }
+            "label": "Treatment year"
+          },
+          "order": 3,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
-          "id": "treatmentFacility3NoDate",
+          "id": "noTreatmentDate",
           "selector": {
             "namePattern": "Check_Box_Do_Not_Have_Date_s\\[2\\]$"
           },
-          "chapterId": "newEvidence",
-          "chapterTitle": "New and relevant evidence",
-          "pageId": "treatmentFacilities",
-          "pageTitle": "Treatment facilities",
+          "chapterId": "treatmentFacilities",
+          "chapterTitle": "Treatment facilities",
+          "pageId": "treatmentFacilityDetails",
+          "pageTitle": "Treatment facility details",
           "component": {
             "type": "checkbox",
-            "label": "I do not have treatment dates for facility 3"
-          }
+            "label": "I do not have treatment dates for this facility"
+          },
+          "order": 4,
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "facility",
+            "nounPlural": "facilities",
+            "arrayPath": "treatmentFacilities",
+            "required": false,
+            "maxItems": 10
+          },
+          "itemNameLabel": "Facility name and location",
+          "sectionIntro": "Add each VA or military treatment facility listed for new and relevant evidence."
         },
         {
           "id": "reviewed5103Notice",
