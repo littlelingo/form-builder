@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after import-time curation decision visibility
+Last updated: 2026-04-25 EDT after recipe-curated review burden fix
 
 ## Current Workspace
 
@@ -147,6 +147,22 @@ review selection, Issues on appeal, and Appeal signature, plus Review 14 panel
 and wizard with cleaned labels/hints. Console still had only the existing
 missing `favicon.ico` error and PDF.js font warnings.
 
+Latest browser smoke used `npm run builder:dev` at `http://localhost:5174/` to
+import `../form-samples/VBA-21P-527EZ-ARE.pdf` after curation-decision reporting
+landed. Result: 20 sections, 346 fields, valid import status, Canvas and Outline
+populated, progress panel showed curation at `curated 491/491`, and the progress
+panel listed all four recipe-driven list-loop conversions: Dependent child
+entries, Income sources, Care provider expenses, and Medical expenses. The
+Review panel also showed the same four decisions under "Applied during PDF
+conversion". Console still had only the existing missing `favicon.ico` error,
+the expected XFA-removal warning, and PDF.js font warning. This smoke initially
+surfaced a review burden gap: the Review wizard opened at `Step 1 of 252` even
+though the form was fully matched by recipe curation. That is now fixed:
+recipe-curated components no longer count as needing human review by default,
+the re-import success message says "Recipe curation matched all 491 source
+fields", no wizard opens, and the Review tab shows `Imported components (0)`
+while still showing the applied curation decisions.
+
 Latest verification:
 
 ```bash
@@ -245,7 +261,7 @@ npm run builder:build
 git diff --check
 ```
 
-Latest verification after import-time curation decision visibility:
+Latest verification after recipe-curated review burden fix:
 
 ```bash
 node --input-type=module -e 'import catalog from "./src/import/curation/catalog.json" with { type: "json" }; import { validateRecipeCatalog } from "./src/import/curation/recipes.mjs"; console.log(JSON.stringify(validateRecipeCatalog(catalog), null, 2));'
@@ -257,6 +273,15 @@ npm run compile:example:27-8832
 npm run builder:build
 node --input-type=module -e 'import { readFile } from "node:fs/promises"; import { importPdf } from "./src/import/pipeline.mjs"; const bytes = await readFile("../form-samples/VBA-21P-527EZ-ARE.pdf"); const result = await importPdf(bytes, { fileName: "VBA-21P-527EZ-ARE.pdf" }); console.log(JSON.stringify(result.importReport.curation.decisions, null, 2));'
 git diff --check
+```
+
+Additional verification for the review burden fix:
+
+```bash
+node --test tests/reviewState.test.mjs tests/wizardSteps.test.mjs
+node --test tests/import-21p-527ez.test.mjs tests/reviewState.test.mjs tests/wizardSteps.test.mjs
+npm test
+npm run builder:build
 ```
 
 Latest corpus result over the 22 sample PDFs: 22/22 ok, 2049 components, 22 curated, 0 builder-native, 0 valid/structured/raw/failed. Representative targets met: 12/12, including `VBA-21P-527EZ-ARE.pdf` and `VBA-21P-534EZ-ARE.pdf` at `curated`. Remaining review count: 0.
@@ -361,7 +386,7 @@ ANTHROPIC_API_KEY=sk-ant-... IMPORT_RUN_CLOUD_TESTS=1 npm test
 
 PDF AcroForm → authoring JSON pipeline shipped. V1.5/V2 backlog still open:
 
-- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. The 22-form sample corpus is curated and now has a save/re-open/generate round-trip guard; curation decisions are now visible in the import progress/report UI. The next quality pass should browser-smoke those new curation-decision surfaces, then continue recipe duplication and repeated-group/list-loop opportunities.
+- Harden native curation: raw extraction now flows through a validated, data-driven curation stage. The 22-form sample corpus is curated and now has a save/re-open/generate round-trip guard; curation decisions are now visible in the import progress/report UI and browser-smoked with a looped 21P-527EZ import. Fully recipe-curated imports no longer open a large review wizard solely because source PDF field confidence was low. The next quality pass should keep browser coverage around these product semantics, then continue recipe duplication and repeated-group/list-loop opportunities.
 - VA9 regression target: `/Users/clint/Downloads/va9_2020.pdf` now drives a curated structural regression test. Next quality pass should exercise it in the builder UI and then tighten recipe/generic extraction data from what the review panel reveals.
 - Recipe layer: known form families (VA9, 21-0966, 27-8832, 28-1900, future forms) should improve generic imports without requiring every converted form to live in `examples/`. Keep recipes/corpus data-driven and reviewable.
 - Continue hardening generic import quality with the curated corpus as regression data, especially where repeated XFA/static groups should become richer builder-native list loops.
@@ -382,7 +407,7 @@ Estimate: ~half-day execution. Plan is execution-ready; no further design needed
 
 ## Recommended Next Sequence
 
-1. **Browser-smoke the new curation-decision surfaces** — import a known looped PDF such as `VBA-21P-527EZ-ARE.pdf` and confirm the progress panel and Review panel both explain the applied list-loop conversions before moving deeper into recipe work.
+1. **Add automated browser coverage for the curated-import UX contract** — the live browser smoke is green for 21P-527EZ, but it is still manual. The next higher-value step is to extend the builder smoke path so a fully recipe-curated import proves: curation decisions visible, no low-confidence wizard, Review count 0, Canvas/Outline populated.
 2. **Only continue list-loop promotion where row semantics are still clear** — 21P-527EZ dependent children, income sources, medical expenses, and care-provider expenses plus 21P-534EZ dependent children are now looped. Marital history remains risky because the rows are incomplete and mixed between Veteran/spouse prior marriages.
 3. **Use the quality ladder and target matrix as regression guardrails** — all 12 representative targets now meet their target levels. Keep them in the matrix so broad recipe or consolidation changes do not regress curated quality.
 4. **Later: execute `form-route-to-va-gov.md`** — still useful, but corpus polish is the better next step now that PDF curation quality has reached full coverage.

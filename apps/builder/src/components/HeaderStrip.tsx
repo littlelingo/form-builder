@@ -383,11 +383,16 @@ export function HeaderStrip(props: HeaderStripProps) {
         return;
       }
       onImportPdf(result.form);
+      const fullyCurated =
+        result.importReport.curation?.status === 'curated' &&
+        result.importReport.curation.curatedFieldCount === result.importReport.curation.totalFieldCount;
       setPdfImportStatus(current => ({
         phase: 'success',
         fileName: current?.fileName || file.name,
         activeStage: 'complete',
-        detail: `Loaded ${importedComponentCount} components into the canvas. Review imported confidence in the right panel.`,
+        detail: fullyCurated
+          ? `Loaded ${importedComponentCount} components into the canvas. Recipe curation matched all ${result.importReport.curation?.curatedFieldCount || 0} source fields; review curation decisions in the right panel.`
+          : `Loaded ${importedComponentCount} components into the canvas. Review imported confidence in the right panel.`,
         startedAt: current?.startedAt || Date.now(),
         elapsedMs: result.importReport.durationMs,
         report: result.importReport,

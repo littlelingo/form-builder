@@ -55,6 +55,7 @@ import {
   importedComponentCount,
   unreviewedComponentCount,
   confidenceBand,
+  needsHumanReview,
 } from './lib/reviewState';
 import { signatureFromForm } from './lib/dirty';
 import { HeaderStrip } from './components/HeaderStrip';
@@ -156,8 +157,8 @@ function formHasLowBand(form: AuthoringForm): boolean {
         const component = stack.shift();
         if (!component) continue;
         if (
+          needsHumanReview(component) &&
           component.provenance &&
-          component.provenance.reviewed === false &&
           importOrigins.has(component.provenance.origin) &&
           confidenceBand(component.provenance.confidence) === 'low'
         ) {

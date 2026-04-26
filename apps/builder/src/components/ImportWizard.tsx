@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { AuthoringComponent, AuthoringForm, SelectedNode } from '../types';
-import { confidenceBand } from '../lib/reviewState';
+import { confidenceBand, needsHumanReview } from '../lib/reviewState';
 
 interface ImportWizardProps {
   form: AuthoringForm;
@@ -34,7 +34,7 @@ function gatherLowBand(form: AuthoringForm): WizardStep[] {
   for (const chapter of form.chapters) {
     for (const page of chapter.pages) {
       for (const component of flatten(page.components)) {
-        if (!component.provenance || component.provenance.reviewed) continue;
+        if (!needsHumanReview(component) || !component.provenance) continue;
         if (!importOrigins.has(component.provenance.origin)) continue;
         const band = confidenceBand(component.provenance.confidence);
         if (band !== 'low') continue;

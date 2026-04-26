@@ -5,6 +5,7 @@ import {
   acceptComponent,
   rejectComponent,
   importedComponentCount,
+  needsHumanReview,
   unreviewedComponentCount,
   confidenceBand,
 } from '../apps/builder/src/lib/reviewState.ts';
@@ -67,6 +68,40 @@ test('unreviewedComponentCount counts components with reviewed=false', () => {
   assert.equal(unreviewedComponentCount(baseForm), 2);
   const accepted = acceptComponent(baseForm, 'a');
   assert.equal(unreviewedComponentCount(accepted), 1);
+});
+
+test('recipe-curated components do not require human review by default', () => {
+  const recipeCurated = {
+    ...baseForm,
+    chapters: [
+      {
+        ...baseForm.chapters[0],
+        pages: [
+          {
+            ...baseForm.chapters[0].pages[0],
+            components: [
+              {
+                ...baseForm.chapters[0].pages[0].components[0],
+                provenance: {
+                  ...baseForm.chapters[0].pages[0].components[0].provenance,
+                  curation: {
+                    source: 'recipe',
+                    recipeId: 'known-form-recipe',
+                  },
+                },
+              },
+              baseForm.chapters[0].pages[0].components[1],
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const [curated, generic] = recipeCurated.chapters[0].pages[0].components;
+  assert.equal(needsHumanReview(curated), false);
+  assert.equal(needsHumanReview(generic), true);
+  assert.equal(unreviewedComponentCount(recipeCurated), 1);
 });
 
 test('importedComponentCount keeps reviewed PDF imports addressable', () => {

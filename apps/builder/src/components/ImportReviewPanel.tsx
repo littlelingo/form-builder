@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 
 import type { AuthoringComponent, AuthoringForm, SelectedNode } from '../types';
-import { confidenceBand } from '../lib/reviewState';
+import { confidenceBand, needsHumanReview } from '../lib/reviewState';
 import {
   appendCorpusEntries,
   exportCorpus,
@@ -83,7 +83,7 @@ function gatherUnreviewed(form: AuthoringForm): ReviewRow[] {
   for (const chapter of form.chapters) {
     for (const page of chapter.pages) {
       for (const component of flatten(page.components)) {
-        if (component.provenance && component.provenance.reviewed === false) {
+        if (needsHumanReview(component)) {
           rows.push({ component, chapterId: chapter.id, pageId: page.id });
         }
       }

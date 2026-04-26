@@ -34,6 +34,19 @@ function isImportedComponent(component: AuthoringComponent): boolean {
   );
 }
 
+function isTrustedRecipeCurated(provenance: AuthoringProvenance): boolean {
+  return (
+    provenance.curation?.source === 'recipe' &&
+    typeof provenance.curation.recipeId === 'string' &&
+    provenance.curation.recipeId.length > 0
+  );
+}
+
+export function needsHumanReview(component: AuthoringComponent): boolean {
+  if (!component.provenance || component.provenance.reviewed !== false) return false;
+  return !isTrustedRecipeCurated(component.provenance);
+}
+
 function mapComponent(
   component: AuthoringComponent,
   componentId: string,
@@ -99,7 +112,7 @@ export function rejectComponent(
 }
 
 export function unreviewedComponentCount(form: AuthoringForm): number {
-  return countFormComponents(form, component => component.provenance?.reviewed === false);
+  return countFormComponents(form, needsHumanReview);
 }
 
 export function importedComponentCount(form: AuthoringForm): number {
