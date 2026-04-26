@@ -135,3 +135,145 @@ test('consolidateFields merges date, SSN, phone, and address fragments', () => {
   assert.equal(consolidated[2].closestLabel, '6. Telephone Number');
   assert.equal(consolidated[3].closestLabel, '5. Veteran Mailing Address');
 });
+
+test('consolidateFields handles XFA naming variants without mixing address and phone parts', () => {
+  const fields = [
+    {
+      name: 'form1[0].#subform[0].DOBMonth[0]',
+      type: 'text',
+      closestLabel: '4. DATE OF BIRTH',
+      neighborText: '4. DATE OF BIRTH (MM-DD-YYYY)',
+      bbox: { page: 0, x: 0.6, y: 0.1, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].DOBDay[0]',
+      type: 'text',
+      closestLabel: '(MM-DD-YYYY)',
+      neighborText: '4. DATE OF BIRTH',
+      bbox: { page: 0, x: 0.7, y: 0.1, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].DOBYear[0]',
+      type: 'text',
+      closestLabel: '(MM-DD-YYYY)',
+      neighborText: '4. DATE OF BIRTH',
+      bbox: { page: 0, x: 0.8, y: 0.1, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].FirstThreeNumbers[0]',
+      type: 'text',
+      closestLabel: '2. SOCIAL SECURITY NUMBER',
+      neighborText: '2. SOCIAL SECURITY NUMBER',
+      bbox: { page: 0, x: 0.1, y: 0.1, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].SecondTwoNumbers[0]',
+      type: 'text',
+      closestLabel: '2. SOCIAL SECURITY NUMBER',
+      neighborText: '2. SOCIAL SECURITY NUMBER',
+      bbox: { page: 0, x: 0.2, y: 0.1, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].LastFourNumbers[0]',
+      type: 'text',
+      closestLabel: 'unhelpful nearby address text',
+      neighborText: 'nearby address text without SSN',
+      bbox: { page: 0, x: 0.3, y: 0.1, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].CurrentMailingAddress_NumberAndStreet[0]',
+      type: 'text',
+      closestLabel: '5. MAILING ADDRESS',
+      neighborText: '5. MAILING ADDRESS street',
+      bbox: { page: 0, x: 0.1, y: 0.2, w: 0.4, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].CurrentMailingAddress_City[0]',
+      type: 'text',
+      closestLabel: 'City',
+      neighborText: '5. MAILING ADDRESS city',
+      bbox: { page: 0, x: 0.1, y: 0.23, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].CurrentMailingAddress_StateOrProvince[0]',
+      type: 'text',
+      closestLabel: 'State/Province',
+      neighborText: '5. MAILING ADDRESS state',
+      bbox: { page: 0, x: 0.2, y: 0.23, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].CurrentMailingAddress_ZIPOrPostalCode_LastFourNumbers[0]',
+      type: 'text',
+      closestLabel: 'ZIP Code/Postal Code',
+      neighborText: 'ZIP Code/Postal Code Enter International Phone Number',
+      bbox: { page: 0, x: 0.3, y: 0.23, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].NewAddress_NumberAndStreet[0]',
+      type: 'text',
+      closestLabel: '9. NEW ADDRESS',
+      neighborText: '9. NEW ADDRESS street',
+      bbox: { page: 0, x: 0.1, y: 0.4, w: 0.4, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].NewAddress_City[0]',
+      type: 'text',
+      closestLabel: 'City',
+      neighborText: '9. NEW ADDRESS city',
+      bbox: { page: 0, x: 0.1, y: 0.43, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].NewAddress_StateOrProvince[0]',
+      type: 'text',
+      closestLabel: 'State/Province',
+      neighborText: '9. NEW ADDRESS state',
+      bbox: { page: 0, x: 0.2, y: 0.43, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].NewAddress_ZIPOrPostalCode_FirstFiveNumbers[0]',
+      type: 'text',
+      closestLabel: 'ZIP Code/Postal Code',
+      neighborText: '9. NEW ADDRESS ZIP',
+      bbox: { page: 0, x: 0.3, y: 0.43, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].AreaCode[0]',
+      type: 'text',
+      closestLabel: '6. MAIN TELEPHONE NUMBER',
+      neighborText: '6. MAIN TELEPHONE NUMBER',
+      bbox: { page: 0, x: 0.1, y: 0.6, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].FirstThreeNumbers[1]',
+      type: 'text',
+      closestLabel: '6. MAIN TELEPHONE NUMBER',
+      neighborText: '6. MAIN TELEPHONE NUMBER',
+      bbox: { page: 0, x: 0.2, y: 0.6, w: 0.05, h: 0.02 },
+    },
+    {
+      name: 'form1[0].#subform[0].LastFourNumbers[1]',
+      type: 'text',
+      closestLabel: '(Include Area Code)',
+      neighborText: '6. MAIN TELEPHONE NUMBER',
+      bbox: { page: 0, x: 0.3, y: 0.6, w: 0.05, h: 0.02 },
+    },
+  ];
+
+  const consolidated = consolidateFields(fields);
+
+  assert.equal(consolidated.length, 5);
+  assert.equal(consolidated[0].closestLabel, '4. Date Of Birth');
+  assert.equal(consolidated[1].closestLabel, '2. Social Security Number');
+  assert.equal(consolidated[2].closestLabel, '5. Mailing Address');
+  assert.equal(consolidated[3].closestLabel, '9. New Address');
+  assert.equal(consolidated[4].closestLabel, '6. Main Telephone Number');
+  assert.deepEqual(
+    consolidated[2].sourceFieldNames,
+    [
+      'form1[0].#subform[0].CurrentMailingAddress_NumberAndStreet[0]',
+      'form1[0].#subform[0].CurrentMailingAddress_City[0]',
+      'form1[0].#subform[0].CurrentMailingAddress_StateOrProvince[0]',
+      'form1[0].#subform[0].CurrentMailingAddress_ZIPOrPostalCode_LastFourNumbers[0]',
+    ],
+  );
+});

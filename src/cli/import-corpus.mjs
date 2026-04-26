@@ -29,15 +29,15 @@ export const REPRESENTATIVE_TARGETS = [
     filename: 'VA Form 10-10EZ.pdf',
     targetSet: 'baseline',
     category: 'medium-acroform-baseline',
-    targetLevel: 'structured',
-    focus: 'Moderate AcroForm coverage with meaningful chapters/pages.',
+    targetLevel: 'curated',
+    focus: 'Moderate AcroForm coverage should remain fully curated into health-benefits sections.',
   },
   {
     filename: 'VBA-21-526EZ-ARE.pdf',
     targetSet: 'baseline',
     category: 'large-xfa-stress-case',
-    targetLevel: 'builder-native',
-    focus: 'Large XFA/AcroForm stress case for section inference.',
+    targetLevel: 'curated',
+    focus: 'Large XFA/AcroForm disability-compensation form should remain fully curated into claim, Veteran, disability, service, payment, and signature sections.',
   },
   {
     filename: 'standard-form-180_2020.pdf',
@@ -87,6 +87,13 @@ export const REPRESENTATIVE_TARGETS = [
     category: 'large-survivor-pension-xfa',
     targetLevel: 'builder-native',
     focus: 'Large survivor pension XFA form should reduce duplicate labels and repeated groups into authorable structures.',
+  },
+  {
+    filename: 'VBA-21P-535-ARE.pdf',
+    targetSet: 'next-risk',
+    category: 'parent-dic-xfa',
+    targetLevel: 'curated',
+    focus: 'Parent DIC XFA packet should be fully curated across VA 21P-535 and attached SSA-24 pages.',
   },
   {
     filename: 'va-form-3288.pdf',

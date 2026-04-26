@@ -120,15 +120,55 @@ function inferGroupLabel(fields, fallback, keywords = []) {
   return titleCase(candidates[0]);
 }
 
+function addressFamily(field) {
+  const name = field.name || '';
+  if (/Mailing_?Address/i.test(name)) return 'mailing_address';
+  const match = name.match(/\.(CurrentMailingAddress|NewAddress|Mailing_?Address|Address)(?:_|[A-Z]|\[)/i);
+  return match?.[1]?.toLowerCase() || 'address';
+}
+
+function identityFamily(field) {
+  const name = field.name || '';
+  if (/Claimants?/i.test(name)) return 'claimant';
+  if (/Veterans?/i.test(name)) return 'veteran';
+  return 'identity';
+}
+
+function dateFamily(field) {
+  const name = field.name || '';
+  if (/DOB|birth/i.test(name)) return 'birth';
+  if (/Date_?Signed|DateSigned/i.test(name)) return 'signed';
+  if (/Date_Of_VA_Decision_Notice|#subform\[4\]\.Date_(?:Day|Year)/i.test(name)) return 'decision_notice';
+  if (/Date_Of_Treatment/i.test(name)) return 'treatment';
+  if (/Date_Last_VAF_21_22_Or_21_22A_Submitted|#subform\[6\]\.Date_(?:Day|Year)\[9\]/i.test(name)) return 'last_power_of_attorney_submission';
+  return 'date';
+}
+
+function rowBucket(field) {
+  const y = field.bbox?.y;
+  return Number.isFinite(y) ? Math.round(y * 1000) : 'row';
+}
+
+function blockBucket(field, size = 0.3) {
+  const y = field.bbox?.y;
+  return Number.isFinite(y) ? Math.floor(y / size) : 'block';
+}
+
 function groupKey(field, kind) {
   const page = field.bbox?.page ?? 'x';
   const index = field.name?.match(/\[(\d+)\]$/)?.[1] ?? '0';
   const subform = field.name?.match(/#subform\[(\d+)\]/)?.[1] ?? 'form';
+  if (kind === 'date') return `${kind}:${page}:${subform}:${dateFamily(field)}:${index}`;
+  if (kind === 'address') return `${kind}:${page}:${subform}:${addressFamily(field)}:${blockBucket(field)}`;
+  if (kind === 'name' || kind === 'ssn') return `${kind}:${page}:${subform}:${identityFamily(field)}:${index}`;
+  if (kind === 'phone') return `${kind}:${page}:${subform}:${rowBucket(field)}`;
   return `${kind}:${page}:${subform}:${index}`;
 }
 
 function isDatePart(field) {
-  return /\.(Month|Day|Year)\[\d+\]$/i.test(field.name || '');
+  const name = field.name || '';
+  return /\.(?:(?:DOB|Date_?Signed|DateSigned|Date_Of_VA_Decision_Notice|Date_Of_Treatment|Date_Last_VAF_21_22_Or_21_22A_Submitted)_?)?(?:Month|Day|Year)\[\d+\]$/i.test(name) ||
+    /\.Date_(?:Day|Year)\[\d+\]$/i.test(name);
 }
 
 function isSsnPart(field) {
@@ -140,23 +180,30 @@ function isSsnPart(field) {
   return looksLikeSsnName || ambiguousSsnPart;
 }
 
+function isSsnGroupCandidate(field) {
+  const name = field.name || '';
+  if (/(?:Address|ZIP|Postal)/i.test(name)) return false;
+  return /(SSN(?:FirstThree|SecondTwo|LastFour)|FirstThreeNumbers|SecondTwoNumbers|LastFourNumbers)\[\d+\]$/i.test(name);
+}
+
 function isPhonePart(field) {
   const name = field.name || '';
-  if (/Mailing_Address_ZIP/i.test(name)) return false;
-  const phonePart = /(AreaCode|FirstThreeNumbers|LastFourNumbers|International_Telephone_Number)/i.test(name);
-  return phonePart && /\b(phone|telephone|area code)\b/i.test(fieldText(field));
+  if (/(?:Mailing_Address|CurrentMailingAddress|NewAddress|Address).*ZIP/i.test(name)) return false;
+  const phonePart = /(AreaCode|FirstThreeNumbers|SecondThreeNumbers|LastFourNumbers|International_Telephone_Number|International_Phone_Number|Telephone_Number_(?:FirstThree|SecondThree|LastFour)Numbers)/i.test(name);
+  return phonePart && (/\b(phone|telephone|area code)\b/i.test(fieldText(field)) || /Telephone_Number|International_Phone_Number/i.test(name));
 }
 
 function isAddressPart(field) {
   const name = field.name || '';
-  const addressPart = /(Mailing_Address|Address_.*(City|Country|ZIP|State|Street|Apartment)|NumberAndStreet)/i.test(name);
+  if (/\b(e-?mail|electronic correspondence)\b/i.test(field.closestLabel || '') && !/ZIP|Postal/i.test(name)) return false;
+  const addressPart = /(Mailing_?Address|CurrentMailingAddress|NewAddress|Address_.*(City|Country|ZIP|State|Street|Apartment)|NumberAndStreet)/i.test(name);
   return addressPart && /\b(address|street|city|country|zip|postal|state|province)\b/i.test(fieldText(field));
 }
 
 function isNamePart(field) {
   const name = field.name || '';
-  const namePart = /\.(?:Claimants_)?(First_Name|Middle_Initial|Last_Name)\[\d+\]$/i.test(name);
-  return namePart && /\b(name|first|middle|last)\b/i.test(fieldText(field));
+  const namePart = /\.(?:(?:Veterans?|Claimants?)_?)?(?:First_Name|Middle_Initial1?|Last_Name|FirstName|MiddleInitial1?|LastName)\[\d+\]$/i.test(name);
+  return namePart;
 }
 
 function makeConsolidatedField(fields, kind, patch = {}) {
@@ -279,6 +326,45 @@ function collectGroups(fields, predicate, kind, minSize, patchForGroup) {
   return result;
 }
 
+function collectSsnGroups(fields) {
+  const groups = new Map();
+  fields.forEach((field, index) => {
+    if (!isSsnGroupCandidate(field)) return;
+    const key = groupKey(field, 'ssn');
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ field, index });
+  });
+
+  const result = [];
+  for (const entries of groups.values()) {
+    const groupFields = entries.map(entry => entry.field);
+    const explicitFields = groupFields.filter(field =>
+      /\bSSN|SocialSecurity|Social_Security/i.test(field.name || ''),
+    );
+    const selectedFields = explicitFields.length >= 3
+      ? groupFields.filter(field =>
+          explicitFields.includes(field) || /SecondTwoNumbers/i.test(field.name || ''),
+        )
+      : groupFields;
+    const selectedNames = new Set(selectedFields.map(field => field.name));
+    const selectedEntries = entries.filter(entry => selectedNames.has(entry.field.name));
+    const names = groupFields.map(field => field.name || '').join(' ');
+    const text = selectedFields.map(fieldText).join(' ');
+    const hasSsnContext = /\b(SSN|social security)\b/i.test(text);
+    const hasMiddleSsnPart = /SecondTwoNumbers|SSNSecondTwo/i.test(names);
+    if (selectedEntries.length < 3 || (!hasSsnContext && !hasMiddleSsnPart)) continue;
+    result.push({
+      indexes: selectedEntries.map(entry => entry.index),
+      field: makeConsolidatedField(selectedFields, 'ssn', {
+        type: 'text',
+        closestLabel: inferGroupLabel(selectedFields, 'Social Security number', ['social security', 'ssn']),
+        maxLength: 11,
+      }),
+    });
+  }
+  return result;
+}
+
 export function consolidateFields(fields = []) {
   const replacements = [];
 
@@ -302,6 +388,7 @@ export function consolidateFields(fields = []) {
       closestLabel: inferGroupLabel(groupFields, 'Date', ['date', 'birth', 'signed', 'entered', 'separated']),
       maxLength: 20,
     })),
+    ...collectSsnGroups(fields),
     ...collectGroups(fields, isSsnPart, 'ssn', 3, groupFields => ({
       type: 'text',
       closestLabel: inferGroupLabel(groupFields, 'Social Security number', ['social security', 'ssn']),

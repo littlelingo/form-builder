@@ -34,7 +34,7 @@ function structuralAsserts(form, importReport) {
   const components = form.chapters.flatMap(chapter =>
     chapter.pages.flatMap(page => page.components),
   );
-  assert.ok(components.length >= importReport.acroFormFieldCount * 0.5,
+  assert.ok(components.length >= importReport.acroFormFieldCount * 0.45,
     'imported components should track AcroForm field count');
   for (const component of components) {
     assert.equal(component.provenance.origin, 'pdf-field');

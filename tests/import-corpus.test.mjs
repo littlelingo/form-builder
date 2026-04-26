@@ -160,6 +160,7 @@ test('representative import targets cover baseline and next-risk form varieties'
       'va-form-21-8940-tdiu_app_2020.pdf',
       'VBA-21P-527EZ-ARE.pdf',
       'VBA-21P-534EZ-ARE.pdf',
+      'VBA-21P-535-ARE.pdf',
       'va-form-3288.pdf',
     ],
   );
@@ -171,6 +172,7 @@ test('representative import targets cover baseline and next-risk form varieties'
       'baseline',
       'baseline',
       'baseline',
+      'next-risk',
       'next-risk',
       'next-risk',
       'next-risk',
