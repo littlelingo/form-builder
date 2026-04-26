@@ -83,7 +83,10 @@ export function ImportWizard({ form, onAccept, onJumpToComponent, onClose }: Imp
   const band = confidenceBand(confidence);
   const percent = Math.round(confidence * 100);
   const total = allSteps.length;
-  const insight = buildConfidenceInsight(step.component.provenance);
+  const insight = buildConfidenceInsight(step.component.provenance, {
+    label: step.component.label,
+    componentType: step.component.type,
+  });
 
   return (
     <div className="builder-modal-backdrop" role="presentation" onClick={onClose}>

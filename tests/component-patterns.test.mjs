@@ -106,6 +106,30 @@ test('recognizeComponentPatterns deterministic fallback handles date and binary 
   assert.equal(deterministic.fields[1].componentPattern?.source, 'deterministic');
 });
 
+test('recognizeComponentPatterns deterministic fallback handles static item-number labels and dollar-only amounts', () => {
+  const fields = [
+    {
+      name: 'static:22c',
+      closestLabel: '22c',
+      neighborText: '',
+      type: 'text',
+    },
+    {
+      name: 'F[0].P6[0].Section8_Q1[0]',
+      closestLabel: '$',
+      neighborText: '',
+      type: 'text',
+    },
+  ];
+
+  const deterministic = recognizeComponentPatterns(fields, { mode: 'deterministic' });
+  assert.equal(deterministic.report.matchedFieldCount, 2);
+  assert.equal(deterministic.fields[0].componentPattern?.role, 'numberValue');
+  assert.equal(deterministic.fields[1].componentPattern?.role, 'currencyAmount');
+  assert.equal(deterministic.fields[0].componentPattern?.source, 'deterministic');
+  assert.equal(deterministic.fields[1].componentPattern?.source, 'deterministic');
+});
+
 test('recognizeComponentPatterns normalizes AcroForm/XFA scaffolding tokens into deterministic matches', () => {
   const fields = [
     {
@@ -136,4 +160,33 @@ test('recognizeComponentPatterns normalizes AcroForm/XFA scaffolding tokens into
   assert.equal(deterministic.fields[0].componentPattern?.source, 'deterministic');
   assert.equal(deterministic.fields[1].componentPattern?.source, 'deterministic');
   assert.equal(deterministic.fields[2].componentPattern?.source, 'deterministic');
+});
+
+test('recognizeComponentPatterns matches enrollment/support count fields deterministically', () => {
+  const fields = [
+    {
+      name: 'totalEnrolled12',
+      closestLabel: 'ENROLLED',
+      neighborText: 'TOTAL ENROLLED',
+      type: 'text',
+    },
+    {
+      name: 'supportedEnrolled7',
+      closestLabel: 'ENROLLED',
+      neighborText: 'SUPPORTED ENROLLED',
+      type: 'text',
+    },
+    {
+      name: 'numSupported3',
+      closestLabel: 'ENROLLED',
+      neighborText: 'NUMBER SUPPORTED',
+      type: 'text',
+    },
+  ];
+
+  const deterministic = recognizeComponentPatterns(fields, { mode: 'deterministic' });
+  assert.equal(deterministic.report.matchedFieldCount, 3);
+  assert.equal(deterministic.fields[0].componentPattern?.role, 'numberValue');
+  assert.equal(deterministic.fields[1].componentPattern?.role, 'numberValue');
+  assert.equal(deterministic.fields[2].componentPattern?.role, 'numberValue');
 });

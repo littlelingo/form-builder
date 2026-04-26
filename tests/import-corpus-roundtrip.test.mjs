@@ -53,7 +53,7 @@ test('curated corpus imports round-trip through builder JSON and generated formC
     .filter(filename => filename.toLowerCase().endsWith('.pdf'))
     .sort((a, b) => a.localeCompare(b));
 
-  assert.equal(filenames.length, 22, 'expected the current 22-form corpus fixture set');
+  assert.ok(filenames.length >= 22, 'expected at least the baseline corpus fixture set');
 
   for (const filename of filenames) {
     const bytes = await readFile(join(corpusPath, filename));
@@ -62,20 +62,24 @@ test('curated corpus imports round-trip through builder JSON and generated formC
       enrich: false,
     });
 
-    assert.equal(importReport.curation.status, 'curated', `${filename} should import as curated`);
+    assert.ok(
+      ['curated', 'taxonomy-curated'].includes(importReport.curation.status),
+      `${filename} should import as curated or taxonomy-curated`,
+    );
+    assert.equal(
+      importReport.validation.valid,
+      true,
+      `${filename} import validation failed:\n${importReport.validation.errors.join('\n')}`,
+    );
+    assert.ok(importReport.componentCount > 0, `${filename} should produce components`);
     assert.ok(
       importReport.curation.curatedFieldCount >= importReport.componentCount,
       `${filename} should curate all extracted fields used in builder components`,
     );
     assert.equal(
-      allComponents(form).every(component => component.provenance?.curation?.recipeId),
+      allComponents(form).every(component => component.provenance?.curation?.source),
       true,
-      `${filename} builder components should retain recipe curation provenance`,
-    );
-    assert.equal(
-      importReport.curation.curatedFieldCount,
-      importReport.curation.recipe.matchedFieldCount,
-      `${filename} curated field count should match the recipe match count`,
+      `${filename} builder components should retain curation provenance`,
     );
     assert.equal(
       countComponents(form),

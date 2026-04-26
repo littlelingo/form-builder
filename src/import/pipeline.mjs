@@ -84,6 +84,7 @@ export async function importPdf(pdfBytes, options = {}) {
     fieldCount: acroForm.fieldCount,
   });
   const text = await extractText(textInput, {
+    enableXfa: acroForm?.source === 'xfa-html',
     onProgress: event =>
       emitProgress(onProgress, {
         ...event,

@@ -37,10 +37,12 @@ import {
   moveChapterToIndex,
   moveComponentToPageAt,
   movePageToIndex,
+  normalizeHorizontalComponentRows,
   previewTemplateAuthoringHelpers,
   removeChapter,
   removeComponent,
   removePage,
+  rowComponentIdsForComponent,
   setComponentRowStart,
   setComponentLayoutWidth,
   updateComponent,
@@ -336,13 +338,16 @@ export default function App() {
     }
 
     const result = addComponentToPageAt(form, selected, type, index, layoutWidth);
-    const nextForm = siblingId
-      ? setComponentLayoutWidth(
-          result.form,
-          { ...selected, componentId: siblingId },
-          'half',
-        )
-      : result.form;
+    const siblingRow = siblingId ? rowComponentIdsForComponent(form, selected, siblingId) : [];
+    const nextForm =
+      siblingId && result.componentId
+        ? normalizeHorizontalComponentRows(
+            result.form,
+            selected,
+            [...siblingRow, result.componentId],
+            { preferWrapId: result.componentId },
+          )
+        : result.form;
     commitForm(nextForm);
     setSelected({
       ...selected,
@@ -359,13 +364,14 @@ export default function App() {
     options?: TemplateInsertionOptions,
   ) {
     const result = addSectionTemplateToPage(form, selected, templateId, index, layoutWidth, options);
-    const nextForm = siblingId
-      ? setComponentLayoutWidth(
-          result.form,
-          { ...result.selected, componentId: siblingId },
-          'half',
-        )
-      : result.form;
+    const insertedId = result.selected.componentId;
+    const siblingRow = siblingId ? rowComponentIdsForComponent(form, selected, siblingId) : [];
+    const nextForm =
+      siblingId && insertedId
+        ? normalizeHorizontalComponentRows(result.form, selected, [...siblingRow, insertedId], {
+            preferWrapId: insertedId,
+          })
+        : result.form;
     commitForm(nextForm);
     setSelected(result.selected);
     setPropertiesPanel('properties');
@@ -447,13 +453,19 @@ export default function App() {
       index,
       layoutWidth,
     );
-    const nextForm = siblingId
-      ? setComponentLayoutWidth(
-          result.form,
-          { ...result.selected, componentId: siblingId },
-          'half',
-        )
-      : result.form;
+    const insertedId = result.selected.componentId;
+    const siblingRow = siblingId
+      ? rowComponentIdsForComponent(currentSelection.form, currentSelection.selected, siblingId)
+      : [];
+    const nextForm =
+      siblingId && insertedId
+        ? normalizeHorizontalComponentRows(
+            result.form,
+            currentSelection.selected,
+            [...siblingRow, insertedId],
+            { preferWrapId: insertedId },
+          )
+        : result.form;
     commitForm(nextForm);
     setSelected(result.selected);
     setPropertiesPanel('properties');
@@ -665,14 +677,32 @@ export default function App() {
     layoutWidth: LayoutWidth = 'full',
     siblingId?: string,
   ) {
+    const sourceRow =
+      siblingId && node.componentId ? rowComponentIdsForComponent(form, node, node.componentId) : [];
+    const targetRow = siblingId ? rowComponentIdsForComponent(form, selected, siblingId) : [];
     const moved = moveComponentToPageAt(form, node, selected, index, layoutWidth);
-    const nextForm = siblingId
-      ? setComponentLayoutWidth(
-          moved,
-          { ...selected, componentId: siblingId },
-          'half',
-        )
-      : moved;
+    let nextForm = moved;
+
+    if (siblingId && node.componentId) {
+      const samePage = node.chapterId === selected.chapterId && node.pageId === selected.pageId;
+      const sameRow =
+        samePage &&
+        sourceRow.some(componentId => targetRow.includes(componentId));
+
+      if (sameRow) {
+        nextForm = normalizeHorizontalComponentRows(nextForm, selected, [...sourceRow, ...targetRow]);
+      } else {
+        nextForm = normalizeHorizontalComponentRows(nextForm, selected, [...targetRow, node.componentId], {
+          preferWrapId: node.componentId,
+        });
+        nextForm = normalizeHorizontalComponentRows(
+          nextForm,
+          node,
+          sourceRow.filter(componentId => componentId !== node.componentId),
+        );
+      }
+    }
+
     commitForm(nextForm);
     setSelected({
       ...selected,

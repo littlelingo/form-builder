@@ -38,6 +38,56 @@ function compactLabel(label) {
     .trim();
 }
 
+const PLACEHOLDER_FIELD_NAME_PATTERN = /^undefined(?:[_.-]\d+)?$/i;
+const PLACEHOLDER_WEAK_WORDS = new Set([
+  'do',
+  'page',
+  'item',
+  'report',
+  'value',
+  'estate',
+  'section',
+  'remark',
+  'remarks',
+  'term',
+  'begins',
+  'begin',
+  'see',
+  'attendance',
+  'va',
+  'v',
+  'of',
+  'the',
+  'and',
+]);
+const PLACEHOLDER_STRONG_SIGNAL_PATTERN = /\b(name|address|city|state|zip|postal|phone|email|ssn|social|birth|date|signature|relationship|marital|service|branch|veteran|claimant|school|education|support|enrolled|amount|income|expense|payment|employer|occupation|dependent|child|spouse|guardian|custodian)\b/i;
+
+function placeholderWords(text) {
+  return String(text || '')
+    .toLowerCase()
+    .match(/\b[a-z]{2,}\b/g) || [];
+}
+
+function isPlaceholderNoiseField(field) {
+  if (!PLACEHOLDER_FIELD_NAME_PATTERN.test(field?.name || '')) return false;
+  const label = compactLabel(field?.closestLabel);
+  const neighborText = compactLabel(field?.neighborText);
+  const combined = compactLabel(`${label} ${neighborText}`.trim());
+  if (!combined) return true;
+
+  const words = placeholderWords(combined);
+  const strongSignal = PLACEHOLDER_STRONG_SIGNAL_PATTERN.test(combined);
+  if (strongSignal) return false;
+
+  const labelLooksPunctuation = !/[a-z]/i.test(label) || /^[\d().,$:;\/-]+$/i.test(label);
+  const weakOnly = words.length > 0 && words.every(word => PLACEHOLDER_WEAK_WORDS.has(word));
+
+  if (words.length === 0) return true;
+  if (weakOnly) return true;
+  if (labelLooksPunctuation && words.length < 3) return true;
+  return false;
+}
+
 function cleanNumberedCandidate(label) {
   return compactLabel(label)
     .replace(/\s+\d{1,2}[A-Z]?$/i, '')
@@ -366,10 +416,11 @@ function collectSsnGroups(fields) {
 }
 
 export function consolidateFields(fields = []) {
+  const sourceFields = fields.filter(field => !isPlaceholderNoiseField(field));
   const replacements = [];
 
   const radioGroups = new Map();
-  fields.forEach((field, index) => {
+  sourceFields.forEach((field, index) => {
     if (field.type !== 'radio' || !field.name) return;
     if (!radioGroups.has(field.name)) radioGroups.set(field.name, []);
     radioGroups.get(field.name).push({ field, index });
@@ -383,28 +434,28 @@ export function consolidateFields(fields = []) {
   }
 
   replacements.push(
-    ...collectGroups(fields, isDatePart, 'date', 3, groupFields => ({
+    ...collectGroups(sourceFields, isDatePart, 'date', 3, groupFields => ({
       type: 'text',
       closestLabel: inferGroupLabel(groupFields, 'Date', ['date', 'birth', 'signed', 'entered', 'separated']),
       maxLength: 20,
     })),
-    ...collectSsnGroups(fields),
-    ...collectGroups(fields, isSsnPart, 'ssn', 3, groupFields => ({
+    ...collectSsnGroups(sourceFields),
+    ...collectGroups(sourceFields, isSsnPart, 'ssn', 3, groupFields => ({
       type: 'text',
       closestLabel: inferGroupLabel(groupFields, 'Social Security number', ['social security', 'ssn']),
       maxLength: 11,
     })),
-    ...collectGroups(fields, isPhonePart, 'phone', 3, groupFields => ({
+    ...collectGroups(sourceFields, isPhonePart, 'phone', 3, groupFields => ({
       type: 'text',
       closestLabel: inferGroupLabel(groupFields, 'Telephone number', ['telephone', 'phone']),
       maxLength: 30,
     })),
-    ...collectGroups(fields, isAddressPart, 'address', 4, groupFields => ({
+    ...collectGroups(sourceFields, isAddressPart, 'address', 4, groupFields => ({
       type: 'text',
       closestLabel: inferGroupLabel(groupFields, 'Mailing address', ['mailing address', 'address']),
       maxLength: 240,
     })),
-    ...collectGroups(fields, isNamePart, 'name', 2, groupFields => ({
+    ...collectGroups(sourceFields, isNamePart, 'name', 2, groupFields => ({
       type: 'text',
       closestLabel: inferGroupLabel(groupFields, 'Name', ['name']),
       maxLength: 80,
@@ -420,7 +471,7 @@ export function consolidateFields(fields = []) {
   }
 
   const consolidated = [];
-  fields.forEach((field, index) => {
+  sourceFields.forEach((field, index) => {
     if (byFirstIndex.has(index)) {
       consolidated.push(byFirstIndex.get(index));
     }

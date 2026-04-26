@@ -2,7 +2,12 @@ import { useRef, useState } from 'react';
 
 import { validateAuthoringForm } from '../lib/core';
 import { importPdfFromFile } from '../lib/importClient';
-import type { ImportPdfResult, ImportProgressEvent, ImportProgressStage } from '../lib/importClient';
+import type {
+  ImportFormInventoryReport,
+  ImportPdfResult,
+  ImportProgressEvent,
+  ImportProgressStage,
+} from '../lib/importClient';
 import type { AuthoringForm, ComponentSystemId } from '../types';
 
 const importSteps: Array<{ stage: ImportProgressStage; label: string }> = [
@@ -45,6 +50,12 @@ interface PdfImportStatus {
     chapterCount?: number;
     componentCount?: number;
   };
+}
+
+interface MultiFormPromptState {
+  fileName: string;
+  pageCount?: number;
+  forms: ImportFormInventoryReport['forms'];
 }
 
 function formatDuration(ms?: number): string {
@@ -99,6 +110,7 @@ function ImportProgressPanel({
   status: PdfImportStatus;
   onDismiss: () => void;
 }) {
+  const [metricHelpOpen, setMetricHelpOpen] = useState<string | null>(null);
   const activeIndex = Math.max(
     0,
     importSteps.findIndex(step => step.stage === status.activeStage),
@@ -115,6 +127,77 @@ function ImportProgressPanel({
   const formInventory = status.report?.formInventory || status.stats.formInventory;
   const detectedForms = formInventory?.forms || [];
   const patternReport = status.report?.patterns || status.stats.patterns;
+  const pageCount = status.stats.pageCount ?? status.report?.pageCount;
+  const detectedFormsSummary = formInventory
+    ? `${formInventory.detectedFormCount}${formInventory.status === 'multi-form' ? ' (multiple)' : ''}`
+    : 'pending';
+  const inventoryFormId = formInventory?.formId || detectedForms[0]?.formNumber || 'pending';
+  const metrics: Array<{ key: string; label: string; value: string; help: string }> = [
+    {
+      key: 'readable-fields',
+      label: 'Readable fields',
+      value: String(status.stats.fieldCount ?? '-'),
+      help: 'Fillable PDF fields the importer could read directly from the file.',
+    },
+    {
+      key: 'builder-components',
+      label: 'Builder components',
+      value: String(componentTotal ?? '-'),
+      help: 'Fields and content blocks currently loaded into the builder canvas.',
+    },
+    {
+      key: 'paired-labels',
+      label: 'Paired labels',
+      value: String(status.stats.pairedFieldCount ?? '-'),
+      help: 'Fields that were matched with nearby label text from the PDF.',
+    },
+    {
+      key: 'corpus-hits',
+      label: 'Corpus hits',
+      value: `${status.stats.corpusHits ?? '-'}${
+        status.stats.corpusEntryCount ? ` / ${status.stats.corpusEntryCount}` : ''
+      }`,
+      help: 'Number of known form patterns that matched during conversion.',
+    },
+    {
+      key: 'enrichment',
+      label: 'Enrichment',
+      value: status.stats.enrichment || status.report?.enrichment?.reason || 'pending',
+      help: 'Whether extra import hints were applied to improve field shaping.',
+    },
+    {
+      key: 'curation',
+      label: 'Curation',
+      value: curation
+        ? `${curation.status}${
+            curatedFieldCount !== undefined && totalFieldCount !== undefined
+              ? ` ${curatedFieldCount}/${totalFieldCount}`
+              : ''
+          }`
+        : 'pending',
+      help: 'How much of the import matched recipe or curated grouping rules.',
+    },
+    {
+      key: 'pattern-coverage',
+      label: 'Pattern coverage',
+      value: patternReport
+        ? `${patternReport.matchedFieldCount}/${patternReport.totalFieldCount}${
+            patternReport.mode ? ` (${patternReport.mode})` : ''
+          }`
+        : 'pending',
+      help: 'How many extracted fields matched known structural import patterns.',
+    },
+    {
+      key: 'validation',
+      label: 'Validation',
+      value: status.report
+        ? status.report.validation.valid
+          ? 'valid'
+          : `${validationErrors} issue${validationErrors === 1 ? '' : 's'}`
+        : 'pending',
+      help: 'Schema and structure checks run before loading the converted draft.',
+    },
+  ];
 
   return (
     <section
@@ -160,140 +243,138 @@ function ImportProgressPanel({
           {status.error || status.detail}
         </p>
 
-        <ol className="pdf-import-progress__steps" aria-label="Import progress steps">
-          {importSteps.map((step, index) => {
-            const state =
-              status.phase === 'error' && index === activeIndex
-                ? 'error'
-                : status.phase === 'blocked' && step.stage === 'complete'
-                  ? 'blocked'
-                  : index < activeIndex || status.phase === 'success'
-                  ? 'done'
-                  : index === activeIndex
-                    ? 'active'
-                    : 'pending';
-            return (
-              <li className={`is-${state}`} key={step.stage}>
-                <span aria-hidden="true" />
-                {step.label}
-              </li>
-            );
-          })}
-        </ol>
-
-        <dl className="pdf-import-progress__stats">
-          <div>
-            <dt>Pages</dt>
-            <dd>
-              {status.stats.pageNumber && status.stats.pageCount
-                ? `${status.stats.pageNumber}/${status.stats.pageCount}`
-                : status.stats.pageCount ?? '-'}
-            </dd>
-          </div>
-          <div>
-            <dt>Readable fields</dt>
-            <dd>{status.stats.fieldCount ?? '-'}</dd>
-          </div>
-          <div>
-            <dt>Builder components</dt>
-            <dd>{componentTotal ?? '-'}</dd>
-          </div>
-          <div>
-            <dt>Paired labels</dt>
-            <dd>{status.stats.pairedFieldCount ?? '-'}</dd>
-          </div>
-          <div>
-            <dt>Corpus hits</dt>
-            <dd>
-              {status.stats.corpusHits ?? '-'}
-              {status.stats.corpusEntryCount ? ` / ${status.stats.corpusEntryCount}` : ''}
-            </dd>
-          </div>
-          <div>
-            <dt>Enrichment</dt>
-            <dd>{status.stats.enrichment || status.report?.enrichment?.reason || 'pending'}</dd>
-          </div>
-          <div>
-            <dt>Curation</dt>
-            <dd>
-              {curation
-                ? `${curation.status}${curatedFieldCount !== undefined && totalFieldCount !== undefined
-                  ? ` ${curatedFieldCount}/${totalFieldCount}`
-                  : ''}`
-                : 'pending'}
-            </dd>
-          </div>
-          <div>
-            <dt>Detected forms</dt>
-            <dd>
-              {formInventory
-                ? `${formInventory.detectedFormCount}${formInventory.status === 'multi-form' ? ' (multiple)' : ''}`
-                : 'pending'}
-            </dd>
-          </div>
-          <div>
-            <dt>Pattern coverage</dt>
-            <dd>
-              {patternReport
-                ? `${patternReport.matchedFieldCount}/${patternReport.totalFieldCount}${patternReport.mode ? ` (${patternReport.mode})` : ''}`
-                : 'pending'}
-            </dd>
-          </div>
-          <div>
-            <dt>Validation</dt>
-            <dd>
-              {status.report
-                ? status.report.validation.valid
-                  ? 'valid'
-                  : `${validationErrors} issue${validationErrors === 1 ? '' : 's'}`
-                : 'pending'}
-            </dd>
-          </div>
-        </dl>
-
-        {detectedForms.length > 0 && (
-          <section className="pdf-import-progress__curation" aria-labelledby="pdf-import-forms-heading">
+        <div className="pdf-import-progress__body">
+          <section className="pdf-import-progress__inventory" aria-labelledby="pdf-import-forms-heading">
             <div>
               <p className="builder-eyebrow">Form inventory</p>
               <h3 id="pdf-import-forms-heading">Detected forms and page ranges</h3>
             </div>
-            <ul>
-              {detectedForms.map(form => (
-                <li key={form.formNumber}>
-                  <strong>{form.formNumber}</strong>
-                  <span>
-                    {form.pageRanges.join(', ')}
-                    {form.revisions.length > 0 ? ` | ${form.revisions.join(', ')}` : ''}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {curationDecisions.length > 0 && (
-          <section className="pdf-import-progress__curation" aria-labelledby="pdf-import-curation-heading">
-            <div>
-              <p className="builder-eyebrow">Curation decisions</p>
-              <h3 id="pdf-import-curation-heading">Builder shape applied during import</h3>
+            <div className="pdf-import-progress__inventory-summary">
+              <p>
+                <strong>{pageCount ?? '-'}</strong>
+                <span>Total pages</span>
+              </p>
+              <p className="pdf-import-progress__inventory-form">
+                <strong>{inventoryFormId}</strong>
+                <span>Form ID</span>
+                <small>Detected forms: {detectedFormsSummary}</small>
+              </p>
             </div>
-            <ul>
-              {curationDecisions.map(decision => (
-                <li key={`${decision.type}:${decision.chapterId}:${decision.pageId}`}>
-                  <strong>{decision.chapterTitle}</strong>
-                  <span>
-                    {decision.sourceFieldCount} source field{decision.sourceFieldCount === 1 ? '' : 's'} converted into{' '}
-                    {decision.itemFieldCount} loop field{decision.itemFieldCount === 1 ? '' : 's'}
-                    {decision.estimatedItemCount
-                      ? ` across about ${decision.estimatedItemCount} ${decision.nounPlural || 'items'}`
-                      : ''}
-                    {decision.arrayPath ? ` (${decision.arrayPath})` : ''}.
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {detectedForms.length > 0 ? (
+              <ul>
+                {detectedForms.map(form => (
+                  <li key={form.formNumber}>
+                    <strong>{form.formNumber}</strong>
+                    <span>
+                      {form.pageRanges.join(', ')}
+                      {form.revisions.length > 0 ? ` | ${form.revisions.join(', ')}` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="pdf-import-progress__inventory-empty">
+                Scanning pages for form numbers and revisions.
+              </p>
+            )}
           </section>
-        )}
+
+          <section className="pdf-import-progress__flow" aria-labelledby="pdf-import-flow-heading">
+            <div>
+              <p className="builder-eyebrow">Import flow</p>
+              <h3 id="pdf-import-flow-heading">Conversion steps</h3>
+            </div>
+            <div className="pdf-import-progress__steps-scroll">
+              <ol className="pdf-import-progress__steps" aria-label="Import progress steps">
+                {importSteps.map((step, index) => {
+                  const state =
+                    status.phase === 'error' && index === activeIndex
+                      ? 'error'
+                      : status.phase === 'blocked' && step.stage === 'complete'
+                        ? 'blocked'
+                        : index < activeIndex || status.phase === 'success'
+                          ? 'done'
+                          : index === activeIndex
+                            ? 'active'
+                            : 'pending';
+                  const icon =
+                    state === 'done' ? '✓' : state === 'error' || state === 'blocked' ? '✕' : state === 'active' ? '▲' : '•';
+                  const stateLabel =
+                    state === 'done'
+                      ? 'done'
+                      : state === 'error'
+                        ? 'failed'
+                        : state === 'blocked'
+                          ? 'blocked'
+                          : state === 'active'
+                            ? 'in progress'
+                            : 'pending';
+                  return (
+                    <li className={`is-${state}`} key={step.stage} aria-label={`${step.label}: ${stateLabel}`}>
+                      <span className="pdf-import-progress__step-icon" aria-hidden="true">
+                        {icon}
+                      </span>
+                      <span className="pdf-import-progress__step-label">{step.label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </section>
+
+          <dl className="pdf-import-progress__stats">
+            {metrics.map(metric => (
+              <div key={metric.key}>
+                <div className="pdf-import-progress__metric-header">
+                  <dt>{metric.label}</dt>
+                  <span
+                    className="pdf-import-progress__metric-help"
+                    tabIndex={0}
+                    aria-label={`About ${metric.label}`}
+                    onMouseEnter={() => setMetricHelpOpen(metric.key)}
+                    onMouseLeave={() => setMetricHelpOpen(current => (current === metric.key ? null : current))}
+                    onFocus={() => setMetricHelpOpen(metric.key)}
+                    onBlur={() => setMetricHelpOpen(current => (current === metric.key ? null : current))}
+                  >
+                    <span className="pdf-import-progress__metric-help-icon" aria-hidden="true">
+                      i
+                    </span>
+                  </span>
+                </div>
+                <dd>{metric.value}</dd>
+                {metricHelpOpen === metric.key && (
+                  <p className="pdf-import-progress__metric-help-text" role="note">
+                    {metric.help}
+                  </p>
+                )}
+              </div>
+            ))}
+          </dl>
+
+          {curationDecisions.length > 0 && (
+            <section className="pdf-import-progress__curation" aria-labelledby="pdf-import-curation-heading">
+              <div>
+                <p className="builder-eyebrow">Curation decisions</p>
+                <h3 id="pdf-import-curation-heading">Builder shape applied during import</h3>
+              </div>
+              <ul>
+                {curationDecisions.map(decision => (
+                  <li key={`${decision.type}:${decision.chapterId}:${decision.pageId}`}>
+                    <strong>{decision.chapterTitle}</strong>
+                    <span>
+                      {decision.sourceFieldCount} source field{decision.sourceFieldCount === 1 ? '' : 's'} converted into{' '}
+                      {decision.itemFieldCount} loop field{decision.itemFieldCount === 1 ? '' : 's'}
+                      {decision.estimatedItemCount
+                        ? ` across about ${decision.estimatedItemCount} ${decision.nounPlural || 'items'}`
+                        : ''}
+                      {decision.arrayPath ? ` (${decision.arrayPath})` : ''}.
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -346,7 +427,23 @@ export function HeaderStrip(props: HeaderStripProps) {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string>('');
   const [pdfImportStatus, setPdfImportStatus] = useState<PdfImportStatus | null>(null);
+  const [multiFormPrompt, setMultiFormPrompt] = useState<MultiFormPromptState | null>(null);
   const [overflowOpen, setOverflowOpen] = useState<boolean>(false);
+  const multiFormResolveRef = useRef<((proceed: boolean) => void) | null>(null);
+
+  function promptForMultiFormDecision(state: MultiFormPromptState): Promise<boolean> {
+    return new Promise(resolve => {
+      multiFormResolveRef.current = resolve;
+      setMultiFormPrompt(state);
+    });
+  }
+
+  function resolveMultiFormDecision(proceed: boolean) {
+    const resolve = multiFormResolveRef.current;
+    multiFormResolveRef.current = null;
+    setMultiFormPrompt(null);
+    resolve?.(proceed);
+  }
 
   async function handleOpen(file?: File) {
     if (!file) return;
@@ -431,12 +528,11 @@ export function HeaderStrip(props: HeaderStripProps) {
       }
       const inventory = result.importReport.formInventory;
       if (inventory?.status === 'multi-form' && inventory.forms.length > 1) {
-        const detail = inventory.forms
-          .map(form => `${form.formNumber} (pages ${form.pageRanges.join(', ')})`)
-          .join('\n');
-        const proceed = window.confirm(
-          `Multiple forms were detected in this PDF:\n\n${detail}\n\nContinue importing into a single draft?`,
-        );
+        const proceed = await promptForMultiFormDecision({
+          fileName: file.name,
+          pageCount: result.importReport.pageCount,
+          forms: inventory.forms,
+        });
         if (!proceed) {
           setPdfImportStatus(current => ({
             phase: 'blocked',
@@ -546,6 +642,16 @@ export function HeaderStrip(props: HeaderStripProps) {
             <span>Open JSON</span>
           </button>
           <button
+            className="builder-header-strip__action builder-header-strip__action--import"
+            type="button"
+            disabled={busy !== null}
+            onClick={() => pdfInputRef.current?.click()}
+            title="Import an AcroForm PDF and convert to authoring JSON"
+          >
+            <span aria-hidden="true">📄</span>
+            <span>{busy || 'Import PDF'}</span>
+          </button>
+          <button
             className={`builder-header-strip__action builder-header-strip__action--save${dirty ? ' is-dirty' : ''}`}
             type="button"
             disabled={!dirty}
@@ -557,16 +663,6 @@ export function HeaderStrip(props: HeaderStripProps) {
           >
             <span aria-hidden="true">{dirty ? '●' : '✓'}</span>
             <span>{dirty ? 'Save *' : 'Saved'}</span>
-          </button>
-          <button
-            className="builder-header-strip__action builder-header-strip__action--import"
-            type="button"
-            disabled={busy !== null}
-            onClick={() => pdfInputRef.current?.click()}
-            title="Import an AcroForm PDF and convert to authoring JSON"
-          >
-            <span aria-hidden="true">📄</span>
-            <span>{busy || 'Import PDF'}</span>
           </button>
         </div>
 
@@ -711,6 +807,70 @@ export function HeaderStrip(props: HeaderStripProps) {
           status={pdfImportStatus}
           onDismiss={() => setPdfImportStatus(null)}
         />
+      )}
+      {multiFormPrompt && (
+        <div
+          className="builder-modal-backdrop"
+          role="presentation"
+          onClick={() => resolveMultiFormDecision(false)}
+        >
+          <div
+            className="builder-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="multi-form-heading"
+            onClick={event => event.stopPropagation()}
+          >
+            <header className="builder-modal__header">
+              <p className="builder-eyebrow">Import decision</p>
+              <h2 id="multi-form-heading">Multiple forms detected</h2>
+              <button
+                type="button"
+                className="builder-modal__close"
+                aria-label="Close multi-form prompt"
+                onClick={() => resolveMultiFormDecision(false)}
+              >
+                ×
+              </button>
+            </header>
+            <div className="builder-modal__body">
+              <p className="usa-prose">
+                <strong>{multiFormPrompt.fileName}</strong> includes more than one form number.
+                Continue importing everything into one draft?
+              </p>
+              <p className="usa-prose builder-modal__component-meta">
+                Pages in file: {multiFormPrompt.pageCount ?? '-'}
+              </p>
+              <ul className="builder-modal__list">
+                {multiFormPrompt.forms.map(form => (
+                  <li key={`${form.formNumber}:${form.pageRanges.join(',')}`}>
+                    <strong>{form.formNumber}</strong>
+                    <span>
+                      Pages {form.pageRanges.join(', ')}
+                      {form.revisions.length > 0 ? ` | ${form.revisions.join(', ')}` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <footer className="builder-modal__footer">
+              <button
+                type="button"
+                className="usa-button usa-button--secondary"
+                onClick={() => resolveMultiFormDecision(false)}
+              >
+                Cancel import
+              </button>
+              <button
+                type="button"
+                className="usa-button"
+                onClick={() => resolveMultiFormDecision(true)}
+              >
+                Continue import
+              </button>
+            </footer>
+          </div>
+        </div>
       )}
     </>
   );

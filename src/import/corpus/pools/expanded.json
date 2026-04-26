@@ -1,7 +1,7 @@
 {
   "name": "expanded-corpus-pool",
   "description": "Manifest-driven corpus pool for broad import quality runs across baseline samples, revisions, and packet variants.",
-  "targetFileCount": 40,
+  "targetFileCount": 100,
   "entries": [
     {
       "path": "../form-samples",
@@ -14,6 +14,12 @@
       "required": false,
       "recursive": true,
       "tags": ["pilot", "packet"]
+    },
+    {
+      "path": "tests/fixtures/pool-extra-forms",
+      "required": false,
+      "recursive": true,
+      "tags": ["expanded", "va-gov", "broad-sample"]
     },
     {
       "path": "../form-samples-expanded",

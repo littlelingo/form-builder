@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-26 EDT after confidence-guidance UX pass and centered import modal behavior
+Last updated: 2026-04-26 EDT after expanded corpus form-only pool split and zero-review gate pass
 
 ## Current Workspace
 
@@ -20,6 +20,15 @@ as the source of truth and generates VA `formConfig` as an output artifact.
 - `npm run compile:example` and `npm run compile:example:27-8832` produce valid output.
 - Pilot smoke confirmed: real `VBA-27-8832-ARE.pdf` imports end-to-end via local Ollama (`llama3.1:8b`, ~18 min on CPU). Output schema valid, type mix improves over deterministic-only.
 - Browser smoke confirmed: `tests/fixtures/pilot/VA9-2020.pdf` imports into builder state with 4 sections, 17 fields, semantic screens, populated Canvas, Review 17 wizard, Accept all, and Promote recipe.
+- Expanded manifest-backed corpus now uses form-only samples at `tests/fixtures/pool-extra-forms` with `targetFileCount=100` and currently resolves 106 PDFs (non-form/noise PDFs were split out of the default pool).
+- Latest expanded corpus run (`npm run import:corpus:expanded`) is green at strict `phase-e`: `106/106 ok`, `0 failed`, `10263 components`, `0 need review`, deterministic pattern coverage `0.998`, worst decile `0.981`.
+- Direct imports for `/Users/clint/Downloads/SGLV-8284.pdf` and `/Users/clint/Downloads/VBA-21-4142-ARE.pdf` now land as fully recipe-sourced builder components with `needsReview=0`.
+- Generic importer hardening added in this slice:
+  - recipe/corpus/taxonomy priority ordering for curated duplicate resolution in list-loop pages,
+  - placeholder `undefined_*` noise filtering in consolidation,
+  - enrollment/support/FTE deterministic taxonomy matching,
+  - taxonomy page-majority fallback assignment for leftover unmatched fields,
+  - imported-label cleanup now applies to `pdf-static-region` and adds a final global collision pass for pre-suffixed duplicate labels.
 - Two design plans live in repo root:
   - `pdf-import-and-standards.md` — V1 fully implemented (M1–M8).
   - `form-route-to-va-gov.md` — drafted, not yet executed.

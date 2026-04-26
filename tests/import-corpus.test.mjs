@@ -15,6 +15,7 @@ import {
   REPRESENTATIVE_TARGETS,
   resolveCorpusInput,
   resolveGateConfig,
+  summarizeCorpus,
 } from '../src/cli/import-corpus.mjs';
 
 function formWith({ chapterTitle, pageTitle, components }) {
@@ -209,29 +210,39 @@ test('corpus quality gate fails when pattern coverage falls below threshold', ()
   assert.equal(gates.checks[0].passed, false);
 });
 
-test('pattern gate profiles tighten from phase-a through phase-d', () => {
+test('pattern gate profiles tighten from phase-a through phase-f', () => {
   const phaseA = PATTERN_GATE_PROFILES['phase-a'];
   const phaseB = PATTERN_GATE_PROFILES['phase-b'];
   const phaseC = PATTERN_GATE_PROFILES['phase-c'];
   const phaseD = PATTERN_GATE_PROFILES['phase-d'];
+  const phaseE = PATTERN_GATE_PROFILES['phase-e'];
+  const phaseF = PATTERN_GATE_PROFILES['phase-f'];
 
   assert.ok(phaseA.minPatternCoverage < phaseB.minPatternCoverage);
   assert.ok(phaseB.minPatternCoverage < phaseC.minPatternCoverage);
   assert.ok(phaseC.minPatternCoverage < phaseD.minPatternCoverage);
+  assert.ok(phaseD.minPatternCoverage < phaseE.minPatternCoverage);
+  assert.ok(phaseE.minPatternCoverage < phaseF.minPatternCoverage);
 
   assert.ok(phaseA.minPatternWorstDecile < phaseB.minPatternWorstDecile);
   assert.ok(phaseB.minPatternWorstDecile < phaseC.minPatternWorstDecile);
   assert.ok(phaseC.minPatternWorstDecile < phaseD.minPatternWorstDecile);
+  assert.ok(phaseD.minPatternWorstDecile < phaseE.minPatternWorstDecile);
+  assert.ok(phaseE.minPatternWorstDecile < phaseF.minPatternWorstDecile);
 
   assert.ok(phaseA.minPatternFamilyStatic < phaseB.minPatternFamilyStatic);
   assert.ok(phaseB.minPatternFamilyStatic < phaseC.minPatternFamilyStatic);
   assert.ok(phaseC.minPatternFamilyStatic < phaseD.minPatternFamilyStatic);
+  assert.ok(phaseD.minPatternFamilyStatic < phaseE.minPatternFamilyStatic);
+  assert.ok(phaseE.minPatternFamilyStatic < phaseF.minPatternFamilyStatic);
 
   assert.ok(phaseA.minPatternFamilyAcroform < phaseB.minPatternFamilyAcroform);
   assert.ok(phaseB.minPatternFamilyAcroform < phaseC.minPatternFamilyAcroform);
   assert.ok(phaseC.minPatternFamilyAcroform < phaseD.minPatternFamilyAcroform);
+  assert.ok(phaseD.minPatternFamilyAcroform < phaseE.minPatternFamilyAcroform);
+  assert.ok(phaseE.minPatternFamilyAcroform < phaseF.minPatternFamilyAcroform);
 
-  assert.equal(DEFAULT_PATTERN_GATE_PROFILE, 'phase-d');
+  assert.equal(DEFAULT_PATTERN_GATE_PROFILE, 'phase-e');
 });
 
 test('corpus quality gate defaults to minimum threshold and can be disabled', () => {
@@ -332,4 +343,61 @@ test('resolveCorpusInput merges manifest entries, tags, and missing-path warning
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('summarizeCorpus excludes zero-field forms from worst-decile and lowest-coverage rankings', () => {
+  const base = {
+    status: 'ok',
+    acroFormFieldCount: 1,
+    componentCount: 1,
+    poolTags: [],
+    curation: { status: 'generic-fallback' },
+    quality: { level: 'builder-native', rank: 4 },
+    qualitySignals: {
+      curatedCount: 0,
+      needsReview: false,
+      lowConfidenceRatio: 0,
+      genericChapters: [],
+      genericPages: [],
+      duplicateLabels: [],
+      veryLongLabels: [],
+    },
+  };
+  const summary = summarizeCorpus([
+    {
+      ...base,
+      filename: 'zero.pdf',
+      patterns: {
+        matchedFieldCount: 0,
+        totalFieldCount: 0,
+        coverageRatio: 0,
+        sourceCounts: { deterministic: 0, semantic: 0 },
+      },
+    },
+    {
+      ...base,
+      filename: 'low.pdf',
+      patterns: {
+        matchedFieldCount: 8,
+        totalFieldCount: 10,
+        coverageRatio: 0.8,
+        sourceCounts: { deterministic: 8, semantic: 0 },
+      },
+    },
+    {
+      ...base,
+      filename: 'high.pdf',
+      patterns: {
+        matchedFieldCount: 10,
+        totalFieldCount: 10,
+        coverageRatio: 1,
+        sourceCounts: { deterministic: 10, semantic: 0 },
+      },
+    },
+  ]);
+
+  assert.equal(summary.worstDecile.length, 1);
+  assert.equal(summary.worstDecile[0].filename, 'low.pdf');
+  assert.equal(summary.worstDecilePatternCoverage, 0.8);
+  assert.equal(summary.lowestPatternCoverage.some(item => item.filename === 'zero.pdf'), false);
 });

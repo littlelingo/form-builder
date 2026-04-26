@@ -54,7 +54,7 @@ export function pairLabelsToFields(acroForm, textExtraction) {
   const textPages = textExtraction.pages || [];
 
   const fieldsWithLabels = acroForm.fields.map(field => {
-    const closestLabel = findClosestLabel(field, textPages);
+    const closestLabel = findClosestLabel(field, textPages) || field.closestLabel || null;
     const neighborText = field.bbox
       ? joinNearby(
           textPages.find(p => p.page === field.bbox.page)?.items || [],
@@ -66,7 +66,7 @@ export function pairLabelsToFields(acroForm, textExtraction) {
     return {
       ...field,
       closestLabel,
-      neighborText,
+      neighborText: neighborText || field.neighborText || '',
     };
   });
 

@@ -12,7 +12,7 @@ import type {
 import {
   createHelperTemplateScreen,
   previewTemplateAuthoringHelpers as previewTemplateAuthoringHelpersCore,
-} from './templateHelperPreview';
+} from './templateHelperPreview.js';
 
 export type LayoutWidth = 'full' | 'half' | 'third';
 type ReusableSectionTemplateId =
@@ -656,6 +656,127 @@ function moveItemToIndex<T>(items: T[], fromIndex: number, toIndex: number) {
   const boundedIndex = Math.max(0, Math.min(toIndex, nextItems.length));
   nextItems.splice(boundedIndex, 0, item);
   return nextItems;
+}
+
+const layoutColumns: Record<LayoutWidth, number> = {
+  full: 6,
+  half: 3,
+  third: 2,
+};
+
+function componentLayoutWidth(component: AuthoringComponent): LayoutWidth {
+  return component.layoutWidth || 'full';
+}
+
+function pageRows(components: AuthoringComponent[]) {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let usedColumns = 0;
+
+  components.forEach(component => {
+    const width = componentLayoutWidth(component);
+    const span = layoutColumns[width];
+    const startsRow = Boolean(component.layoutNewRow) || width === 'full';
+    if (currentRow.length > 0 && (startsRow || usedColumns + span > 6)) {
+      rows.push(currentRow);
+      currentRow = [];
+      usedColumns = 0;
+    }
+
+    currentRow.push(component.id);
+    usedColumns += span;
+    if (width === 'full' || usedColumns >= 6) {
+      rows.push(currentRow);
+      currentRow = [];
+      usedColumns = 0;
+    }
+  });
+
+  if (currentRow.length > 0) rows.push(currentRow);
+  return rows;
+}
+
+function dedupe(values: string[]) {
+  return Array.from(new Set(values));
+}
+
+function layoutWidthForRowSize(size: number): LayoutWidth {
+  if (size >= 3) return 'third';
+  if (size === 2) return 'half';
+  return 'full';
+}
+
+export function rowComponentIdsForComponent(
+  form: AuthoringForm,
+  selected: SelectedNode,
+  componentId: string | undefined,
+): string[] {
+  if (!componentId) return [];
+  const page = findPage(form, selected);
+  if (!page) return [];
+  const row = pageRows(page.components).find(ids => ids.includes(componentId));
+  return row || [];
+}
+
+export function normalizeHorizontalComponentRows(
+  form: AuthoringForm,
+  selected: SelectedNode,
+  componentIds: string[],
+  options: { preferWrapId?: string } = {},
+): AuthoringForm {
+  if (componentIds.length === 0) return form;
+  const page = findPage(form, selected);
+  if (!page) return form;
+
+  const requested = new Set(dedupe(componentIds));
+  let orderedIds = page.components.filter(component => requested.has(component.id)).map(component => component.id);
+  const preferWrapId = options.preferWrapId;
+  if (preferWrapId && orderedIds.length > 3 && orderedIds.includes(preferWrapId)) {
+    orderedIds = [...orderedIds.filter(id => id !== preferWrapId), preferWrapId];
+  }
+  if (orderedIds.length === 0) return form;
+
+  const componentById = new Map(page.components.map(component => [component.id, component]));
+  const patches = new Map<string, { layoutWidth: LayoutWidth; layoutNewRow?: boolean }>();
+
+  let cursor = 0;
+  let groupIndex = 0;
+  while (cursor < orderedIds.length) {
+    const remaining = orderedIds.length - cursor;
+    const rowSize = remaining >= 3 ? 3 : remaining;
+    const rowWidth = layoutWidthForRowSize(rowSize);
+    const rowIds = orderedIds.slice(cursor, cursor + rowSize);
+
+    rowIds.forEach((id, index) => {
+      const component = componentById.get(id);
+      if (!component) return;
+
+      patches.set(id, {
+        layoutWidth: rowWidth,
+        layoutNewRow:
+          groupIndex === 0 && index === 0
+            ? component.layoutNewRow
+            : index === 0,
+      });
+    });
+
+    cursor += rowSize;
+    groupIndex += 1;
+  }
+
+  return updatePage(form, selected, pageState => ({
+    ...pageState,
+    components: pageState.components.map(component => {
+      const patch = patches.get(component.id);
+      return patch
+        ? {
+            ...component,
+            layoutWidth: patch.layoutWidth,
+            layoutNewRow: patch.layoutNewRow,
+          }
+        : component;
+    }),
+  }));
 }
 
 export function updateMetadata(

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import { validateAuthoringForm } from '../src/index.mjs';
 import { auditFormAgainstDefaults } from '../src/standards/index.mjs';
-import { normalizeImportedLabels } from '../src/import/build.mjs';
+import { buildAuthoringForm, normalizeImportedLabels } from '../src/import/build.mjs';
 import { importPdf } from '../src/import/pipeline.mjs';
 import {
   buildSyntheticAcroFormPdf,
@@ -76,7 +76,9 @@ test('importPdf infers draft components from static PDFs without fillable fields
   assert.equal(importReport.acroFormFieldCount, 0);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.ok(importReport.componentCount >= 2);
-  assert.equal(form.chapters.length, 1);
+  assert.ok(form.chapters.length >= 1);
+  assert.ok(form.chapters.some(chapter => chapter.id === 'applicantInformation'));
+  assert.ok(form.chapters.some(chapter => chapter.id === 'claimInformation'));
 
   const components = form.chapters.flatMap(chapter =>
     chapter.pages.flatMap(page => page.components),
@@ -112,7 +114,7 @@ test('importPdf keeps static field pages that also mention instructions', async 
   assert.equal(labels.includes('Item 9'), false);
 });
 
-test('importPdf promotes repeated static provider rows into a list-loop chapter', async () => {
+test('importPdf keeps repeated static provider rows as semantic provider-related fields', async () => {
   const pdfBytes = await buildSyntheticRepeatedProviderStaticPdf();
   const { form, importReport } = await runImport(pdfBytes, {
     filename: 'repeated-provider-static.pdf',
@@ -122,25 +124,67 @@ test('importPdf promotes repeated static provider rows into a list-loop chapter'
   assert.equal(importReport.acroFormFieldCount, 0);
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
 
-  const providerChapter = form.chapters.find(chapter => chapter.id === 'treatmentProviders');
-  assert.ok(providerChapter, 'repeated provider fields should become a treatmentProviders chapter');
-  assert.equal(providerChapter.type, 'listLoop');
-  assert.equal(providerChapter.options.nounSingular, 'provider');
-  assert.equal(providerChapter.options.nounPlural, 'providers');
-  assert.equal(providerChapter.pages.length, 1);
-
-  const providerLabels = providerChapter.pages.flatMap(page =>
-    page.components.map(component => component.label),
+  const labels = form.chapters.flatMap(chapter =>
+    chapter.pages.flatMap(page => page.components.map(component => component.label)),
   );
-  assert.deepEqual(providerLabels, [
-    'Provider Or Facility Name',
-    'Date Of Treatment',
-    'Provider/Facility Street Address',
-  ]);
+  assert.equal(labels.filter(label => label.startsWith('Provider Or Facility Name')).length, 2);
+  assert.equal(labels.filter(label => label.startsWith('Date Of Treatment')).length, 2);
+  assert.equal(labels.filter(label => label.startsWith('Provider/Facility Street Address')).length, 2);
+  assert.ok(form.chapters.some(chapter => chapter.id === 'medicalInformation'));
+  assert.ok(form.chapters.some(chapter => chapter.id === 'contactInformation'));
+});
 
-  const duplicateProviderFields = providerLabels.filter(label => label === 'Provider Or Facility Name');
-  assert.equal(duplicateProviderFields.length, 1);
-  assert.equal(providerChapter.pages[0].components[0].summaryCard, true);
+test('buildAuthoringForm normalizes curated list-loop options and page ids', () => {
+  const form = buildAuthoringForm({
+    formId: 'taxonomy-loop-page-id-test',
+    title: 'Taxonomy loop page id test',
+    fields: [
+      {
+        name: 'ProviderName1',
+        closestLabel: 'Provider name',
+        semanticId: 'providerName',
+        curation: {
+          chapterId: 'treatmentProviders',
+          chapterTitle: 'Treatment providers',
+          chapterType: 'listLoop',
+          chapterOptions: {
+            nounSingular: 'provider',
+            nounPlural: 'providers',
+          },
+          itemNameLabel: 'Provider name',
+          pageId: 'details',
+          pageTitle: 'Details',
+        },
+      },
+      {
+        name: 'ServiceDate1',
+        closestLabel: 'Service date',
+        semanticId: 'serviceDate',
+        curation: {
+          chapterId: 'serviceEntries',
+          chapterTitle: 'Service entries',
+          chapterType: 'listLoop',
+          chapterOptions: {
+            nounSingular: 'service entry',
+            nounPlural: 'service entries',
+          },
+          itemNameLabel: 'Service detail',
+          pageId: 'details',
+          pageTitle: 'Details',
+        },
+      },
+    ],
+  });
+
+  const validation = validateAuthoringForm(form);
+  assert.equal(validation.valid, true, validation.errors.join('\n'));
+
+  const listLoops = form.chapters.filter(chapter => chapter.type === 'listLoop');
+  assert.equal(listLoops.length, 2);
+  assert.equal(listLoops.every(chapter => chapter.options?.required === false), true);
+
+  const pageIds = form.chapters.flatMap(chapter => chapter.pages.map(page => page.id));
+  assert.equal(new Set(pageIds).size, pageIds.length);
 });
 
 test('importPdf cleans SF-180-style static prose labels and raises numbered-label confidence', async () => {
@@ -216,6 +260,56 @@ test('normalizeImportedLabels cleans weak XFA labels and disambiguates duplicate
                 pdfPage: 9,
               },
             },
+            {
+              id: 'alreadySuffixed1',
+              type: 'textInput',
+              label: "Don't have date (page 6.1)",
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[12].Dont_Have_Date[0]',
+                pdfPage: 5,
+              },
+            },
+            {
+              id: 'alreadySuffixed2',
+              type: 'textInput',
+              label: "Don't have date (page 6.1)",
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[12].Dont_Have_Date[1]',
+                pdfPage: 5,
+              },
+            },
+            {
+              id: 'alreadySuffixed3',
+              type: 'textInput',
+              label: "Don't have date (page 6.2)",
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[12].Dont_Have_Date[2]',
+                pdfPage: 5,
+              },
+            },
+            {
+              id: 'alreadySuffixed4',
+              type: 'textInput',
+              label: "Don't have date (page 6.2)",
+              provenance: {
+                origin: 'pdf-field',
+                pdfFieldName: 'form1[0].#subform[12].Dont_Have_Date[3]',
+                pdfPage: 5,
+              },
+            },
+            {
+              id: 'longStaticRegion',
+              type: 'textInput',
+              label: 'Authorization To Change Claimant Address By Checking The Box Below I Authorize The Organization Named In Item Fifteen To Act On My',
+              provenance: {
+                origin: 'pdf-static-region',
+                pdfFieldName: 'static:15',
+                pdfPage: 0,
+              },
+            },
           ],
         },
       ],
@@ -228,10 +322,22 @@ test('normalizeImportedLabels cleans weak XFA labels and disambiguates duplicate
   );
 
   assert.equal(labels[0], 'Facility Website Address');
-  assert.deepEqual(labels.slice(1), [
+  assert.deepEqual(labels.slice(1, 5), [
     'Monthly Amount (page 9.1)',
     'Monthly Amount (page 10.2)',
+    "Don't have date (page 6.1)",
+    "Don't have date (page 6.2)",
   ]);
+  assert.equal(
+    labels.filter(label => label === "Don't have date (page 6.2)").length,
+    1,
+    'global duplicate cleanup should prevent repeated pre-suffixed labels',
+  );
+  assert.ok(
+    labels.some(label => label.includes("(#2)")),
+    'global duplicate cleanup should add occurrence suffixes when first-pass relabeling collides',
+  );
+  assert.ok(labels.at(-1).length <= 90, 'long static-region labels should be trimmed');
   assert.equal(new Set(labels).size, labels.length);
   assert.equal(labels.some(label => label.length > 90), false);
 });

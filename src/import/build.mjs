@@ -111,16 +111,34 @@ function cleanImportedLabel(label) {
   return text;
 }
 
+function truncateLabel(label, maxLength = 90) {
+  const text = String(label || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(3, maxLength - 3)).trim()}...`;
+}
+
+function withOccurrenceSuffix(label, occurrence, maxLength = 90) {
+  const suffix = `(#${occurrence})`;
+  const rawBase = String(label || '').replace(/\s+/g, ' ').trim();
+  const base = rawBase.replace(/\s+\(#\d+\)$/i, '');
+  const budget = maxLength - suffix.length - 1;
+  if (budget <= 6) return suffix;
+  const normalizedBase = base.length > budget
+    ? `${base.slice(0, Math.max(3, budget - 3)).trim()}...`
+    : base;
+  return `${normalizedBase} ${suffix}`;
+}
+
 function importedComponentLabel(component) {
   const label = cleanImportedLabel(component.label);
   const stem = cleanImportedLabel(fieldNameStem(component.provenance?.pdfFieldName));
+  let nextLabel = label;
   if ((label.length > 90 || isWeakImportedLabel(label)) && isUsefulFieldStem(stem)) {
-    return stem;
+    nextLabel = stem;
   }
-  if (label.length > 90) {
-    return `${label.slice(0, 86).trim()}...`;
-  }
-  return label || stem || 'Imported field';
+  if (!nextLabel) nextLabel = stem || 'Imported field';
+  return truncateLabel(nextLabel);
 }
 
 function allComponents(chapters) {
@@ -132,7 +150,10 @@ function allComponents(chapters) {
 export function normalizeImportedLabels(chapters) {
   const components = allComponents(chapters);
   for (const component of components) {
-    if (component.provenance?.origin === 'pdf-field') {
+    if (
+      component.provenance?.origin === 'pdf-field' ||
+      component.provenance?.origin === 'pdf-static-region'
+    ) {
       component.label = importedComponentLabel(component);
     }
   }
@@ -159,6 +180,21 @@ export function normalizeImportedLabels(chapters) {
         : base;
       component.label = `${trimmedBase} (${suffix})`;
     });
+  }
+
+  // A first-pass relabel can create collisions across groups (for example,
+  // pre-suffixed labels that normalize to the same base). Resolve globally.
+  const seenLabels = new Map();
+  for (const component of components) {
+    const key = labelKey(component.label);
+    if (!key) continue;
+    const occurrence = (seenLabels.get(key) || 0) + 1;
+    seenLabels.set(key, occurrence);
+    if (occurrence > 1) {
+      component.label = withOccurrenceSuffix(component.label, occurrence);
+    } else {
+      component.label = truncateLabel(component.label);
+    }
   }
 
   return chapters;
@@ -326,8 +362,28 @@ function sortFieldsByPdfPosition(fields) {
   });
 }
 
+const CURATION_SOURCE_PRIORITY = {
+  recipe: 0,
+  corpus: 1,
+  taxonomy: 2,
+};
+
+function curationSourcePriority(field) {
+  const source = field?.curation?.source;
+  if (source && Object.hasOwn(CURATION_SOURCE_PRIORITY, source)) {
+    return CURATION_SOURCE_PRIORITY[source];
+  }
+  return 3;
+}
+
 function sortCuratedFields(fields) {
   return [...fields].sort((a, b) => {
+    const aSourcePriority = curationSourcePriority(a);
+    const bSourcePriority = curationSourcePriority(b);
+    if (aSourcePriority !== bSourcePriority) {
+      return aSourcePriority - bSourcePriority;
+    }
+
     const aOrder = a.curation?.order;
     const bOrder = b.curation?.order;
     if (Number.isInteger(aOrder) && Number.isInteger(bOrder) && aOrder !== bOrder) {
@@ -337,21 +393,55 @@ function sortCuratedFields(fields) {
   });
 }
 
+function normalizeListLoopChapterOptions(options = {}) {
+  const source = options && typeof options === 'object' ? options : {};
+  const nounSingular = source.nounSingular || 'item';
+  const nounPlural = source.nounPlural || (nounSingular === 'item' ? 'items' : `${nounSingular}s`);
+  return {
+    nounSingular,
+    nounPlural,
+    required: source.required ?? false,
+    ...source,
+  };
+}
+
+function makeUniquePageId(chapterId, pageId, takenPageIds) {
+  const rawId = pageId || 'page1';
+  if (!takenPageIds.has(rawId)) {
+    takenPageIds.add(rawId);
+    return rawId;
+  }
+  const scopedBase = toCamelCase(`${chapterId} ${rawId}`) || toCamelCase(`${chapterId} page`) || 'page';
+  let candidate = scopedBase;
+  let suffix = 2;
+  while (takenPageIds.has(candidate)) {
+    candidate = `${scopedBase}${suffix}`;
+    suffix += 1;
+  }
+  takenPageIds.add(candidate);
+  return candidate;
+}
+
 function segmentCuratedFields(fields) {
   const curatedFields = fields.filter(field => field.curation?.chapterId && field.curation?.pageId);
   if (curatedFields.length === 0) return null;
 
   const chapters = [];
   const chapterMap = new Map();
+  const usedPageIds = new Set();
 
   function getChapter(curation) {
     const chapterId = curation.chapterId;
     if (!chapterMap.has(chapterId)) {
+      const chapterType = curation.chapterType || 'standard';
+      const chapterOptions = chapterType === 'listLoop'
+        ? normalizeListLoopChapterOptions(curation.chapterOptions)
+        : curation.chapterOptions;
       const chapter = {
         id: chapterId,
         title: curation.chapterTitle || titleFromId(chapterId),
-        type: curation.chapterType || 'standard',
-        ...(curation.chapterOptions !== undefined ? { options: curation.chapterOptions } : {}),
+        type: chapterType,
+        ...(chapterOptions !== undefined ? { options: chapterOptions } : {}),
         ...(curation.itemNameLabel !== undefined ? { itemNameLabel: curation.itemNameLabel } : {}),
         ...(curation.sectionIntro !== undefined ? { sectionIntro: curation.sectionIntro } : {}),
         pages: [],
@@ -364,17 +454,17 @@ function segmentCuratedFields(fields) {
   }
 
   function getPage(chapter, curation) {
-    const pageId = curation.pageId;
-    if (!chapter.pageMap.has(pageId)) {
+    const pageKey = curation.pageId || 'page1';
+    if (!chapter.pageMap.has(pageKey)) {
       const page = {
-        id: pageId,
-        title: curation.pageTitle || titleFromId(pageId, 'Page 1'),
+        id: makeUniquePageId(chapter.id, pageKey, usedPageIds),
+        title: curation.pageTitle || titleFromId(pageKey, 'Page 1'),
         fields: [],
       };
-      chapter.pageMap.set(pageId, page);
+      chapter.pageMap.set(pageKey, page);
       chapter.pages.push(page);
     }
-    return chapter.pageMap.get(pageId);
+    return chapter.pageMap.get(pageKey);
   }
 
   for (const field of sortCuratedFields(curatedFields)) {
@@ -393,7 +483,10 @@ function segmentCuratedFields(fields) {
 
   const uncuratedFields = fields.filter(field => !field.curation?.chapterId || !field.curation?.pageId);
   if (uncuratedFields.length > 0) {
-    const fallbackPages = segmentIntoPages(uncuratedFields);
+    const fallbackPages = segmentIntoPages(uncuratedFields).map(page => ({
+      ...page,
+      id: makeUniquePageId('needsReview', page.id || 'page1', usedPageIds),
+    }));
     const fallbackChapter = {
       id: 'needs-review',
       title: 'Needs review',

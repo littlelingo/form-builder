@@ -7,6 +7,8 @@ import { confidenceBand } from '../lib/reviewState';
 interface ConfidenceBadgeProps {
   provenance: AuthoringProvenance;
   componentId: string;
+  componentLabel?: string;
+  componentType?: string;
   onAccept?: (componentId: string) => void;
   onReject?: (componentId: string) => void;
   compact?: boolean;
@@ -28,6 +30,8 @@ function sourceLabel(origin: AuthoringProvenance['origin']): string {
 export function ConfidenceBadge({
   provenance,
   componentId,
+  componentLabel,
+  componentType,
   onAccept,
   onReject,
   compact = false,
@@ -43,7 +47,10 @@ export function ConfidenceBadge({
   const band = confidenceBand(confidence);
   const reviewed = provenance.reviewed === true;
   const percent = Math.round(confidence * 100);
-  const insight = buildConfidenceInsight(provenance);
+  const insight = buildConfidenceInsight(provenance, {
+    label: componentLabel,
+    componentType,
+  });
 
   const className = `confidence-badge confidence-badge--${band}${reviewed ? ' confidence-badge--reviewed' : ''}${compact ? ' confidence-badge--compact' : ''}`;
   const ariaLabel = reviewed

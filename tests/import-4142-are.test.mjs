@@ -50,9 +50,11 @@ test('VBA 21-4142 ARE import detects bundled forms and applies curated workflow'
   assert.ok(importReport.patterns?.coverageRatio > 0.4);
 
   assert.equal(importReport.curation?.status, 'curated');
-  assert.equal(
-    importReport.curation?.recipe?.recipeId,
-    'va-form-21-4142-4142a-authorization-2024-acroform',
+  const recipeId = importReport.curation?.recipe?.recipeId || '';
+  assert.ok(
+    recipeId === 'va-form-21-4142-4142a-authorization-2024-acroform' ||
+      /^auto-vba-21-4142-are-[a-f0-9]+$/.test(recipeId),
+    `expected curated 21-4142 recipe id, got "${recipeId}"`,
   );
   assert.ok((importReport.curation?.curatedFieldCount || 0) > 20);
 

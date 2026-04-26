@@ -15,16 +15,19 @@ test('buildConfidenceInsight explains low-confidence signal gaps in plain langua
       corpusSimilarity: 0.1,
       validationMatch: 0.35,
     },
+  }, {
+    label: 'Issue date',
+    componentType: 'textInput',
   });
 
-  assert.match(insight.summary, /^Review this field because /);
-  assert.ok(insight.reasons.includes('Nearby PDF text was unclear.'));
-  assert.ok(insight.reasons.includes('No close match from past imports was found.'));
+  assert.match(insight.summary, /^Review "Issue date" because /);
+  assert.ok(insight.reasons.some(reason => reason.includes('Label match score is 25%')));
+  assert.ok(insight.reasons.some(reason => reason.includes('Pattern similarity is 10%')));
   assert.ok(
     insight.reasons.some(reason =>
-      reason === 'The field type may need checking.' ||
-      reason === 'Required and format clues were limited.' ||
-      reason === 'The PDF field structure gave weak clues.',
+      reason.includes('field type certainty') ||
+      reason.includes('Validation clue score') ||
+      reason.includes('PDF field structure score'),
     ),
   );
   assert.equal(insight.checks.length, 3);
@@ -39,10 +42,13 @@ test('buildConfidenceInsight adds visible-text guidance for static region import
       labelDistance: 0.45,
       classificationCertainty: 0.4,
     },
+  }, {
+    label: 'Provider name',
+    componentType: 'textInput',
   });
 
   assert.ok(insight.reasons[0].includes('visible PDF text'));
-  assert.equal(insight.checks[0], 'Confirm this should be a fillable field.');
+  assert.match(insight.checks[0], /fillable field/i);
 });
 
 test('buildConfidenceInsight falls back to concise default messaging when signals are absent', () => {
@@ -53,7 +59,7 @@ test('buildConfidenceInsight falls back to concise default messaging when signal
   });
 
   assert.equal(insight.reasons.length, 1);
-  assert.equal(insight.reasons[0], 'There were limited clues in the PDF for this field.');
-  assert.match(insight.summary, /limited clues in the PDF/i);
+  assert.equal(insight.reasons[0], 'Low confidence score (40%) with limited import signals.');
+  assert.match(insight.summary, /Low confidence score \(40%\)/i);
   assert.equal(insight.checks.length, 3);
 });

@@ -277,3 +277,43 @@ test('consolidateFields handles XFA naming variants without mixing address and p
     ],
   );
 });
+
+test('consolidateFields drops placeholder undefined fields that only carry punctuation/noise text', () => {
+  const fields = [
+    {
+      name: 'undefined_2',
+      type: 'text',
+      closestLabel: ',',
+      neighborText: ', . ,',
+      bbox: { page: 0, x: 0.1, y: 0.1, w: 0.02, h: 0.02 },
+    },
+    {
+      name: 'undefined_55',
+      type: 'text',
+      closestLabel: 'VALUE OF',
+      neighborText: 'VALUE OF ESTATE',
+      bbox: { page: 0, x: 0.2, y: 0.1, w: 0.02, h: 0.02 },
+    },
+    {
+      name: 'undefined_90',
+      type: 'text',
+      closestLabel: 'Student name',
+      neighborText: 'Name of enrolled student',
+      bbox: { page: 0, x: 0.3, y: 0.1, w: 0.02, h: 0.02 },
+    },
+    {
+      name: 'Claimant_First_Name',
+      type: 'text',
+      closestLabel: 'Claimant first name',
+      neighborText: '',
+      bbox: { page: 0, x: 0.4, y: 0.1, w: 0.02, h: 0.02 },
+    },
+  ];
+
+  const consolidated = consolidateFields(fields);
+  assert.equal(consolidated.length, 2);
+  assert.deepEqual(
+    consolidated.map(field => field.name),
+    ['undefined_90', 'Claimant_First_Name'],
+  );
+});

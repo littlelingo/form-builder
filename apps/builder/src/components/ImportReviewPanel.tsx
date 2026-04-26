@@ -228,7 +228,10 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
             const confidence = row.component.provenance?.confidence ?? 0;
             const band = confidenceBand(confidence);
             const percent = Math.round(confidence * 100);
-            const insight = buildConfidenceInsight(row.component.provenance);
+            const insight = buildConfidenceInsight(row.component.provenance, {
+              label: row.component.label,
+              componentType: row.component.type,
+            });
             return (
               <li key={row.component.id} className={`builder-review-row builder-review-row--${band}`}>
                 <div className="builder-review-row__header">

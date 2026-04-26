@@ -287,16 +287,16 @@ const ROLE_DEFINITIONS = [
   role({
     role: 'numberValue',
     family: 'claim',
-    namePatterns: [/\bnumber\b/i, /\bcount\b/i, /\bqty\b/i, /\btotal\b/i],
-    labelPatterns: [/\bnumber\b/i, /\bcount\b/i, /\btotal\b/i],
-    semanticKeywords: ['number', 'count', 'quantity', 'total', 'amount'],
-    groupRoleHints: ['financialGroup', 'claimGroup'],
+    namePatterns: [/\bnumber\b/i, /\bcount\b/i, /\bqty\b/i, /\btotal\b/i, /enrolled?/i, /supported?/i, /\bfte\b/i, /\bprogram\b/i],
+    labelPatterns: [/\bnumber\b/i, /\bcount\b/i, /\btotal\b/i, /\benrolled?\b/i, /\bsupported?\b/i, /\bfte\b/i],
+    semanticKeywords: ['number', 'count', 'quantity', 'total', 'amount', 'enrolled', 'enrollment', 'support', 'supported', 'fte', 'program', 'student'],
+    groupRoleHints: ['financialGroup', 'claimGroup', 'employmentGroup'],
   }),
   role({
     role: 'currencyAmount',
     family: 'financial',
     namePatterns: [/\bamount\b/i, /\bdollars?\b/i, /\bcents?\b/i, /\bincome\b/i, /\bexpense\b/i, /\bpayment\b/i, /\bmortgage\b/i, /\brent\b/i, /\butilities\b/i, /\bpayroll\b/i],
-    labelPatterns: [/\bamount\b/i, /\bdollars?\b/i, /\bcents?\b/i, /\bmonthly\b/i, /\byearly\b/i, /\bpayment\b/i, /\bmortgage\b/i, /\brent\b/i, /\butilities\b/i],
+    labelPatterns: [/\$/i, /\bamount\b/i, /\bdollars?\b/i, /\bcents?\b/i, /\bmonthly\b/i, /\byearly\b/i, /\bpayment\b/i, /\bmortgage\b/i, /\brent\b/i, /\butilities\b/i],
     textPatterns: [/\$\s*\d/i, /\bdollars?\b/i],
     semanticKeywords: ['amount', 'dollar', 'cent', 'income', 'expense', 'monthly', 'yearly', 'financial', 'payment', 'mortgage', 'rent', 'utilities'],
     groupRoleHints: ['financialGroup', 'providerGroup', 'medicalGroup'],
@@ -719,6 +719,7 @@ function isLikelyAcroformFieldName(name) {
 
 function fallbackDeterministicMatch(field, groupSignal, tokens, normalizedText) {
   const fieldName = String(field?.name || '');
+  const rawLabel = String(field?.closestLabel || '').trim();
   const normalizedName = normalizeText(fieldName);
   const normalizedType = normalizeText(field?.type || '');
   const hasQuestionLead = /^(have you|are you|is this|did you|do you|has the|has your|were you|was the|will you|can you)\b/.test(normalizedText);
@@ -771,6 +772,10 @@ function fallbackDeterministicMatch(field, groupSignal, tokens, normalizedText) 
       return buildRoleMatch('expenseAmount', 'deterministic', 0.58, ['fallback-deterministic:token:expense'], groupSignal);
     }
     return buildRoleMatch('currencyAmount', 'deterministic', 0.56, ['fallback-deterministic:token:amount'], groupSignal);
+  }
+
+  if (/^static:\d+[a-z]?$/i.test(fieldName) && /^[0-9]+[a-z]?$/i.test(rawLabel)) {
+    return buildRoleMatch('numberValue', 'deterministic', 0.5, ['fallback-deterministic:static-item-number'], groupSignal);
   }
 
   if (/\bemployment\b|\bemployer\b|\boccupation\b|\bwork\b|\bhours\b/.test(normalizedText)) {

@@ -47,8 +47,20 @@ export const PATTERN_GATE_PROFILES = {
     minPatternFamilyStatic: 0.88,
     minPatternFamilyAcroform: 0.9,
   },
+  'phase-e': {
+    minPatternCoverage: 0.95,
+    minPatternWorstDecile: 0.9,
+    minPatternFamilyStatic: 0.93,
+    minPatternFamilyAcroform: 0.95,
+  },
+  'phase-f': {
+    minPatternCoverage: 0.97,
+    minPatternWorstDecile: 0.94,
+    minPatternFamilyStatic: 0.96,
+    minPatternFamilyAcroform: 0.97,
+  },
 };
-export const DEFAULT_PATTERN_GATE_PROFILE = 'phase-d';
+export const DEFAULT_PATTERN_GATE_PROFILE = 'phase-e';
 export const DEFAULT_MIN_PATTERN_COVERAGE =
   PATTERN_GATE_PROFILES[DEFAULT_PATTERN_GATE_PROFILE].minPatternCoverage;
 export const DEFAULT_CORPUS_MANIFEST = 'src/import/corpus/pools/expanded.json';
@@ -665,7 +677,7 @@ async function importFile(descriptor, options = {}) {
   return summarizeImport(filePath, result, Date.now() - startedAt, descriptor);
 }
 
-function summarizeCorpus(results) {
+export function summarizeCorpus(results) {
   const successful = results.filter(result => result.status === 'ok');
   const failed = results.filter(result => result.status === 'error');
   const byExtractionKind = countBy(
@@ -734,7 +746,7 @@ function summarizeCorpus(results) {
         : 0,
   };
 
-  const sortedByPatternCoverage = successful
+  const patternCoverageCandidates = successful
     .map(result => ({
       filename: result.filename,
       coverageRatio: result.patterns?.coverageRatio || 0,
@@ -742,9 +754,15 @@ function summarizeCorpus(results) {
       totalFieldCount: result.patterns?.totalFieldCount || 0,
       extractionKind: result.acroFormFieldCount > 0 ? 'acroform' : 'static',
     }))
+    .filter(entry => entry.totalFieldCount > 0);
+  const sortedByPatternCoverage = patternCoverageCandidates
     .sort((a, b) => a.coverageRatio - b.coverageRatio);
-  const worstDecileCount = Math.max(1, Math.ceil(sortedByPatternCoverage.length * 0.1));
-  const worstDecile = sortedByPatternCoverage.slice(0, worstDecileCount);
+  const worstDecileCount =
+    sortedByPatternCoverage.length > 0
+      ? Math.max(1, Math.ceil(sortedByPatternCoverage.length * 0.1))
+      : 0;
+  const worstDecile =
+    worstDecileCount > 0 ? sortedByPatternCoverage.slice(0, worstDecileCount) : [];
   const worstDecilePatternCoverage =
     worstDecile.length > 0
       ? Number(
@@ -778,6 +796,7 @@ function summarizeCorpus(results) {
       coverageRatio: result.patterns?.coverageRatio || 0,
       curationStatus: result.curation?.status || null,
     }))
+    .filter(item => item.totalFieldCount > 0)
     .sort((a, b) => a.coverageRatio - b.coverageRatio)
     .slice(0, 12);
 

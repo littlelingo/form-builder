@@ -372,7 +372,10 @@ export function InspectorPanel({
   const hasOptions = ['radioButton', 'select', 'checkbox', 'comboBox'].includes(component.type);
   const canAnswer = hasAnswerValue(component);
   const guidance = showLowConfidenceGuidance(component)
-    ? buildConfidenceInsight(component.provenance)
+    ? buildConfidenceInsight(component.provenance, {
+        label: component.label,
+        componentType: component.type,
+      })
     : null;
   const change = (patch: Partial<AuthoringComponent>) => onChange({ ...component, ...patch });
 
@@ -386,6 +389,8 @@ export function InspectorPanel({
             <ConfidenceBadge
               provenance={component.provenance}
               componentId={component.id}
+              componentLabel={component.label}
+              componentType={component.type}
               onAccept={onAcceptComponent}
               onReject={onRejectComponent}
             />

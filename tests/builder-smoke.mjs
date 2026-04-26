@@ -175,21 +175,16 @@ async function smokeCuratedPdfImport(page) {
 
   await loadBlankBuilder(page);
 
-  page.once('dialog', async dialog => {
-    if (
-      dialog.type() === 'confirm' &&
-      dialog.message().includes('Multiple forms were detected in this PDF')
-    ) {
-      await dialog.accept();
-      return;
-    }
-    await dialog.dismiss();
-  });
-
   const fileChooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Import PDF' }).click();
   const fileChooser = await fileChooserPromise;
   await fileChooser.setFiles(pensionPdfFixture.pathname);
+  await expectVisible(
+    page,
+    page.getByRole('heading', { name: 'Multiple forms detected' }),
+    'Expected multi-form imports to show an in-app confirmation dialog.',
+  );
+  await page.getByRole('button', { name: 'Continue import' }).click();
 
   await expectVisible(
     page,

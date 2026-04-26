@@ -308,6 +308,203 @@ test('curateFields can match fields through component-pattern selectors', () => 
   clearRuntimeRecipes();
 });
 
+test('curateFields applies taxonomy curation when no recipe or corpus matches exist', () => {
+  clearRuntimeRecipes();
+  const result = curateFields(
+    [
+      {
+        name: 'ApplicantEmailAddress',
+        closestLabel: 'Email address',
+        componentPattern: {
+          role: 'email',
+          family: 'contact',
+          confidence: 0.9,
+          source: 'deterministic',
+        },
+      },
+      {
+        name: 'ApplicantPhoneNumber',
+        closestLabel: 'Phone number',
+        componentPattern: {
+          role: 'phone',
+          family: 'contact',
+          confidence: 0.86,
+          source: 'deterministic',
+        },
+      },
+      {
+        name: 'ApplicantSignature',
+        closestLabel: 'Signature',
+        componentPattern: {
+          role: 'signature',
+          family: 'signature',
+          confidence: 0.91,
+          source: 'deterministic',
+        },
+      },
+    ],
+    {
+      metadata: { filename: 'taxonomy-synthetic.pdf' },
+      corpus: [],
+    },
+  );
+
+  assert.equal(result.report.status, 'taxonomy-curated');
+  assert.equal(result.report.corpus.matchedFieldCount, 0);
+  assert.equal(result.report.taxonomy.matchedFieldCount, 3);
+  assert.equal(result.fields[0].curation.source, 'taxonomy');
+  assert.equal(result.fields[0].curation.chapterId, 'contactInformation');
+  assert.equal(result.fields[1].curation.chapterId, 'contactInformation');
+  assert.equal(result.fields[2].curation.chapterId, 'certificationAndSignature');
+});
+
+test('curateFields uses taxonomy group-key loops to promote repeated rows into list-loop chapters', () => {
+  clearRuntimeRecipes();
+  const result = curateFields(
+    [
+      {
+        name: 'ProviderName_1',
+        closestLabel: 'Provider name',
+        componentPattern: {
+          role: 'provider',
+          family: 'medical',
+          confidence: 0.9,
+          source: 'deterministic',
+          groupKey: 'provider-table',
+          groupRole: 'providerGroup',
+        },
+      },
+      {
+        name: 'ProviderAddress_1',
+        closestLabel: 'Street address',
+        componentPattern: {
+          role: 'address',
+          family: 'contact',
+          confidence: 0.9,
+          source: 'deterministic',
+          groupKey: 'provider-table',
+          groupRole: 'providerGroup',
+        },
+      },
+      {
+        name: 'ProviderDateFrom_1',
+        closestLabel: 'Date from',
+        componentPattern: {
+          role: 'effectiveDate',
+          family: 'claim',
+          confidence: 0.9,
+          source: 'deterministic',
+          groupKey: 'provider-table',
+          groupRole: 'providerGroup',
+        },
+      },
+      {
+        name: 'ProviderName_2',
+        closestLabel: 'Provider name',
+        componentPattern: {
+          role: 'provider',
+          family: 'medical',
+          confidence: 0.9,
+          source: 'deterministic',
+          groupKey: 'provider-table',
+          groupRole: 'providerGroup',
+        },
+      },
+      {
+        name: 'ProviderAddress_2',
+        closestLabel: 'Street address',
+        componentPattern: {
+          role: 'address',
+          family: 'contact',
+          confidence: 0.9,
+          source: 'deterministic',
+          groupKey: 'provider-table',
+          groupRole: 'providerGroup',
+        },
+      },
+      {
+        name: 'ProviderDateFrom_2',
+        closestLabel: 'Date from',
+        componentPattern: {
+          role: 'effectiveDate',
+          family: 'claim',
+          confidence: 0.9,
+          source: 'deterministic',
+          groupKey: 'provider-table',
+          groupRole: 'providerGroup',
+        },
+      },
+    ],
+    {
+      metadata: { filename: 'taxonomy-loop-synthetic.pdf' },
+      corpus: [],
+    },
+  );
+
+  assert.equal(result.report.status, 'taxonomy-curated');
+  assert.equal(result.report.taxonomy.loopFieldCount, 6);
+  assert.equal(result.report.decisions.length, 1);
+  assert.equal(result.report.decisions[0].type, 'listLoop');
+  assert.equal(result.report.decisions[0].chapterId, 'treatmentProviders');
+  assert.equal(result.report.decisions[0].itemFieldCount, 3);
+  assert.equal(result.report.decisions[0].estimatedItemCount, 2);
+  assert.equal(
+    result.fields.every(field => field.curation.chapterType === 'listLoop'),
+    true,
+  );
+  assert.equal(
+    result.fields.every(field => field.curation.chapterOptions?.required === false),
+    true,
+  );
+  assert.equal(result.fields[0].curation.chapterOptions?.nounSingular, 'provider');
+  assert.equal(result.fields[0].curation.chapterOptions?.nounPlural, 'providers');
+});
+
+test('curateFields assigns unmatched leftovers to page-majority taxonomy chapter mappings', () => {
+  clearRuntimeRecipes();
+  const result = curateFields(
+    [
+      {
+        name: 'ApplicantEmailAddress',
+        closestLabel: 'Email address',
+        bbox: { page: 0, x: 0.1, y: 0.1, w: 0.1, h: 0.02 },
+        componentPattern: {
+          role: 'email',
+          family: 'contact',
+          confidence: 0.9,
+          source: 'deterministic',
+        },
+      },
+      {
+        name: 'ApplicantPhoneNumber',
+        closestLabel: 'Phone number',
+        bbox: { page: 0, x: 0.1, y: 0.2, w: 0.1, h: 0.02 },
+        componentPattern: {
+          role: 'phone',
+          family: 'contact',
+          confidence: 0.86,
+          source: 'deterministic',
+        },
+      },
+      {
+        name: 'UnclassifiedLeftover',
+        closestLabel: 'Test name',
+        bbox: { page: 0, x: 0.1, y: 0.3, w: 0.1, h: 0.02 },
+      },
+    ],
+    {
+      metadata: { filename: 'taxonomy-page-fallback.pdf' },
+      corpus: [],
+    },
+  );
+
+  assert.equal(result.report.status, 'taxonomy-curated');
+  assert.equal(result.report.taxonomy.matchedFieldCount, 3);
+  assert.equal(result.fields[2].curation.source, 'taxonomy');
+  assert.equal(result.fields[2].curation.chapterId, 'contactInformation');
+  assert.equal(result.fields[2].curation.pageId, 'contactDetails');
+});
+
 test('curateFields rejects invalid caller-provided recipes before applying them', () => {
   assert.throws(
     () =>

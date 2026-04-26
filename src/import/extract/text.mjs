@@ -27,12 +27,14 @@ function emitProgress(onProgress, event) {
 
 export async function extractText(pdfBytes, options = {}) {
   const data = pdfBytes instanceof Uint8Array ? pdfBytes : new Uint8Array(pdfBytes);
+  const enableXfa = options.enableXfa === true;
 
   const loadingTask = getDocument({
     data,
     disableWorker: true,
     isEvalSupported: false,
     useSystemFonts: false,
+    enableXfa,
   });
   const doc = await loadingTask.promise;
 
@@ -49,7 +51,14 @@ export async function extractText(pdfBytes, options = {}) {
     const viewport = page.getViewport({ scale: 1 });
 
     const items = content.items
-      .filter(item => 'str' in item && item.str && item.str.trim().length > 0)
+      .filter(
+        item =>
+          'str' in item &&
+          item.str &&
+          item.str.trim().length > 0 &&
+          Array.isArray(item.transform) &&
+          item.transform.length >= 6,
+      )
       .map(item => ({
         text: item.str,
         page: pageNum - 1,
