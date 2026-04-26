@@ -128,6 +128,22 @@ export interface AuthoringProvenanceBbox {
   h: number;
 }
 
+export interface AuthoringCurationProvenance {
+  source?: string;
+  order?: number;
+  chapterId?: string;
+  chapterTitle?: string;
+  chapterType?: string;
+  chapterOptions?: Record<string, unknown>;
+  itemNameLabel?: string;
+  sectionIntro?: string;
+  pageId?: string;
+  pageTitle?: string;
+  recipeId?: string | null;
+  exemplarId?: string | null;
+  similarity?: number;
+}
+
 export interface AuthoringProvenance {
   origin: AuthoringProvenanceOrigin;
   pdfFieldName?: string;
@@ -137,6 +153,7 @@ export interface AuthoringProvenance {
   reviewed: boolean;
   lastCorrectedBy?: string | null;
   exemplarId?: string | null;
+  curation?: AuthoringCurationProvenance;
 }
 
 export interface AuthoringComponent {

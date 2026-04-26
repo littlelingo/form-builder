@@ -184,6 +184,61 @@ function applyCorpus(fields, corpus, options = {}) {
   return { fields: curatedFields, matchedFieldCount };
 }
 
+function summarizeCurationDecisions(fields) {
+  const loopGroups = new Map();
+
+  for (const field of fields) {
+    const curation = field?.curation;
+    if (curation?.chapterType !== 'listLoop') continue;
+    const key = `${curation.source || 'curation'}:${curation.chapterId}:${curation.pageId}`;
+    if (!loopGroups.has(key)) {
+      loopGroups.set(key, {
+        type: 'listLoop',
+        source: curation.source || 'curation',
+        recipeId: curation.recipeId || null,
+        chapterId: curation.chapterId,
+        chapterTitle: curation.chapterTitle,
+        pageId: curation.pageId,
+        pageTitle: curation.pageTitle,
+        arrayPath: curation.chapterOptions?.arrayPath || null,
+        nounSingular: curation.chapterOptions?.nounSingular || null,
+        nounPlural: curation.chapterOptions?.nounPlural || null,
+        sourceFieldCount: 0,
+        _items: new Map(),
+      });
+    }
+    const decision = loopGroups.get(key);
+    decision.sourceFieldCount += 1;
+    const itemId = field.semanticId || field.componentOverrides?.id || field.name || field.closestLabel;
+    if (itemId && !decision._items.has(itemId)) {
+      const label = field.componentOverrides?.label || field.closestLabel || itemId;
+      decision._items.set(itemId, {
+        id: itemId,
+        label,
+        order: Number.isInteger(curation.order) ? curation.order : Number.MAX_SAFE_INTEGER,
+      });
+    }
+  }
+
+  return [...loopGroups.values()].map(({ _items, ...decision }) => {
+    const items = [..._items.values()].sort((a, b) => a.order - b.order);
+    const itemFieldIds = items.map(item => item.id);
+    const itemFieldLabels = items.map(item => item.label);
+    const itemFieldCount = itemFieldIds.length;
+    const estimatedItemCount =
+      itemFieldCount > 0 && decision.sourceFieldCount % itemFieldCount === 0
+        ? decision.sourceFieldCount / itemFieldCount
+        : null;
+    return {
+      ...decision,
+      itemFieldIds,
+      itemFieldLabels,
+      itemFieldCount,
+      estimatedItemCount,
+    };
+  });
+}
+
 export function curateFields(fields, options = {}) {
   const sourceFields = Array.isArray(fields) ? fields : [];
   const catalog = Array.isArray(options.recipes)
@@ -223,6 +278,7 @@ export function curateFields(fields, options = {}) {
       corpus: {
         matchedFieldCount: corpusResult.matchedFieldCount,
       },
+      decisions: summarizeCurationDecisions(corpusResult.fields),
       curatedFieldCount,
       totalFieldCount: sourceFields.length,
       recipeCatalogVersion: catalog.version || null,

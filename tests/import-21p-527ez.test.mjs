@@ -47,7 +47,7 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
   });
 
   assert.equal(importReport.acroFormFieldCount, 519);
-  assert.equal(importReport.componentCount, 491);
+  assert.equal(importReport.componentCount, 346);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(
     importReport.curation.recipe.recipeId,
@@ -55,6 +55,50 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
   );
   assert.equal(importReport.curation.recipe.matchedFieldCount, 491);
   assert.equal(importReport.curation.curatedFieldCount, 491);
+  assert.deepEqual(
+    importReport.curation.decisions.map(decision => ({
+      type: decision.type,
+      chapterId: decision.chapterId,
+      arrayPath: decision.arrayPath,
+      sourceFieldCount: decision.sourceFieldCount,
+      itemFieldCount: decision.itemFieldCount,
+      estimatedItemCount: decision.estimatedItemCount,
+    })),
+    [
+      {
+        type: 'listLoop',
+        chapterId: 'dependentChildEntries',
+        arrayPath: 'dependentChildren',
+        sourceFieldCount: 45,
+        itemFieldCount: 15,
+        estimatedItemCount: 3,
+      },
+      {
+        type: 'listLoop',
+        chapterId: 'incomeSources',
+        arrayPath: 'incomeSources',
+        sourceFieldCount: 32,
+        itemFieldCount: 8,
+        estimatedItemCount: 4,
+      },
+      {
+        type: 'listLoop',
+        chapterId: 'careProviderExpenses',
+        arrayPath: 'careProviderExpenses',
+        sourceFieldCount: 54,
+        itemFieldCount: 18,
+        estimatedItemCount: 3,
+      },
+      {
+        type: 'listLoop',
+        chapterId: 'medicalExpenses',
+        arrayPath: 'medicalExpenses',
+        sourceFieldCount: 66,
+        itemFieldCount: 11,
+        estimatedItemCount: 6,
+      },
+    ],
+  );
   assert.equal(importReport.validation.valid, true, importReport.validation.errors.join('\n'));
   assert.equal(validation.valid, true, validation.errors.join('\n'));
   assert.equal(quality.level, 'curated');
@@ -74,8 +118,12 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
       'Marital status and spouse information',
       'Prior marital history',
       'Dependent children',
+      'Dependent child entries',
       'Income and assets',
+      'Income sources',
       'Unreimbursed medical expenses',
+      'Care provider expenses',
+      'Medical expenses',
       'Direct deposit information',
       'Certification and signature',
       'Alternate signer',
@@ -88,9 +136,10 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
   assert.equal(byId('veteranFullName')?.type, 'textInput');
   assert.equal(byId('veteranSocialSecurityNumber')?.type, 'maskedInput');
   assert.equal(byId('spouseSocialSecurityNumber')?.type, 'maskedInput');
-  assert.equal(byId('child3SocialSecurityNumber')?.type, 'maskedInput');
+  assert.equal(byId('childSocialSecurityNumber')?.type, 'maskedInput');
   assert.equal(byId('assetsOver25000Dollars')?.type, 'radioButton');
-  assert.equal(byId('careProviderDTypeOfCare')?.type, 'radioButton');
+  assert.equal(byId('careProviderTypeOfCare')?.type, 'radioButton');
+  assert.equal(byId('medicalExpenseAmountPaidCents')?.type, 'textInput');
   assert.equal(byId('financialInstitutionName')?.type, 'textInput');
   assert.equal(byId('claimantSignatureDate')?.type, 'date');
   assert.equal(byId('alternateSignerSignatureDate')?.type, 'date');
@@ -98,11 +147,11 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
   assert.equal(byId('inHomeCareProviderSignatureDate')?.type, 'date');
 
   assert.deepEqual(
-    byId('careProviderBTypeOfCare')?.responseOptions?.map(option => option.label),
+    byId('careProviderTypeOfCare')?.responseOptions?.map(option => option.label),
     ['Care facility', 'In-home care attendant'],
   );
   assert.deepEqual(
-    byId('incomeSourceKType')?.responseOptions?.map(option => option.label),
+    byId('incomeSourceType')?.responseOptions?.map(option => option.label),
     ['Social Security', 'Interest or dividends', 'Civil service', 'Pension or retirement', 'Other'],
   );
   assert.deepEqual(
@@ -113,8 +162,139 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
   assert.ok(labels.includes('Veteran full name'));
   assert.ok(labels.includes('Claiming special monthly pension'));
   assert.ok(labels.includes('Number of dependent children living with Veteran'));
-  assert.ok(labels.includes('Income source K current gross monthly income amount'));
-  assert.ok(labels.includes('Medical expense J amount paid amount'));
+  assert.ok(labels.includes('Child first name'));
+  assert.ok(labels.includes('Child Social Security number'));
+  assert.ok(labels.includes('Care provider name and type of care'));
+  assert.ok(labels.includes('Type of care'));
+  assert.ok(labels.includes('Hours worked per week'));
+  assert.ok(labels.includes('Income source payer name'));
+  assert.ok(labels.includes('Income source current gross monthly income amount'));
+  assert.ok(labels.includes('Medical expense paid to'));
+  assert.ok(labels.includes('Medical expense amount paid amount'));
   assert.ok(labels.includes('Care facility state or country requires licensing'));
   assert.ok(labels.includes('In-home care hours per month'));
+
+  const dependentChildEntries = form.chapters.find(chapter => chapter.id === 'dependentChildEntries');
+  assert.equal(dependentChildEntries?.type, 'listLoop');
+  assert.deepEqual(dependentChildEntries?.options, {
+    nounSingular: 'child',
+    nounPlural: 'children',
+    arrayPath: 'dependentChildren',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(dependentChildEntries?.itemNameLabel, 'Child first name');
+  assert.equal(dependentChildEntries?.sectionIntro, 'Add each dependent child listed on the source form.');
+  assert.deepEqual(
+    dependentChildEntries?.pages[0].components.map(component => component.id),
+    [
+      'childFirstName',
+      'childMiddleInitial',
+      'childLastName',
+      'childBirthDateMonth',
+      'childBirthDateDay',
+      'childBirthDateYear',
+      'childSocialSecurityNumber',
+      'childPlaceOfBirth',
+      'childBiologicalChild',
+      'childStepchild',
+      'childSeriouslyDisabled',
+      'childEighteenToTwentyThreeInSchool',
+      'childPreviouslyMarried',
+      'childAdopted',
+      'childDoesNotLiveWithVeteranButContributes',
+    ],
+  );
+  assert.equal(dependentChildEntries?.pages[0].components[0].summaryCard, true);
+
+  const incomeSources = form.chapters.find(chapter => chapter.id === 'incomeSources');
+  assert.equal(incomeSources?.type, 'listLoop');
+  assert.deepEqual(incomeSources?.options, {
+    nounSingular: 'income source',
+    nounPlural: 'income sources',
+    arrayPath: 'incomeSources',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(incomeSources?.itemNameLabel, 'Income payer name');
+  assert.equal(incomeSources?.sectionIntro, 'Add each income source listed on the source form.');
+  assert.deepEqual(
+    incomeSources?.pages[0].components.map(component => component.id),
+    [
+      'incomeSourcePayerName',
+      'incomeSourceRecipient',
+      'incomeSourceType',
+      'incomeSourceChildRecipientName',
+      'incomeSourceCurrentGrossMonthlyIncomeDollars',
+      'incomeSourceCurrentGrossMonthlyIncomeCents',
+      'incomeSourceCurrentGrossMonthlyIncomeAmount',
+      'incomeSourceOtherIncomeType',
+    ],
+  );
+  assert.equal(incomeSources?.pages[0].components[0].summaryCard, true);
+
+  const careProviderExpenses = form.chapters.find(chapter => chapter.id === 'careProviderExpenses');
+  assert.equal(careProviderExpenses?.type, 'listLoop');
+  assert.deepEqual(careProviderExpenses?.options, {
+    nounSingular: 'provider',
+    nounPlural: 'providers',
+    arrayPath: 'careProviderExpenses',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(careProviderExpenses?.itemNameLabel, 'Care provider name and type of care');
+  assert.equal(careProviderExpenses?.sectionIntro, 'Add each care provider listed on the source form.');
+  assert.deepEqual(
+    careProviderExpenses?.pages[0].components.map(component => component.id),
+    [
+      'careProviderNameAndTypeOfCare',
+      'careProviderExpenseRecipient',
+      'careProviderHourlyRateDollars',
+      'careProviderHourlyRateCents',
+      'careProviderHoursWorkedPerWeek',
+      'careProviderChildRecipientName',
+      'careProviderTypeOfCare',
+      'careProviderStartDateMonth',
+      'careProviderStartDateDay',
+      'careProviderStartDateYear',
+      'careProviderPaymentFrequency',
+      'careProviderAmountPaidDollars',
+      'careProviderAmountPaidCents',
+      'careProviderAmountPaidAmount',
+      'careProviderEndDateMonth',
+      'careProviderEndDateDay',
+      'careProviderEndDateYear',
+      'careProviderNoEndDate',
+    ],
+  );
+  assert.equal(careProviderExpenses?.pages[0].components[0].summaryCard, true);
+
+  const medicalExpenses = form.chapters.find(chapter => chapter.id === 'medicalExpenses');
+  assert.equal(medicalExpenses?.type, 'listLoop');
+  assert.deepEqual(medicalExpenses?.options, {
+    nounSingular: 'medical expense',
+    nounPlural: 'medical expenses',
+    arrayPath: 'medicalExpenses',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(medicalExpenses?.itemNameLabel, 'Medical expense paid to');
+  assert.equal(medicalExpenses?.sectionIntro, 'Add each medical expense listed on the source form.');
+  assert.deepEqual(
+    medicalExpenses?.pages[0].components.map(component => component.id),
+    [
+      'medicalExpensePaidTo',
+      'medicalExpenseDateCostsPaidMonth',
+      'medicalExpenseDateCostsPaidDay',
+      'medicalExpenseDateCostsPaidYear',
+      'medicalExpenseRecipient',
+      'medicalExpensePaymentFrequency',
+      'medicalExpensePurpose',
+      'medicalExpenseChildRecipientName',
+      'medicalExpenseAmountPaidDollars',
+      'medicalExpenseAmountPaidCents',
+      'medicalExpenseAmountPaidAmount',
+    ],
+  );
+  assert.equal(medicalExpenses?.pages[0].components[0].summaryCard, true);
 });

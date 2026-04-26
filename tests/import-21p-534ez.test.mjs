@@ -47,7 +47,7 @@ test('VBA 21P-534EZ imports as a curated survivor benefits workflow', async t =>
   });
 
   assert.equal(importReport.acroFormFieldCount, 626);
-  assert.equal(importReport.componentCount, 569);
+  assert.equal(importReport.componentCount, 537);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(
     importReport.curation.recipe.recipeId,
@@ -73,6 +73,7 @@ test('VBA 21P-534EZ imports as a curated survivor benefits workflow', async t =>
       'Marital information',
       'Marital history',
       'Child of Veteran information',
+      'Dependent child entries',
       'D.I.C. information',
       'Special monthly pension or D.I.C.',
       'Income and assets',
@@ -108,6 +109,7 @@ test('VBA 21P-534EZ imports as a curated survivor benefits workflow', async t =>
   assert.equal(byId('inHomeCareWorksheetSignature')?.type, 'textInput');
   assert.equal(byId('inHomeCareWorksheetDateSigned')?.type, 'date');
   assert.equal(byId('inHomeCareHoursPerMonth')?.type, 'textInput');
+  assert.equal(byId('childSocialSecurityNumber')?.type, 'maskedInput');
 
   assert.deepEqual(
     byId('claimantRelationshipToVeteran')?.responseOptions?.map(option => option.label),
@@ -126,7 +128,9 @@ test('VBA 21P-534EZ imports as a curated survivor benefits workflow', async t =>
   assert.ok(labels.includes('Claimant full name'));
   assert.ok(labels.includes('Claiming Survivors Pension'));
   assert.ok(labels.includes('Claiming Dependency and Indemnity Compensation'));
-  assert.ok(labels.includes('Child 1 is biological child'));
+  assert.ok(labels.includes('Child first name'));
+  assert.ok(labels.includes('Biological child'));
+  assert.ok(labels.includes('Monthly support contribution'));
   assert.ok(labels.includes('D.I.C. claim type'));
   assert.ok(labels.includes('Income source B current gross monthly income amount'));
   assert.ok(labels.includes('Medical expense E date costs paid month'));
@@ -136,4 +140,38 @@ test('VBA 21P-534EZ imports as a curated survivor benefits workflow', async t =>
 
   const weakLabelPattern = /\b(?:Field|Checkbox(?:yes|no)?|Jf\d|Number Street|Zip Postal|Apt or Unit|State Province|NumberStreet)\b|Child 1[01]\b|Care expense [RSTUVWXYZ]\b/i;
   assert.deepEqual(labels.filter(label => weakLabelPattern.test(label)), []);
+
+  const dependentChildEntries = form.chapters.find(chapter => chapter.id === 'dependentChildEntries');
+  assert.equal(dependentChildEntries?.type, 'listLoop');
+  assert.deepEqual(dependentChildEntries?.options, {
+    nounSingular: 'child',
+    nounPlural: 'children',
+    arrayPath: 'dependentChildren',
+    required: false,
+    maxItems: 10,
+  });
+  assert.equal(dependentChildEntries?.itemNameLabel, 'Child first name');
+  assert.equal(dependentChildEntries?.sectionIntro, 'Add each dependent child listed on the source form.');
+  assert.deepEqual(
+    dependentChildEntries?.pages[0].components.map(component => component.id),
+    [
+      'childFirstName',
+      'childMiddleInitial',
+      'childLastName',
+      'childBirthDateMonth',
+      'childBirthDateDay',
+      'childBirthDateYear',
+      'childSocialSecurityNumber',
+      'childPlaceOfBirth',
+      'childBiologicalChild',
+      'childStepchild',
+      'childSeriouslyDisabled',
+      'childAge18To23AndInSchool',
+      'childMarriedOrPreviouslyMarried',
+      'childAdopted',
+      'childDoesNotLiveWithClaimant',
+      'childMonthlySupportContribution',
+    ],
+  );
+  assert.equal(dependentChildEntries?.pages[0].components[0].summaryCard, true);
 });

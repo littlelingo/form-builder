@@ -10,9 +10,45 @@ export type ImportProgressStage =
   | 'pair-labels'
   | 'corpus'
   | 'enrichment'
+  | 'curation'
   | 'build-authoring'
   | 'validate'
   | 'complete';
+
+export interface ImportCurationDecision {
+  type: 'listLoop';
+  source: string;
+  recipeId?: string | null;
+  chapterId: string;
+  chapterTitle: string;
+  pageId: string;
+  pageTitle: string;
+  arrayPath?: string | null;
+  nounSingular?: string | null;
+  nounPlural?: string | null;
+  sourceFieldCount: number;
+  itemFieldIds: string[];
+  itemFieldLabels: string[];
+  itemFieldCount: number;
+  estimatedItemCount?: number | null;
+}
+
+export interface ImportCurationReport {
+  status: string;
+  recipe?: {
+    status: string;
+    recipeId?: string | null;
+    recipeName?: string | null;
+    matchedFieldCount: number;
+  };
+  corpus?: {
+    matchedFieldCount: number;
+  };
+  decisions?: ImportCurationDecision[];
+  curatedFieldCount: number;
+  totalFieldCount: number;
+  recipeCatalogVersion?: string | null;
+}
 
 export interface ImportProgressEvent {
   stage: ImportProgressStage;
@@ -28,6 +64,7 @@ export interface ImportProgressEvent {
   corpusEntryCount?: number;
   corpusHits?: number;
   enrichment?: string;
+  curation?: ImportCurationReport;
   chapterCount?: number;
   componentCount?: number;
   validation?: { valid: boolean; errors: string[]; warnings: unknown[] };
@@ -51,6 +88,7 @@ export interface ImportPdfResult {
     validation: { valid: boolean; errors: string[]; warnings: unknown[] };
     corpusEntryCount?: number;
     corpusHits?: number;
+    curation?: ImportCurationReport;
     enrichment?: {
       provider: string;
       reason: string;

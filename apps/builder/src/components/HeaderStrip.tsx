@@ -13,6 +13,7 @@ const importSteps: Array<{ stage: ImportProgressStage; label: string }> = [
   { stage: 'pair-labels', label: 'Labels' },
   { stage: 'corpus', label: 'Corpus' },
   { stage: 'enrichment', label: 'Enrichment' },
+  { stage: 'curation', label: 'Curation' },
   { stage: 'build-authoring', label: 'Build JSON' },
   { stage: 'validate', label: 'Validate' },
   { stage: 'complete', label: 'Load canvas' },
@@ -35,6 +36,7 @@ interface PdfImportStatus {
     pairedFieldCount?: number;
     corpusEntryCount?: number;
     corpusHits?: number;
+    curation?: ImportPdfResult['importReport']['curation'];
     enrichment?: string;
     chapterCount?: number;
     componentCount?: number;
@@ -69,6 +71,7 @@ function mergeImportStats(
     ...(event.pairedFieldCount !== undefined ? { pairedFieldCount: event.pairedFieldCount } : {}),
     ...(event.corpusEntryCount !== undefined ? { corpusEntryCount: event.corpusEntryCount } : {}),
     ...(event.corpusHits !== undefined ? { corpusHits: event.corpusHits } : {}),
+    ...(event.curation !== undefined ? { curation: event.curation } : {}),
     ...(event.enrichment !== undefined ? { enrichment: event.enrichment } : {}),
     ...(event.chapterCount !== undefined ? { chapterCount: event.chapterCount } : {}),
     ...(event.componentCount !== undefined ? { componentCount: event.componentCount } : {}),
@@ -99,6 +102,10 @@ function ImportProgressPanel({
   const elapsed = formatDuration(status.elapsedMs ?? Date.now() - status.startedAt);
   const validationErrors = status.report?.validation.errors.length || 0;
   const componentTotal = status.stats.componentCount ?? status.report?.componentCount;
+  const curation = status.report?.curation || status.stats.curation;
+  const curationDecisions = curation?.decisions || [];
+  const curatedFieldCount = curation?.curatedFieldCount;
+  const totalFieldCount = curation?.totalFieldCount;
 
   return (
     <section
@@ -198,6 +205,16 @@ function ImportProgressPanel({
             <dd>{status.stats.enrichment || status.report?.enrichment?.reason || 'pending'}</dd>
           </div>
           <div>
+            <dt>Curation</dt>
+            <dd>
+              {curation
+                ? `${curation.status}${curatedFieldCount !== undefined && totalFieldCount !== undefined
+                  ? ` ${curatedFieldCount}/${totalFieldCount}`
+                  : ''}`
+                : 'pending'}
+            </dd>
+          </div>
+          <div>
             <dt>Validation</dt>
             <dd>
               {status.report
@@ -208,6 +225,30 @@ function ImportProgressPanel({
             </dd>
           </div>
         </dl>
+
+        {curationDecisions.length > 0 && (
+          <section className="pdf-import-progress__curation" aria-labelledby="pdf-import-curation-heading">
+            <div>
+              <p className="builder-eyebrow">Curation decisions</p>
+              <h3 id="pdf-import-curation-heading">Builder shape applied during import</h3>
+            </div>
+            <ul>
+              {curationDecisions.map(decision => (
+                <li key={`${decision.type}:${decision.chapterId}:${decision.pageId}`}>
+                  <strong>{decision.chapterTitle}</strong>
+                  <span>
+                    {decision.sourceFieldCount} source field{decision.sourceFieldCount === 1 ? '' : 's'} converted into{' '}
+                    {decision.itemFieldCount} loop field{decision.itemFieldCount === 1 ? '' : 's'}
+                    {decision.estimatedItemCount
+                      ? ` across about ${decision.estimatedItemCount} ${decision.nounPlural || 'items'}`
+                      : ''}
+                    {decision.arrayPath ? ` (${decision.arrayPath})` : ''}.
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </section>
   );
@@ -331,6 +372,7 @@ export function HeaderStrip(props: HeaderStripProps) {
             componentCount: importedComponentCount,
             corpusEntryCount: result.importReport.corpusEntryCount,
             corpusHits: result.importReport.corpusHits,
+            curation: result.importReport.curation,
             enrichment: result.importReport.enrichment?.reason,
             chapterCount: result.form.chapters.length,
           },
@@ -356,6 +398,7 @@ export function HeaderStrip(props: HeaderStripProps) {
           componentCount: importedComponentCount,
           corpusEntryCount: result.importReport.corpusEntryCount,
           corpusHits: result.importReport.corpusHits,
+          curation: result.importReport.curation,
           enrichment: result.importReport.enrichment?.reason,
           chapterCount: result.form.chapters.length,
         },

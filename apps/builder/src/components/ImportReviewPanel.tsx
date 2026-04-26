@@ -57,6 +57,16 @@ interface ReviewRow {
   pageId: string;
 }
 
+interface CurationDecisionRow {
+  chapterId: string;
+  chapterTitle: string;
+  pageId: string;
+  pageTitle: string;
+  arrayPath?: string;
+  source: string;
+  itemFieldCount: number;
+}
+
 function flatten(components: AuthoringComponent[] = []): AuthoringComponent[] {
   const out: AuthoringComponent[] = [];
   for (const component of components) {
@@ -87,6 +97,33 @@ function gatherUnreviewed(form: AuthoringForm): ReviewRow[] {
   return rows;
 }
 
+function gatherCurationDecisions(form: AuthoringForm): CurationDecisionRow[] {
+  const decisions = new Map<string, CurationDecisionRow>();
+  for (const chapter of form.chapters) {
+    if (chapter.type !== 'listLoop') continue;
+    for (const page of chapter.pages) {
+      const curatedComponents = flatten(page.components).filter(
+        component => component.provenance?.curation?.source,
+      );
+      if (curatedComponents.length === 0) continue;
+      const firstCuration = curatedComponents[0].provenance?.curation;
+      const key = `${chapter.id}:${page.id}`;
+      decisions.set(key, {
+        chapterId: chapter.id,
+        chapterTitle: chapter.title,
+        pageId: page.id,
+        pageTitle: page.title,
+        arrayPath: typeof chapter.options?.arrayPath === 'string'
+          ? chapter.options.arrayPath
+          : undefined,
+        source: firstCuration?.source || 'curation',
+        itemFieldCount: curatedComponents.length,
+      });
+    }
+  }
+  return [...decisions.values()];
+}
+
 function bandLabel(band: 'high' | 'medium' | 'low'): string {
   if (band === 'high') return 'High';
   if (band === 'medium') return 'Medium';
@@ -95,6 +132,7 @@ function bandLabel(band: 'high' | 'medium' | 'low'): string {
 
 export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: ImportReviewPanelProps) {
   const rows = gatherUnreviewed(form);
+  const curationDecisions = gatherCurationDecisions(form);
   const correctionsInputRef = useRef<HTMLInputElement | null>(null);
   const recipesInputRef = useRef<HTMLInputElement | null>(null);
   const [correctionsMessage, setCorrectionsMessage] = useState<string>('');
@@ -237,6 +275,25 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
             );
           })}
         </ol>
+      )}
+
+      {curationDecisions.length > 0 && (
+        <section className="builder-curation-summary" aria-labelledby="review-curation-heading">
+          <p className="builder-eyebrow">Curation decisions</p>
+          <h3 id="review-curation-heading">Applied during PDF conversion</h3>
+          <ul>
+            {curationDecisions.map(decision => (
+              <li key={`${decision.chapterId}:${decision.pageId}`}>
+                <strong>{decision.chapterTitle}</strong>
+                <span>
+                  Converted by {decision.source} into a list loop with {decision.itemFieldCount}{' '}
+                  field{decision.itemFieldCount === 1 ? '' : 's'}
+                  {decision.arrayPath ? ` at ${decision.arrayPath}` : ''}.
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <footer className="builder-review-footer">
