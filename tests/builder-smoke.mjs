@@ -175,6 +175,17 @@ async function smokeCuratedPdfImport(page) {
 
   await loadBlankBuilder(page);
 
+  page.once('dialog', async dialog => {
+    if (
+      dialog.type() === 'confirm' &&
+      dialog.message().includes('Multiple forms were detected in this PDF')
+    ) {
+      await dialog.accept();
+      return;
+    }
+    await dialog.dismiss();
+  });
+
   const fileChooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Import PDF' }).click();
   const fileChooser = await fileChooserPromise;
@@ -217,6 +228,7 @@ async function smokeCuratedPdfImport(page) {
     page.getByText('66 source fields converted into 11 loop fields across about 6 medical expenses'),
     'Expected medical expense list-loop curation decision in progress panel.',
   );
+  await page.getByRole('button', { name: 'Dismiss' }).click();
   await expectVisible(
     page,
     page.getByRole('heading', { name: 'Screens' }),

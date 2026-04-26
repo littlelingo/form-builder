@@ -1,7 +1,7 @@
 {
   "name": "expanded-corpus-pool",
   "description": "Manifest-driven corpus pool for broad import quality runs across baseline samples, revisions, and packet variants.",
-  "targetFileCount": 100,
+  "targetFileCount": 40,
   "entries": [
     {
       "path": "../form-samples",

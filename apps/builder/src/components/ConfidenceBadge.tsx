@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { AuthoringProvenance } from '../types';
+import { buildConfidenceInsight } from '../lib/confidenceInsights';
 import { confidenceBand } from '../lib/reviewState';
 
 interface ConfidenceBadgeProps {
@@ -15,6 +16,13 @@ function bandLabel(band: 'high' | 'medium' | 'low'): string {
   if (band === 'high') return 'High';
   if (band === 'medium') return 'Medium';
   return 'Low';
+}
+
+function sourceLabel(origin: AuthoringProvenance['origin']): string {
+  if (origin === 'pdf-field') return 'Imported from a fillable PDF field';
+  if (origin === 'pdf-static-region') return 'Imported from visible PDF text';
+  if (origin === 'template') return 'Imported from a template';
+  return 'Hand authored';
 }
 
 export function ConfidenceBadge({
@@ -35,6 +43,7 @@ export function ConfidenceBadge({
   const band = confidenceBand(confidence);
   const reviewed = provenance.reviewed === true;
   const percent = Math.round(confidence * 100);
+  const insight = buildConfidenceInsight(provenance);
 
   const className = `confidence-badge confidence-badge--${band}${reviewed ? ' confidence-badge--reviewed' : ''}${compact ? ' confidence-badge--compact' : ''}`;
   const ariaLabel = reviewed
@@ -60,11 +69,19 @@ export function ConfidenceBadge({
         <div className="confidence-badge__popover" role="dialog">
           <header>
             <strong>Confidence {percent}%</strong>
-            <small>{provenance.origin}</small>
+            <small>{sourceLabel(provenance.origin)}</small>
           </header>
+          <p>
+            <strong>Why review this?</strong> {insight.summary}
+          </p>
+          <ul className="confidence-badge__checks">
+            {insight.checks.map(check => (
+              <li key={check}>{check}</li>
+            ))}
+          </ul>
           {provenance.pdfFieldName && (
             <p>
-              <strong>AcroForm field:</strong> <code>{provenance.pdfFieldName}</code>
+              <strong>PDF field name:</strong> <code>{provenance.pdfFieldName}</code>
             </p>
           )}
           {typeof provenance.pdfPage === 'number' && (

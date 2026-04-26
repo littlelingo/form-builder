@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 
 import type { AuthoringComponent, AuthoringForm, SelectedNode } from '../types';
+import { buildConfidenceInsight } from '../lib/confidenceInsights';
 import { confidenceBand, needsHumanReview } from '../lib/reviewState';
 import {
   appendCorpusEntries,
@@ -227,6 +228,7 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
             const confidence = row.component.provenance?.confidence ?? 0;
             const band = confidenceBand(confidence);
             const percent = Math.round(confidence * 100);
+            const insight = buildConfidenceInsight(row.component.provenance);
             return (
               <li key={row.component.id} className={`builder-review-row builder-review-row--${band}`}>
                 <div className="builder-review-row__header">
@@ -243,11 +245,14 @@ export function ImportReviewPanel({ form, onJump, onAccept, onAcceptAll }: Impor
                 </div>
                 {row.component.provenance?.pdfFieldName && (
                   <p className="builder-review-row__meta">
-                    <span>AcroForm:</span> <code>{row.component.provenance.pdfFieldName}</code>
+                    <span>PDF field:</span> <code>{row.component.provenance.pdfFieldName}</code>
                     {typeof row.component.provenance.pdfPage === 'number' && (
                       <span> • page {row.component.provenance.pdfPage + 1}</span>
                     )}
                   </p>
+                )}
+                {band === 'low' && (
+                  <p className="builder-review-row__reason">{insight.summary}</p>
                 )}
                 <div className="builder-review-row__actions">
                   <button

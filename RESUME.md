@@ -1,6 +1,6 @@
 # VA Form Builder Resume Notes
 
-Last updated: 2026-04-25 EDT after curated-import smoke automation and 21P-534a child loop promotion
+Last updated: 2026-04-26 EDT after confidence-guidance UX pass and centered import modal behavior
 
 ## Current Workspace
 
@@ -65,7 +65,7 @@ Recent implementation already completed:
 - Playwright UI smoke on `http://localhost:5173/` imported the repo-local VA9 fixture and showed sections/screens: Veteran identification, Relationship and contact information, Issues on appeal, Why VA decided incorrectly, Board hearing selection, Appeal signature, Representative signature. The only browser console error was the existing missing `favicon.ico`; PDF.js font warnings logged but did not block import.
 - Added review-to-recipe promotion utilities in `src/import/curation/fromAuthoring.mjs`. Reviewed imported components can now be promoted into a validated recipe or single-recipe catalog without hard-coded form-family logic.
 - Added curation recipe import/promote/export controls to the builder Review panel. The panel stays reachable after all imported components are accepted so recipe promotion can happen after review.
-- Success-state import progress now renders inline instead of as a fixed overlay, so it no longer blocks Review panel actions after import completes.
+- Import progress/status now stays in a centered overlay panel for running/success/blocked/error states so import outcomes remain visible and explicit before dismissal.
 - Copied the user's 21-0958 Notice of Disagreement PDF to the ignored repo-local pilot fixture path `tests/fixtures/pilot/VA-21-0958-NOD-2020.pdf`.
 - Added generic AcroForm consolidation in `src/import/heuristic/consolidate.mjs` and wired it into `src/import/pipeline.mjs`. It merges split date, SSN, phone, address, name, and radio-widget fragments before enrichment/build.
 - Added generic static numbered-label inference in `src/import/extract/staticText.mjs` for PDFs with no usable AcroForm fields. The 21-0958 PDF now imports as 14 valid builder components, including SSN/date/address/phone/email classification and a Board review option radio group.
@@ -117,6 +117,8 @@ Recent implementation already completed:
 - Promoted the clear repeated medical expense E-J rows in VA Form 21P-527EZ into a `Medical expenses` `listLoop`. The recipe still matches and curates all 491 extracted fields, but the builder representation now has 346 components because the repeated paid-to/date/recipient/frequency/purpose/amount rows collapse into one authorable loop with 11 item fields. The recipe corrects the bad deterministic inference that treated some cents fields as `date`; the converted builder fields are `textInput`.
 - Added visible import-time curation decision summaries. `curateFields` now reports list-loop decisions with source field count, canonical item field count, estimated repeated item count, array path, and recipe/source metadata. The browser import progress panel and import review panel now show which builder-native list loops were applied during PDF conversion, so users can see why known PDFs imported as loops instead of flat fields.
 - Added automated builder smoke coverage for the curated-import UX contract. `npm run builder:smoke` now imports `VBA-21P-527EZ-ARE.pdf` when the sample fixture is available and asserts Canvas/Outline population, `curated 491/491`, all four visible list-loop curation decisions, no low-confidence wizard, and Review panel `Imported components (0)`.
+- Added shared plain-language low-confidence insight messaging in `apps/builder/src/lib/confidenceInsights.ts` and wired it into `ConfidenceBadge`, `ImportReviewPanel`, `ImportWizard`, and `InspectorPanel`. Low-confidence imported fields now show clear "why this was flagged" summaries plus short "what to check" guidance in non-builder jargon.
+- Updated curated-import smoke automation to explicitly accept the multi-form confirmation dialog triggered by current 21P-527EZ form-inventory detection so the import flow continues through the success panel contract.
 - Promoted the clear four-row child table in VA Form 21P-534a into a `Children in custody` `listLoop`. The recipe still matches and curates all 51 extracted fields, but the builder representation now has 36 components because the repeated child name/date/SSN/place/relationship rows collapse into one authorable loop with 5 item fields.
 - Promoted the clear nine-row issue table in VA Form 20-0995 into an `Issues for supplemental claim` `listLoop`. The recipe still matches and curates all 94 extracted fields, but the builder representation now has 78 components because the repeated specific-issue/VA-decision-notice-date rows collapse into one authorable loop with 2 item fields.
 - Promoted the clear three-row treatment-facility table in VA Form 20-0995 into a separate `Treatment facilities` `listLoop`. The recipe still matches and curates all 94 extracted fields, but the builder representation now has 70 components because the repeated facility name/location, treatment month/year, and no-date rows collapse into one authorable loop with 4 item fields.
@@ -176,6 +178,14 @@ npm test -- tests/import-nod.test.mjs tests/curation.test.mjs   # script ran ful
 npm run builder:build
 npm run compile:example
 npm run compile:example:27-8832
+```
+
+Latest verification after confidence-guidance + centered import modal updates:
+
+```bash
+node --test tests/confidence-insights.test.mjs tests/reviewState.test.mjs tests/wizardSteps.test.mjs
+npm run builder:smoke
+npm run builder:build
 ```
 
 Latest corpus verification:

@@ -144,12 +144,22 @@ export interface AuthoringCurationProvenance {
   similarity?: number;
 }
 
+export interface AuthoringConfidenceSignals {
+  acroformSignal?: number;
+  labelDistance?: number;
+  classificationCertainty?: number;
+  corpusSimilarity?: number;
+  validationMatch?: number;
+}
+
 export interface AuthoringProvenance {
   origin: AuthoringProvenanceOrigin;
   pdfFieldName?: string;
   pdfPage?: number;
   bbox?: AuthoringProvenanceBbox;
   confidence: number;
+  confidenceBand?: 'high' | 'medium' | 'low';
+  signals?: AuthoringConfidenceSignals;
   reviewed: boolean;
   lastCorrectedBy?: string | null;
   exemplarId?: string | null;

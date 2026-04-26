@@ -1,4 +1,6 @@
 import { getComponentSystemSupport } from '../lib/core';
+import { buildConfidenceInsight } from '../lib/confidenceInsights';
+import { confidenceBand } from '../lib/reviewState';
 import type { AuthoringComponent } from '../types';
 import { ConditionEditor } from './ConditionEditor';
 import { ConfidenceBadge } from './ConfidenceBadge';
@@ -90,6 +92,13 @@ function hasAnswerValue(component: AuthoringComponent) {
     'button',
     'buttonGroup',
   ].includes(component.type);
+}
+
+function showLowConfidenceGuidance(component: AuthoringComponent): boolean {
+  if (!component.provenance) return false;
+  if (component.provenance.reviewed !== false) return false;
+  if (!['pdf-field', 'pdf-static-region'].includes(component.provenance.origin)) return false;
+  return confidenceBand(component.provenance.confidence) === 'low';
 }
 
 function supportsTextBehavior(component: AuthoringComponent) {
@@ -362,6 +371,9 @@ export function InspectorPanel({
   const support = getComponentSystemSupport(component.type);
   const hasOptions = ['radioButton', 'select', 'checkbox', 'comboBox'].includes(component.type);
   const canAnswer = hasAnswerValue(component);
+  const guidance = showLowConfidenceGuidance(component)
+    ? buildConfidenceInsight(component.provenance)
+    : null;
   const change = (patch: Partial<AuthoringComponent>) => onChange({ ...component, ...patch });
 
   return (
@@ -377,6 +389,17 @@ export function InspectorPanel({
               onAccept={onAcceptComponent}
               onReject={onRejectComponent}
             />
+          )}
+          {guidance && (
+            <section className="builder-confidence-guidance" aria-label="Why review this field">
+              <p className="builder-eyebrow">Why review this?</p>
+              <p>{guidance.summary}</p>
+              <ul>
+                {guidance.checks.map(check => (
+                  <li key={check}>{check}</li>
+                ))}
+              </ul>
+            </section>
           )}
         </div>
         <button className="usa-button usa-button--secondary" type="button" onClick={onRemove}>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { AuthoringComponent, AuthoringForm, SelectedNode } from '../types';
+import { buildConfidenceInsight } from '../lib/confidenceInsights';
 import { confidenceBand, needsHumanReview } from '../lib/reviewState';
 
 interface ImportWizardProps {
@@ -82,6 +83,7 @@ export function ImportWizard({ form, onAccept, onJumpToComponent, onClose }: Imp
   const band = confidenceBand(confidence);
   const percent = Math.round(confidence * 100);
   const total = allSteps.length;
+  const insight = buildConfidenceInsight(step.component.provenance);
 
   return (
     <div className="builder-modal-backdrop" role="presentation" onClick={onClose}>
@@ -121,7 +123,7 @@ export function ImportWizard({ form, onAccept, onJumpToComponent, onClose }: Imp
           <dl className="builder-modal__meta-list">
             {step.component.provenance?.pdfFieldName && (
               <div>
-                <dt>AcroForm field name</dt>
+                <dt>PDF field name</dt>
                 <dd>
                   <code>{step.component.provenance.pdfFieldName}</code>
                 </dd>
@@ -135,7 +137,7 @@ export function ImportWizard({ form, onAccept, onJumpToComponent, onClose }: Imp
             )}
             {step.component.hint && (
               <div>
-                <dt>Adjacent text / hint</dt>
+                <dt>Nearby PDF text</dt>
                 <dd>{step.component.hint}</dd>
               </div>
             )}
@@ -148,6 +150,16 @@ export function ImportWizard({ form, onAccept, onJumpToComponent, onClose }: Imp
               </div>
             )}
           </dl>
+          <section className="builder-modal__guidance" aria-label="Low confidence guidance">
+            <p>
+              <strong>Why review this?</strong> {insight.summary}
+            </p>
+            <ul>
+              {insight.checks.map(check => (
+                <li key={check}>{check}</li>
+              ))}
+            </ul>
+          </section>
         </div>
 
         <footer className="builder-modal__footer">
