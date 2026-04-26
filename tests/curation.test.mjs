@@ -138,6 +138,27 @@ test('validateRecipe rejects missing selectors and invalid regex patterns', () =
   assert.ok(result.errors.some(error => error.includes('must include at least one')));
 });
 
+test('validateRecipe rejects invalid component-pattern selector metadata', () => {
+  const result = validateRecipe(
+    validRecipe({
+      fields: [
+        {
+          selector: {
+            componentPatternRole: '',
+            componentPatternMinConfidence: 1.2,
+          },
+          chapterId: 'contactInformation',
+          pageId: 'contactDetails',
+        },
+      ],
+    }),
+  );
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(error => error.includes('componentPatternRole')));
+  assert.ok(result.errors.some(error => error.includes('componentPatternMinConfidence')));
+});
+
 test('validateRecipe rejects component overrides for reserved identity fields', () => {
   const result = validateRecipe(
     validRecipe({
@@ -223,6 +244,66 @@ test('curateFields uses runtime recipe store by default', () => {
   assert.equal(result.report.recipe.matchedFieldCount, 1);
   assert.equal(result.fields[0].curation.chapterId, 'contactInformation');
   assert.equal(result.fields[0].componentOverrides.hint, 'Use an email address where VA can contact you.');
+
+  clearRuntimeRecipes();
+});
+
+test('curateFields can match fields through component-pattern selectors', () => {
+  clearRuntimeRecipes();
+  appendRecipe(
+    validRecipe({
+      id: 'test-pattern-selector',
+      match: {
+        anyText: ['synthetic'],
+        minFieldMatches: 0,
+      },
+      fields: [
+        {
+          id: 'emailAddress',
+          selector: {
+            componentPatternRole: 'email',
+            componentPatternMinConfidence: 0.8,
+          },
+          chapterId: 'contactInformation',
+          chapterTitle: 'Contact information',
+          pageId: 'contactDetails',
+          pageTitle: 'Contact details',
+          component: {
+            type: 'email',
+            label: 'Email address',
+          },
+        },
+      ],
+    }),
+  );
+
+  const result = curateFields(
+    [
+      {
+        name: 'FieldA',
+        closestLabel: 'Reach me at',
+        componentPattern: {
+          role: 'email',
+          confidence: 0.9,
+          evidence: ['name:e-mail'],
+        },
+      },
+      {
+        name: 'FieldB',
+        closestLabel: 'Phone',
+      },
+    ],
+    {
+      metadata: { filename: 'synthetic.pdf' },
+    },
+  );
+
+  assert.equal(result.report.status, 'curated');
+  assert.equal(result.report.recipe.recipeId, 'test-pattern-selector');
+  assert.equal(result.report.recipe.matchedFieldCount, 1);
+  assert.equal(result.fields[0].semanticId, 'emailAddress');
+  assert.equal(result.fields[0].curation.chapterId, 'contactInformation');
+  assert.equal(result.fields[0].componentOverrides.type, 'email');
 
   clearRuntimeRecipes();
 });

@@ -1123,6 +1123,377 @@
       ]
     },
     {
+      "id": "va-form-21-4142-4142a-authorization-2024-acroform",
+      "title": "VA Form 21-4142 and 21-4142A authorization workflow",
+      "description": "Curates the combined VBA-21-4142-ARE AcroForm packet into a builder-native authorization workflow with repeatable provider rows.",
+      "formFingerprint": "VA-FORM-21-4142-4142A-2024-ACROFORM",
+      "createdAt": "2026-04-26T00:00:00.000Z",
+      "createdBy": "seed",
+      "match": {
+        "anyText": [
+          "\\b(?:21[-_\\s]?4142a?|authorization[-_\\s]+to[-_\\s]+disclose)\\b"
+        ],
+        "fieldNamePatterns": [
+          "group:name:F\\[0\\]\\.Page_1\\[0\\]\\.VeteranFirstName\\[0\\].*VeteranLastName\\[0\\]$",
+          "F\\[0\\]\\.Page_1\\[0\\]\\.Patients_FirstName\\[0\\]$",
+          "group:date:F\\[0\\]\\.\\#subform\\[1\\]\\.Date_Signed_Month\\[0\\].*Date_Signed_Year\\[0\\]$",
+          "F\\[0\\]\\.\\#subform\\[14\\]\\.Provider_Or_Facility_Name\\[0\\]$",
+          "F\\[0\\]\\.\\#subform\\[15\\]\\.Provider_Or_Facility_Name\\[2\\]$"
+        ],
+        "minFieldMatches": 4
+      },
+      "fields": [
+        {
+          "id": "veteranName",
+          "selector": {
+            "namePattern": "group:name:F\\[0\\]\\.Page_1\\[0\\]\\.VeteranFirstName\\[0\\].*VeteranLastName\\[0\\]$"
+          },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "Veteran's name",
+            "hint": "Enter the Veteran's first name, middle initial, and last name."
+          }
+        },
+        {
+          "id": "veteranSocialSecurityNumber",
+          "selector": {
+            "namePattern": "group:ssn:F\\[0\\]\\.Page_1\\[0\\]\\.VeteransSocialSecurityNumber_"
+          },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "type": "maskedInput",
+            "label": "Social Security number"
+          }
+        },
+        {
+          "id": "vaFileNumber",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.Page_1\\[0\\]\\.VAFileNumber\\[0\\]$"
+          },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "VA file number"
+          }
+        },
+        {
+          "id": "veteranDateOfBirth",
+          "selector": {
+            "namePattern": "group:date:F\\[0\\]\\.Page_1\\[0\\]\\.DOBmonth\\[0\\].*DOByear\\[0\\]$"
+          },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "type": "date",
+            "label": "Date of birth"
+          }
+        },
+        {
+          "id": "veteranServiceNumber",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.Page_1\\[0\\]\\.VeteransServiceNumber_If_Applicable\\[0\\]$"
+          },
+          "chapterId": "veteranInformation",
+          "chapterTitle": "Veteran information",
+          "pageId": "veteranDetails",
+          "pageTitle": "Veteran details",
+          "component": {
+            "label": "Veteran's service number"
+          }
+        },
+        {
+          "id": "veteranMailingAddress",
+          "selector": {
+            "namePattern": "group:address:F\\[0\\]\\.Page_1\\[0\\]\\.MailingAddress_NumberAndStreet\\[0\\].*ZIPOrPostalCode_FirstFiveNumbers\\[0\\]$",
+            "componentPatternRole": "address",
+            "componentPatternMinConfidence": 0.5
+          },
+          "chapterId": "veteranContactInformation",
+          "chapterTitle": "Veteran contact information",
+          "pageId": "contactDetails",
+          "pageTitle": "Contact details",
+          "component": {
+            "type": "address",
+            "label": "Mailing address"
+          }
+        },
+        {
+          "id": "veteranPhoneNumber",
+          "selector": {
+            "namePattern": "group:phone:F\\[0\\]\\.Page_1\\[0\\]\\.TelephoneNumber_AreaCode\\[0\\].*TelephoneNumber_LastFourNumbers\\[0\\]$",
+            "componentPatternRole": "phone",
+            "componentPatternMinConfidence": 0.5
+          },
+          "chapterId": "veteranContactInformation",
+          "chapterTitle": "Veteran contact information",
+          "pageId": "contactDetails",
+          "pageTitle": "Contact details",
+          "component": {
+            "type": "phone",
+            "label": "Telephone number"
+          }
+        },
+        {
+          "id": "veteranEmailAddress",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.Page_1\\[0\\]\\.E_Mail_Address\\[0\\]$",
+            "componentPatternRole": "email",
+            "componentPatternMinConfidence": 0.5
+          },
+          "chapterId": "veteranContactInformation",
+          "chapterTitle": "Veteran contact information",
+          "pageId": "contactDetails",
+          "pageTitle": "Contact details",
+          "component": {
+            "type": "email",
+            "label": "Email address"
+          }
+        },
+        {
+          "id": "patientFirstName",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.Page_1\\[0\\]\\.Patients_FirstName\\[0\\]$"
+          },
+          "chapterId": "patientInformation",
+          "chapterTitle": "Patient information",
+          "pageId": "patientDetails",
+          "pageTitle": "Patient details",
+          "component": {
+            "label": "Patient first name"
+          }
+        },
+        {
+          "id": "patientSocialSecurityNumber",
+          "selector": {
+            "namePattern": "group:ssn:F\\[0\\]\\.Page_1\\[0\\]\\.Patient_SocialSecurityNumber_"
+          },
+          "chapterId": "patientInformation",
+          "chapterTitle": "Patient information",
+          "pageId": "patientDetails",
+          "pageTitle": "Patient details",
+          "component": {
+            "type": "maskedInput",
+            "label": "Patient Social Security number"
+          }
+        },
+        {
+          "id": "patientVaFileNumber",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.Page_1\\[0\\]\\.Patients_VAFileNumber_If_Applicable\\[0\\]$"
+          },
+          "chapterId": "patientInformation",
+          "chapterTitle": "Patient information",
+          "pageId": "patientDetails",
+          "pageTitle": "Patient details",
+          "component": {
+            "label": "Patient VA file number"
+          }
+        },
+        {
+          "id": "authorizationLimitations",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.\\#subform\\[1\\]\\.InformationIsLimitedToWhatIsWrittenInThisSpace\\[0\\]$"
+          },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "authorizationScope",
+          "pageTitle": "Authorization scope",
+          "component": {
+            "type": "textArea",
+            "label": "Consent limitations",
+            "maxLength": 1000
+          }
+        },
+        {
+          "id": "authorizationSignature",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.\\#subform\\[1\\]\\.SignatureField11\\[0\\]$"
+          },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "authorizationSignature",
+          "pageTitle": "Authorization signature",
+          "component": {
+            "label": "Signature of person authorizing disclosure"
+          }
+        },
+        {
+          "id": "authorizationDateSigned",
+          "selector": {
+            "namePattern": "group:date:F\\[0\\]\\.\\#subform\\[1\\]\\.Date_Signed_Month\\[0\\].*Date_Signed_Year\\[0\\]$"
+          },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "authorizationSignature",
+          "pageTitle": "Authorization signature",
+          "component": {
+            "type": "date",
+            "label": "Date signed"
+          }
+        },
+        {
+          "id": "authorizationSignerFirstName",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.\\#subform\\[1\\]\\.Printed_Name_Of_Person_Signing_First\\[0\\]$"
+          },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "authorizationSignature",
+          "pageTitle": "Authorization signature",
+          "component": {
+            "label": "Printed first name of signer"
+          }
+        },
+        {
+          "id": "authorizationRelationship",
+          "selector": {
+            "namePattern": "F\\[0\\]\\.\\#subform\\[1\\]\\.Relationship_To_Veteran_Claimant\\[0\\]$"
+          },
+          "chapterId": "authorization",
+          "chapterTitle": "Authorization",
+          "pageId": "authorizationSignature",
+          "pageTitle": "Authorization signature",
+          "component": {
+            "label": "Relationship to Veteran or claimant"
+          }
+        },
+        {
+          "id": "providerName",
+          "selector": {
+            "namePattern": "Provider_Or_Facility_Name\\[\\d+\\]$",
+            "componentPatternRole": "provider",
+            "componentPatternMinConfidence": 0.5
+          },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility listed in VA Form 21-4142A.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "label": "Provider or facility name",
+            "summaryCard": true
+          }
+        },
+        {
+          "id": "conditionsTreated",
+          "selector": {
+            "namePattern": "Conditions_You_Are_Being_Treated_For\\[\\d+\\]$"
+          },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility listed in VA Form 21-4142A.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "type": "textInput",
+            "label": "Conditions treated"
+          }
+        },
+        {
+          "id": "providerFacilityAddress",
+          "selector": {
+            "namePattern": "group:address:.*Provider_Facility_Street_Address",
+            "componentPatternRole": "address",
+            "componentPatternMinConfidence": 0.5
+          },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility listed in VA Form 21-4142A.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "type": "address",
+            "label": "Provider or facility address"
+          }
+        },
+        {
+          "id": "providerFacilityAddress",
+          "selector": {
+            "namePattern": "Provider_Facility_Street_Address_NumberAndStreet\\[0\\]$"
+          },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility listed in VA Form 21-4142A.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "type": "address",
+            "label": "Provider or facility address"
+          }
+        },
+        {
+          "id": "datesOfTreatment",
+          "selector": {
+            "labelPattern": "(?:9c|10c|11c|12c|13c)\\.?.*Date\\(S\\) Of Treatment"
+          },
+          "chapterId": "treatmentProviders",
+          "chapterTitle": "Treatment providers",
+          "chapterType": "listLoop",
+          "chapterOptions": {
+            "nounSingular": "provider",
+            "nounPlural": "providers",
+            "arrayPath": "treatmentProviders",
+            "required": false,
+            "maxItems": 20
+          },
+          "itemNameLabel": "Provider or facility name",
+          "sectionIntro": "Add each provider or facility listed in VA Form 21-4142A.",
+          "pageId": "providerDetails",
+          "pageTitle": "Provider details",
+          "component": {
+            "type": "textInput",
+            "label": "Dates of treatment"
+          }
+        }
+      ]
+    },
+    {
       "id": "va-form-3288-records-release-2020-acroform",
       "title": "VA Form 3288 records release workflow",
       "description": "Curates the AcroForm extraction fields from VA Form 3288 (Request for and Consent to Release of Information from Claimant's Records) into a builder-native records release workflow.",

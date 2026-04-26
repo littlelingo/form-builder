@@ -154,6 +154,15 @@ export interface AuthoringProvenance {
   lastCorrectedBy?: string | null;
   exemplarId?: string | null;
   curation?: AuthoringCurationProvenance;
+  componentPattern?: {
+    role: string;
+    family?: string;
+    confidence: number;
+    source?: 'deterministic' | 'semantic';
+    evidence: string[];
+    groupKey?: string;
+    groupRole?: string;
+  };
 }
 
 export interface AuthoringComponent {

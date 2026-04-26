@@ -1,10 +1,20 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
   assessImportQuality,
+  DEFAULT_PATTERN_GATE_PROFILE,
+  DEFAULT_MIN_PATTERN_COVERAGE,
+  evaluateCorpusGates,
+  listPdfFiles,
+  PATTERN_GATE_PROFILES,
   qualitySignals,
   REPRESENTATIVE_TARGETS,
+  resolveCorpusInput,
+  resolveGateConfig,
 } from '../src/cli/import-corpus.mjs';
 
 function formWith({ chapterTitle, pageTitle, components }) {
@@ -181,4 +191,145 @@ test('representative import targets cover baseline and next-risk form varieties'
       'next-risk',
     ],
   );
+});
+
+test('corpus quality gate fails when pattern coverage falls below threshold', () => {
+  const summary = {
+    patternCoverageRatio: 0.34,
+    worstDecilePatternCoverage: 0.34,
+    patternCoverageByExtractionKind: { static: 0.34, acroform: 0.34 },
+  };
+  const gates = evaluateCorpusGates(summary, {
+    gateProfile: 'legacy',
+    minPatternCoverage: 0.5,
+  });
+  assert.equal(gates.passed, false);
+  assert.equal(gates.checks.length, 1);
+  assert.equal(gates.checks[0].key, 'patternCoverage');
+  assert.equal(gates.checks[0].passed, false);
+});
+
+test('pattern gate profiles tighten from phase-a through phase-d', () => {
+  const phaseA = PATTERN_GATE_PROFILES['phase-a'];
+  const phaseB = PATTERN_GATE_PROFILES['phase-b'];
+  const phaseC = PATTERN_GATE_PROFILES['phase-c'];
+  const phaseD = PATTERN_GATE_PROFILES['phase-d'];
+
+  assert.ok(phaseA.minPatternCoverage < phaseB.minPatternCoverage);
+  assert.ok(phaseB.minPatternCoverage < phaseC.minPatternCoverage);
+  assert.ok(phaseC.minPatternCoverage < phaseD.minPatternCoverage);
+
+  assert.ok(phaseA.minPatternWorstDecile < phaseB.minPatternWorstDecile);
+  assert.ok(phaseB.minPatternWorstDecile < phaseC.minPatternWorstDecile);
+  assert.ok(phaseC.minPatternWorstDecile < phaseD.minPatternWorstDecile);
+
+  assert.ok(phaseA.minPatternFamilyStatic < phaseB.minPatternFamilyStatic);
+  assert.ok(phaseB.minPatternFamilyStatic < phaseC.minPatternFamilyStatic);
+  assert.ok(phaseC.minPatternFamilyStatic < phaseD.minPatternFamilyStatic);
+
+  assert.ok(phaseA.minPatternFamilyAcroform < phaseB.minPatternFamilyAcroform);
+  assert.ok(phaseB.minPatternFamilyAcroform < phaseC.minPatternFamilyAcroform);
+  assert.ok(phaseC.minPatternFamilyAcroform < phaseD.minPatternFamilyAcroform);
+
+  assert.equal(DEFAULT_PATTERN_GATE_PROFILE, 'phase-d');
+});
+
+test('corpus quality gate defaults to minimum threshold and can be disabled', () => {
+  const phaseDefaults = PATTERN_GATE_PROFILES[DEFAULT_PATTERN_GATE_PROFILE];
+  const summary = {
+    patternCoverageRatio: phaseDefaults.minPatternCoverage + 0.01,
+    worstDecilePatternCoverage: phaseDefaults.minPatternWorstDecile + 0.01,
+    patternCoverageByExtractionKind: {
+      static: phaseDefaults.minPatternFamilyStatic + 0.01,
+      acroform: phaseDefaults.minPatternFamilyAcroform + 0.01,
+    },
+  };
+  const defaultGates = evaluateCorpusGates(summary);
+  assert.equal(defaultGates.passed, true);
+  assert.equal(defaultGates.checks.length, 4);
+
+  const disabled = evaluateCorpusGates(summary, { patternGateEnabled: false });
+  assert.equal(disabled.passed, true);
+  assert.equal(disabled.checks.length, 0);
+});
+
+test('resolveGateConfig merges profile defaults with explicit overrides', () => {
+  const config = resolveGateConfig({
+    gateProfile: 'phase-b',
+    minPatternCoverage: 0.81,
+    minPatternFamilyStatic: 0.79,
+  });
+  assert.equal(config.gateProfile, 'phase-b');
+  assert.equal(config.minPatternCoverage, 0.81);
+  assert.equal(config.minPatternWorstDecile, PATTERN_GATE_PROFILES['phase-b'].minPatternWorstDecile);
+  assert.equal(config.minPatternFamilyStatic, 0.79);
+  assert.equal(config.minPatternFamilyAcroform, PATTERN_GATE_PROFILES['phase-b'].minPatternFamilyAcroform);
+  assert.equal(DEFAULT_MIN_PATTERN_COVERAGE, PATTERN_GATE_PROFILES[DEFAULT_PATTERN_GATE_PROFILE].minPatternCoverage);
+});
+
+test('listPdfFiles supports recursive search', () => {
+  const root = mkdtempSync(join(tmpdir(), 'import-corpus-recursive-'));
+  try {
+    mkdirSync(join(root, 'nested'));
+    writeFileSync(join(root, 'root.pdf'), 'pdf');
+    writeFileSync(join(root, 'nested', 'child.pdf'), 'pdf');
+    writeFileSync(join(root, 'nested', 'ignore.txt'), 'txt');
+
+    const flat = listPdfFiles(root, null, { recursive: false });
+    assert.equal(flat.length, 1);
+    assert.equal(flat[0].endsWith('root.pdf'), true);
+
+    const recursive = listPdfFiles(root, null, { recursive: true });
+    assert.equal(recursive.length, 2);
+    assert.equal(recursive.some(file => file.endsWith('root.pdf')), true);
+    assert.equal(recursive.some(file => file.endsWith('child.pdf')), true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('resolveCorpusInput merges manifest entries, tags, and missing-path warnings', () => {
+  const root = mkdtempSync(join(tmpdir(), 'import-corpus-manifest-'));
+  try {
+    const poolA = join(root, 'pool-a');
+    const poolB = join(root, 'pool-b');
+    mkdirSync(poolA);
+    mkdirSync(poolB);
+    writeFileSync(join(poolA, 'alpha.pdf'), 'pdf');
+    writeFileSync(join(poolB, 'alpha.pdf'), 'pdf');
+    writeFileSync(join(poolB, 'beta.pdf'), 'pdf');
+
+    const manifestPath = join(root, 'manifest.json');
+    writeFileSync(
+      manifestPath,
+      JSON.stringify(
+        {
+          name: 'test-pool',
+          entries: [
+            { path: './pool-a', required: true, tags: ['baseline', 'shared'] },
+            { path: './pool-b', required: true, tags: ['expanded', 'shared'] },
+            { path: './missing-pool', required: false, tags: ['missing'] },
+          ],
+        },
+        null,
+        2,
+      ),
+    );
+
+    const resolved = resolveCorpusInput({ manifest: manifestPath });
+    assert.equal(resolved.source.type, 'manifest');
+    assert.equal(resolved.source.name, 'test-pool');
+    assert.equal(resolved.files.length, 3);
+    assert.equal(resolved.warnings.length, 1);
+    assert.match(resolved.warnings[0], /missing manifest path/i);
+
+    const alphaEntries = resolved.files.filter(entry => entry.filePath.endsWith('alpha.pdf'));
+    assert.equal(alphaEntries.length, 2);
+    for (const alpha of alphaEntries) {
+      assert.ok(alpha.tags.includes('shared'));
+      assert.ok(alpha.tags.includes('baseline') || alpha.tags.includes('expanded'));
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

@@ -1,0 +1,37 @@
+{
+  "name": "expanded-corpus-pool",
+  "description": "Manifest-driven corpus pool for broad import quality runs across baseline samples, revisions, and packet variants.",
+  "targetFileCount": 100,
+  "entries": [
+    {
+      "path": "../form-samples",
+      "required": true,
+      "recursive": true,
+      "tags": ["baseline", "core", "mixed-revisions", "mixed-packets"]
+    },
+    {
+      "path": "tests/fixtures/pilot",
+      "required": false,
+      "recursive": true,
+      "tags": ["pilot", "packet"]
+    },
+    {
+      "path": "../form-samples-expanded",
+      "required": false,
+      "recursive": true,
+      "tags": ["expanded", "revisions"]
+    },
+    {
+      "path": "../form-samples-archive",
+      "required": false,
+      "recursive": true,
+      "tags": ["archive", "revisions"]
+    },
+    {
+      "path": "../form-samples-packets",
+      "required": false,
+      "recursive": true,
+      "tags": ["expanded", "packet"]
+    }
+  ]
+}

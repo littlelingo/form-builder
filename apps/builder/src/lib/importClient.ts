@@ -7,9 +7,11 @@ export type ImportProgressStage =
   | 'fingerprint'
   | 'extract-acroform'
   | 'extract-text'
+  | 'form-inventory'
   | 'pair-labels'
   | 'corpus'
   | 'enrichment'
+  | 'component-patterns'
   | 'curation'
   | 'build-authoring'
   | 'validate'
@@ -50,6 +52,48 @@ export interface ImportCurationReport {
   recipeCatalogVersion?: string | null;
 }
 
+export interface ImportDetectedForm {
+  formNumber: string;
+  revisions: string[];
+  pages: number[];
+  pageRanges: string[];
+  evidence: string[];
+}
+
+export interface ImportFormInventoryDetection {
+  page: number;
+  formNumber: string;
+  revision?: string | null;
+  confidence: number;
+  evidence: string;
+}
+
+export interface ImportFormInventoryReport {
+  status: 'none-detected' | 'single-form' | 'multi-form';
+  detectedFormCount: number;
+  filename?: string | null;
+  formId?: string | null;
+  forms: ImportDetectedForm[];
+  pageDetections: ImportFormInventoryDetection[];
+  warnings: string[];
+}
+
+export interface ImportPatternReport {
+  taxonomyVersion?: string;
+  mode?: 'deterministic' | 'hybrid';
+  matchedFieldCount: number;
+  totalFieldCount: number;
+  unmatchedFieldCount: number;
+  coverageRatio: number;
+  roleCounts: Record<string, number>;
+  familyCounts?: Record<string, number>;
+  sourceCounts?: Record<string, number>;
+  unmatchedSummary?: {
+    topTokens: Array<{ token: string; count: number }>;
+    sampleFields: Array<{ name: string | null; label: string | null }>;
+  };
+}
+
 export interface ImportProgressEvent {
   stage: ImportProgressStage;
   detail: string;
@@ -65,6 +109,8 @@ export interface ImportProgressEvent {
   corpusHits?: number;
   enrichment?: string;
   curation?: ImportCurationReport;
+  formInventory?: ImportFormInventoryReport;
+  patterns?: ImportPatternReport;
   chapterCount?: number;
   componentCount?: number;
   validation?: { valid: boolean; errors: string[]; warnings: unknown[] };
@@ -89,6 +135,8 @@ export interface ImportPdfResult {
     corpusEntryCount?: number;
     corpusHits?: number;
     curation?: ImportCurationReport;
+    formInventory?: ImportFormInventoryReport;
+    patterns?: ImportPatternReport;
     enrichment?: {
       provider: string;
       reason: string;
@@ -118,5 +166,5 @@ export async function importPdfFromFile(
     enrich: false,
     ...options,
   });
-  return result as ImportPdfResult;
+  return result as unknown as ImportPdfResult;
 }

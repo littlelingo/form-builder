@@ -10,9 +10,11 @@ const importSteps: Array<{ stage: ImportProgressStage; label: string }> = [
   { stage: 'fingerprint', label: 'Fingerprint' },
   { stage: 'extract-acroform', label: 'Fields' },
   { stage: 'extract-text', label: 'Page text' },
+  { stage: 'form-inventory', label: 'Form inventory' },
   { stage: 'pair-labels', label: 'Labels' },
   { stage: 'corpus', label: 'Corpus' },
   { stage: 'enrichment', label: 'Enrichment' },
+  { stage: 'component-patterns', label: 'Patterns' },
   { stage: 'curation', label: 'Curation' },
   { stage: 'build-authoring', label: 'Build JSON' },
   { stage: 'validate', label: 'Validate' },
@@ -38,6 +40,8 @@ interface PdfImportStatus {
     corpusHits?: number;
     curation?: ImportPdfResult['importReport']['curation'];
     enrichment?: string;
+    formInventory?: ImportPdfResult['importReport']['formInventory'];
+    patterns?: ImportPdfResult['importReport']['patterns'];
     chapterCount?: number;
     componentCount?: number;
   };
@@ -73,6 +77,8 @@ function mergeImportStats(
     ...(event.corpusHits !== undefined ? { corpusHits: event.corpusHits } : {}),
     ...(event.curation !== undefined ? { curation: event.curation } : {}),
     ...(event.enrichment !== undefined ? { enrichment: event.enrichment } : {}),
+    ...(event.formInventory !== undefined ? { formInventory: event.formInventory } : {}),
+    ...(event.patterns !== undefined ? { patterns: event.patterns } : {}),
     ...(event.chapterCount !== undefined ? { chapterCount: event.chapterCount } : {}),
     ...(event.componentCount !== undefined ? { componentCount: event.componentCount } : {}),
   };
@@ -106,6 +112,9 @@ function ImportProgressPanel({
   const curationDecisions = curation?.decisions || [];
   const curatedFieldCount = curation?.curatedFieldCount;
   const totalFieldCount = curation?.totalFieldCount;
+  const formInventory = status.report?.formInventory || status.stats.formInventory;
+  const detectedForms = formInventory?.forms || [];
+  const patternReport = status.report?.patterns || status.stats.patterns;
 
   return (
     <section
@@ -215,6 +224,22 @@ function ImportProgressPanel({
             </dd>
           </div>
           <div>
+            <dt>Detected forms</dt>
+            <dd>
+              {formInventory
+                ? `${formInventory.detectedFormCount}${formInventory.status === 'multi-form' ? ' (multiple)' : ''}`
+                : 'pending'}
+            </dd>
+          </div>
+          <div>
+            <dt>Pattern coverage</dt>
+            <dd>
+              {patternReport
+                ? `${patternReport.matchedFieldCount}/${patternReport.totalFieldCount}${patternReport.mode ? ` (${patternReport.mode})` : ''}`
+                : 'pending'}
+            </dd>
+          </div>
+          <div>
             <dt>Validation</dt>
             <dd>
               {status.report
@@ -225,6 +250,26 @@ function ImportProgressPanel({
             </dd>
           </div>
         </dl>
+
+        {detectedForms.length > 0 && (
+          <section className="pdf-import-progress__curation" aria-labelledby="pdf-import-forms-heading">
+            <div>
+              <p className="builder-eyebrow">Form inventory</p>
+              <h3 id="pdf-import-forms-heading">Detected forms and page ranges</h3>
+            </div>
+            <ul>
+              {detectedForms.map(form => (
+                <li key={form.formNumber}>
+                  <strong>{form.formNumber}</strong>
+                  <span>
+                    {form.pageRanges.join(', ')}
+                    {form.revisions.length > 0 ? ` | ${form.revisions.join(', ')}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {curationDecisions.length > 0 && (
           <section className="pdf-import-progress__curation" aria-labelledby="pdf-import-curation-heading">
@@ -373,6 +418,8 @@ export function HeaderStrip(props: HeaderStripProps) {
             corpusEntryCount: result.importReport.corpusEntryCount,
             corpusHits: result.importReport.corpusHits,
             curation: result.importReport.curation,
+            formInventory: result.importReport.formInventory,
+            patterns: result.importReport.patterns,
             enrichment: result.importReport.enrichment?.reason,
             chapterCount: result.form.chapters.length,
           },
@@ -381,6 +428,41 @@ export function HeaderStrip(props: HeaderStripProps) {
           `PDF import needs review: ${file.name} produced ${importedComponentCount} builder components`,
         );
         return;
+      }
+      const inventory = result.importReport.formInventory;
+      if (inventory?.status === 'multi-form' && inventory.forms.length > 1) {
+        const detail = inventory.forms
+          .map(form => `${form.formNumber} (pages ${form.pageRanges.join(', ')})`)
+          .join('\n');
+        const proceed = window.confirm(
+          `Multiple forms were detected in this PDF:\n\n${detail}\n\nContinue importing into a single draft?`,
+        );
+        if (!proceed) {
+          setPdfImportStatus(current => ({
+            phase: 'blocked',
+            fileName: current?.fileName || file.name,
+            activeStage: 'complete',
+            detail: 'Import canceled after multiple form numbers were detected in this PDF.',
+            startedAt: current?.startedAt || Date.now(),
+            elapsedMs: result.importReport.durationMs,
+            report: result.importReport,
+            stats: {
+              ...(current?.stats || { byteLength: file.size }),
+              pageCount: result.importReport.pageCount,
+              fieldCount: result.importReport.acroFormFieldCount,
+              componentCount: importedComponentCount,
+              corpusEntryCount: result.importReport.corpusEntryCount,
+              corpusHits: result.importReport.corpusHits,
+              curation: result.importReport.curation,
+              formInventory: result.importReport.formInventory,
+              patterns: result.importReport.patterns,
+              enrichment: result.importReport.enrichment?.reason,
+              chapterCount: result.form.chapters.length,
+            },
+          }));
+          setMessage('PDF import canceled: multiple forms detected in one file');
+          return;
+        }
       }
       onImportPdf(result.form);
       const fullyCurated =
@@ -404,6 +486,8 @@ export function HeaderStrip(props: HeaderStripProps) {
           corpusEntryCount: result.importReport.corpusEntryCount,
           corpusHits: result.importReport.corpusHits,
           curation: result.importReport.curation,
+          formInventory: result.importReport.formInventory,
+          patterns: result.importReport.patterns,
           enrichment: result.importReport.enrichment?.reason,
           chapterCount: result.form.chapters.length,
         },

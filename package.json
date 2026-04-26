@@ -16,6 +16,8 @@
     "builder:smoke": "node tests/builder-smoke.mjs",
     "import": "node src/cli/import.mjs",
     "import:corpus": "node src/cli/import-corpus.mjs",
+    "import:corpus:expanded": "node src/cli/import-corpus.mjs --manifest src/import/corpus/pools/expanded.json --out build/import-corpus-report-expanded.json --markdown build/import-corpus-report-expanded.md --pattern-mode deterministic --gate-profile phase-d",
+    "import:corpus:ci": "node src/cli/import-corpus.mjs tests/fixtures/pilot --out build/import-corpus-report-ci.json --markdown build/import-corpus-report-ci.md --pattern-mode deterministic --gate-profile phase-d",
     "corpus:seed": "node src/import/corpus/seed.mjs",
     "llm:up": "docker compose -f docker-compose.ollama.yml up -d",
     "llm:down": "docker compose -f docker-compose.ollama.yml down",

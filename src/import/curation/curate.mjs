@@ -94,7 +94,23 @@ function selectorMatches(field, selector = {}) {
   if (selector.textPattern && !matchesPattern(fieldText(field), selector.textPattern)) {
     return false;
   }
-  return Boolean(selector.namePattern || selector.labelPattern || selector.textPattern);
+  if (selector.componentPatternRole) {
+    if (field?.componentPattern?.role !== selector.componentPatternRole) {
+      return false;
+    }
+  }
+  if (selector.componentPatternMinConfidence !== undefined) {
+    const confidence = Number(field?.componentPattern?.confidence ?? NaN);
+    if (!Number.isFinite(confidence) || confidence < selector.componentPatternMinConfidence) {
+      return false;
+    }
+  }
+  return Boolean(
+    selector.namePattern ||
+      selector.labelPattern ||
+      selector.textPattern ||
+      selector.componentPatternRole,
+  );
 }
 
 function normalizeCuration(curation = {}, source) {

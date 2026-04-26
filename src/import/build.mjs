@@ -287,6 +287,9 @@ function buildComponent(field, takenIds, corpus = []) {
   if (field.curation) {
     overridden.provenance.curation = field.curation;
   }
+  if (field.componentPattern) {
+    overridden.provenance.componentPattern = field.componentPattern;
+  }
 
   return overridden;
 }

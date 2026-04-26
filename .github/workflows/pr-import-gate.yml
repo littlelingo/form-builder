@@ -1,0 +1,27 @@
+name: PR Import Gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  import-corpus-gate:
+    name: Import Corpus Gate (Deterministic Phase-C)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run deterministic phase-c corpus gate
+        run: npm run import:corpus:ci

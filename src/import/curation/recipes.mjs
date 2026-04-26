@@ -1,7 +1,8 @@
 import seedCatalog from './catalog.json' with { type: 'json' };
 
 const PATTERN_FIELDS = ['allText', 'anyText', 'fieldNamePatterns'];
-const SELECTOR_FIELDS = ['namePattern', 'labelPattern', 'textPattern'];
+const SELECTOR_PATTERN_FIELDS = ['namePattern', 'labelPattern', 'textPattern'];
+const SELECTOR_REQUIRED_FIELDS = [...SELECTOR_PATTERN_FIELDS, 'componentPatternRole'];
 const RESERVED_COMPONENT_KEYS = ['id', 'provenance'];
 
 let runtimeRecipes = [];
@@ -56,12 +57,21 @@ function validateSelector(selector, path, errors) {
     return;
   }
 
-  const present = SELECTOR_FIELDS.filter(key => selector[key] !== undefined);
+  const present = SELECTOR_REQUIRED_FIELDS.filter(key => selector[key] !== undefined);
   if (present.length === 0) {
-    errors.push(`${path} must include at least one of ${SELECTOR_FIELDS.join(', ')}`);
+    errors.push(`${path} must include at least one of ${SELECTOR_REQUIRED_FIELDS.join(', ')}`);
   }
-  for (const key of present) {
+  for (const key of SELECTOR_PATTERN_FIELDS.filter(key => selector[key] !== undefined)) {
     validatePattern(selector[key], `${path}.${key}`, errors);
+  }
+  if (selector.componentPatternRole !== undefined && !hasText(selector.componentPatternRole)) {
+    errors.push(`${path}.componentPatternRole must be a non-empty string`);
+  }
+  if (selector.componentPatternMinConfidence !== undefined) {
+    const value = selector.componentPatternMinConfidence;
+    if (typeof value !== 'number' || value < 0 || value > 1) {
+      errors.push(`${path}.componentPatternMinConfidence must be a number between 0 and 1`);
+    }
   }
 }
 

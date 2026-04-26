@@ -48,6 +48,16 @@ test('VBA 21P-527EZ imports as a curated Veterans Pension workflow', async t => 
 
   assert.equal(importReport.acroFormFieldCount, 519);
   assert.equal(importReport.componentCount, 346);
+  assert.equal(importReport.formInventory?.status, 'multi-form');
+  assert.ok(
+    (importReport.formInventory?.forms || []).some(form => form.formNumber === '21P-527EZ'),
+  );
+  assert.ok(
+    (importReport.formInventory?.forms || []).some(form => form.formNumber === '21P-8416'),
+  );
+  assert.ok((importReport.patterns?.coverageRatio || 0) >= 0.45);
+  assert.ok((importReport.patterns?.roleCounts?.provider || 0) >= 20);
+  assert.ok((importReport.patterns?.roleCounts?.address || 0) >= 20);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(
     importReport.curation.recipe.recipeId,

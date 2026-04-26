@@ -39,6 +39,14 @@ test('VA Form 10-10EZ imports as a curated health benefits workflow', async t =>
 
   assert.equal(importReport.acroFormFieldCount, 122);
   assert.equal(importReport.componentCount, 116);
+  assert.equal(importReport.formInventory?.status, 'single-form');
+  assert.deepEqual(
+    importReport.formInventory?.forms.map(item => item.formNumber),
+    ['10-10EZ'],
+  );
+  assert.ok((importReport.patterns?.coverageRatio || 0) >= 0.45);
+  assert.ok((importReport.patterns?.roleCounts?.ssn || 0) >= 8);
+  assert.ok((importReport.patterns?.roleCounts?.address || 0) >= 8);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(
     importReport.curation.recipe.recipeId,

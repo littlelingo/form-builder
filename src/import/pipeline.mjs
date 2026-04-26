@@ -6,7 +6,9 @@ import { inferStaticTextFields } from './extract/staticText.mjs';
 import { consolidateFields } from './heuristic/consolidate.mjs';
 import { loadCorpus } from './corpus/store.mjs';
 import { curateFields } from './curation/curate.mjs';
+import { detectFormInventory } from './inventory/forms.mjs';
 import { applyEnrichment, enrichFields } from './llm/enricher.mjs';
+import { recognizeComponentPatterns } from './pattern/recognize.mjs';
 import { runMigrations } from '../schema/migrations/registry.mjs';
 import { computeBytesHash } from '../schema/migrations/schemaHash.mjs';
 import { validateAuthoringForm } from '../compiler/authoringCompiler.mjs';
@@ -93,6 +95,35 @@ export async function importPdf(pdfBytes, options = {}) {
   });
 
   emitProgress(onProgress, {
+    stage: 'form-inventory',
+    detail: 'Scanning page headers and footers for form numbers and revision dates.',
+    elapsedMs: Date.now() - t0,
+    formId,
+    pdfHash,
+    pageCount: text.pageCount,
+    fieldCount: acroForm.fieldCount,
+  });
+  const formInventory = detectFormInventory(text, {
+    formId,
+    filename: options.filename,
+  });
+  emitProgress(onProgress, {
+    stage: 'form-inventory',
+    detail:
+      formInventory.detectedFormCount === 0
+        ? 'No explicit VA form marker detected in page headers or footers.'
+        : formInventory.detectedFormCount === 1
+          ? `Detected ${formInventory.forms[0].formNumber}${formInventory.forms[0].revisions.length ? ` (${formInventory.forms[0].revisions.join(', ')})` : ''}.`
+          : `Detected ${formInventory.detectedFormCount} forms in one PDF: ${formInventory.forms.map(form => form.formNumber).join(', ')}.`,
+    elapsedMs: Date.now() - t0,
+    formId,
+    pdfHash,
+    pageCount: text.pageCount,
+    fieldCount: acroForm.fieldCount,
+    formInventory,
+  });
+
+  emitProgress(onProgress, {
     stage: 'pair-labels',
     detail:
       acroForm.fieldCount > 0
@@ -170,6 +201,36 @@ export async function importPdf(pdfBytes, options = {}) {
     : consolidated.fields;
 
   emitProgress(onProgress, {
+    stage: 'component-patterns',
+    detail: 'Recognizing reusable field patterns using deterministic taxonomy and semantic fallback.',
+    elapsedMs: Date.now() - t0,
+    formId,
+    pdfHash,
+    pageCount: text.pageCount,
+    fieldCount: acroForm.fieldCount,
+    pairedFieldCount: consolidated.fields.length,
+    corpusEntryCount: corpus.length,
+    enrichment: enrichmentResult.reason,
+    formInventory,
+  });
+  const patternMode = options.patternMode === 'deterministic' ? 'deterministic' : 'hybrid';
+  const patternResult = recognizeComponentPatterns(enrichedFields, { mode: patternMode });
+  emitProgress(onProgress, {
+    stage: 'component-patterns',
+    detail: `Matched ${patternResult.report.matchedFieldCount} of ${patternResult.report.totalFieldCount} fields to reusable component patterns (${patternResult.report.mode}).`,
+    elapsedMs: Date.now() - t0,
+    formId,
+    pdfHash,
+    pageCount: text.pageCount,
+    fieldCount: acroForm.fieldCount,
+    pairedFieldCount: consolidated.fields.length,
+    corpusEntryCount: corpus.length,
+    enrichment: enrichmentResult.reason,
+    formInventory,
+    patterns: patternResult.report,
+  });
+
+  emitProgress(onProgress, {
     stage: 'curation',
     detail: 'Curating extracted fields into builder-native sections and screens.',
     elapsedMs: Date.now() - t0,
@@ -180,8 +241,10 @@ export async function importPdf(pdfBytes, options = {}) {
     pairedFieldCount: consolidated.fields.length,
     corpusEntryCount: corpus.length,
     enrichment: enrichmentResult.reason,
+    formInventory,
+    patterns: patternResult.report,
   });
-  const curated = curateFields(enrichedFields, {
+  const curated = curateFields(patternResult.fields, {
     corpus,
     recipes: options.recipes,
     recipeCatalog: options.recipeCatalog,
@@ -209,6 +272,8 @@ export async function importPdf(pdfBytes, options = {}) {
     corpusEntryCount: corpus.length,
     enrichment: enrichmentResult.reason,
     curation: curated.report,
+    formInventory,
+    patterns: patternResult.report,
   });
   const authoring = buildAuthoringForm({
     formId,
@@ -234,6 +299,8 @@ export async function importPdf(pdfBytes, options = {}) {
     corpusEntryCount: corpus.length,
     enrichment: enrichmentResult.reason,
     curation: curated.report,
+    formInventory,
+    patterns: patternResult.report,
     chapterCount: migrated.chapters?.length || 0,
   });
   const validation = validateAuthoringForm(migrated);
@@ -270,6 +337,8 @@ export async function importPdf(pdfBytes, options = {}) {
     corpusHits,
     enrichment: enrichmentResult.reason,
     curation: curated.report,
+    formInventory,
+    patterns: patternResult.report,
     chapterCount: migrated.chapters?.length || 0,
     componentCount,
     validation,
@@ -284,6 +353,8 @@ export async function importPdf(pdfBytes, options = {}) {
       componentCount,
       corpusEntryCount: corpus.length,
       corpusHits,
+      formInventory,
+      patterns: patternResult.report,
       enrichment: {
         provider: enrichmentResult.provider,
         reason: enrichmentResult.reason,

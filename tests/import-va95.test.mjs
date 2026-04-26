@@ -38,6 +38,9 @@ test('VA Form 95 static tort claim imports as a curated workflow', async t => {
   const labels = components.map(component => component.label);
 
   assert.equal(importReport.acroFormFieldCount, 0);
+  assert.equal(importReport.formInventory?.status, 'none-detected');
+  assert.ok((importReport.patterns?.coverageRatio || 0) >= 0.35);
+  assert.ok((importReport.patterns?.roleCounts?.address || 0) >= 3);
   assert.equal(importReport.curation.status, 'curated');
   assert.equal(importReport.curation.recipe.recipeId, 'va-form-95-tort-claim-2020-static');
   assert.equal(importReport.curation.recipe.matchedFieldCount, 17);

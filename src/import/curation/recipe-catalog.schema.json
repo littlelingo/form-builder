@@ -80,12 +80,19 @@
       "properties": {
         "namePattern": { "type": "string", "minLength": 1 },
         "labelPattern": { "type": "string", "minLength": 1 },
-        "textPattern": { "type": "string", "minLength": 1 }
+        "textPattern": { "type": "string", "minLength": 1 },
+        "componentPatternRole": { "type": "string", "minLength": 1 },
+        "componentPatternMinConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       },
       "anyOf": [
         { "required": ["namePattern"] },
         { "required": ["labelPattern"] },
-        { "required": ["textPattern"] }
+        { "required": ["textPattern"] },
+        { "required": ["componentPatternRole"] }
       ]
     },
     "componentOverrides": {
